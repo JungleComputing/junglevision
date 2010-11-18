@@ -10,7 +10,7 @@ import javax.media.opengl.glu.GLUquadric;
 import com.sun.opengl.util.BufferUtil;
 import com.sun.opengl.util.FPSAnimator;
 
-class Project implements GLEventListener {
+class Junglevision implements GLEventListener {
     GLU glu = new GLU();
     
     //Perspective variables 
@@ -29,7 +29,7 @@ class Project implements GLEventListener {
      * Constructor for your program, this sets up the
      * window (Frame), creates a GLCanvas and starts the Animator
      */
-    public Project() {
+    public Junglevision() {
     	//Standard capabilities
 		GLCapabilities glCapabilities = new GLCapabilities();		
 		glCapabilities.setDoubleBuffered(true);
@@ -607,6 +607,6 @@ class Project implements GLEventListener {
 	 * Your program starts here
 	 */
     public static void main(String[] args) {
-    	new Project();		
+    	new Junglevision();		
 	}
 }

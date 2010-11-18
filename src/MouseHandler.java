@@ -7,7 +7,7 @@ import java.awt.event.MouseWheelListener;
 import javax.swing.SwingUtilities;
 
 public class MouseHandler implements MouseListener, MouseMotionListener, MouseWheelListener{	
-	private Project p;
+	private Junglevision p;
 		
 	private float viewDistOrigin; 
 	private float viewDist = -6; 
@@ -31,7 +31,7 @@ public class MouseHandler implements MouseListener, MouseMotionListener, MouseWh
 	private float translationYorigin = 0; 
 	private float translationY = 0;
 	
-	MouseHandler(Project p) {
+	MouseHandler(Junglevision p) {
 		this.p = p;
 		
 		rotation = new Float[3];
