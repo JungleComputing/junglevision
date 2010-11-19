@@ -9,8 +9,8 @@ import javax.swing.SwingUtilities;
 public class MouseHandler implements MouseListener, MouseMotionListener, MouseWheelListener{	
 	private Junglevision p;
 		
-	private float viewDistOrigin; 
 	private float viewDist = -6; 
+	private float dragCoefficient = 10.0f;
 	
 	private Float[] rotation;
 	private Float[] translation;
@@ -47,13 +47,12 @@ public class MouseHandler implements MouseListener, MouseMotionListener, MouseWh
 		this.translationYorigin = 0.0f;
 	}
 	
-	public void mouseClicked(MouseEvent e) {
+	public void mouseClicked(MouseEvent e) {		
 		if (SwingUtilities.isLeftMouseButton(e)) {
-			if (e.getClickCount() == 1) {	
-				p.doPickRequest(e.getPoint());				
-			} else {
-				//p.relocateOrigin(e.getPoint());
-			}
+			p.doPickRequest(e.getPoint());
+			if (e.getClickCount() != 1) {
+				p.doRecenterRequest();
+			}			
 		} else if (SwingUtilities.isMiddleMouseButton(e)) {
 			//Nothing yet
 		} else if (SwingUtilities.isRightMouseButton(e)) {
@@ -69,7 +68,7 @@ public class MouseHandler implements MouseListener, MouseMotionListener, MouseWh
 		//Empty - unneeded		
 	}
 
-	public void mousePressed(MouseEvent e) {
+	public void mousePressed(MouseEvent e) {		
 		if (SwingUtilities.isLeftMouseButton(e)) {			
 			dragLeftXorigin = e.getPoint().x;
 			dragLeftYorigin = e.getPoint().y;
@@ -82,7 +81,7 @@ public class MouseHandler implements MouseListener, MouseMotionListener, MouseWh
 	public void mouseReleased(MouseEvent e) {
 		rotationXorigin = rotationX;
 		rotationYorigin = rotationY;	
-		
+				
 		translationXorigin = translationX;
 		translationYorigin = -translationY;
 	}
@@ -96,10 +95,10 @@ public class MouseHandler implements MouseListener, MouseMotionListener, MouseWh
 			rotation[1] = rotationY;
 			rotation[2] = 0.0f;
 			p.setRotation(rotation);
-		} else if (SwingUtilities.isLeftMouseButton(e)) {
+		} else if (SwingUtilities.isLeftMouseButton(e)) {			
 			// y direction reversed because window coordinates are read from top to bottom
-			translationX =  ((e.getPoint().x - dragLeftXorigin)/150 + translationXorigin);
-			translationY = -((e.getPoint().y - dragLeftYorigin)/150 + translationYorigin);
+			translationX =  ((e.getPoint().x - dragLeftXorigin)*dragCoefficient + translationXorigin);
+			translationY = -((e.getPoint().y - dragLeftYorigin)*dragCoefficient + translationYorigin);
 			translation[0] = translationX;				 
 			translation[1] = translationY;
 			translation[2] = 0.0f;
@@ -112,7 +111,10 @@ public class MouseHandler implements MouseListener, MouseMotionListener, MouseWh
 	}
 
 	public void mouseWheelMoved(MouseWheelEvent e) {	
-		viewDist += viewDistOrigin + e.getWheelRotation();	
+		viewDist += e.getWheelRotation();
+		dragCoefficient = 100* 1/(100 - viewDist);
+		
+		System.out.println("viewdist "+ viewDist + " dragCoefficient " + dragCoefficient);
 		p.setViewDist(viewDist);
 	}
 

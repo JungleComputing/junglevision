@@ -1,17 +1,17 @@
-
 import java.awt.*;
 import java.awt.event.*;
 import java.nio.IntBuffer;
+import java.util.HashMap;
 
 import javax.media.opengl.*;
 import javax.media.opengl.glu.GLU;
-import javax.media.opengl.glu.GLUquadric;
 
 import com.sun.opengl.util.BufferUtil;
 import com.sun.opengl.util.FPSAnimator;
 
-class Junglevision implements GLEventListener {
+class Junglevision implements GLEventListener {	
     GLU glu = new GLU();
+    MouseHandler mouseHandler;
     
     //Perspective variables 
     private double fovy, aspect, width, height, zNear, zFar;
@@ -21,9 +21,13 @@ class Junglevision implements GLEventListener {
     private Float[] viewTranslation, viewRotation;
     
     //picking
-    private boolean pickRequest;
+    private boolean pickRequest, updateRequest, recenterRequest;
     private Point pickPoint;
     private int selectedItem;
+    private HashMap<Integer, FakeMetric> namesToVisuals;
+    
+    //Universe
+    private FakeLocationUpper location;
 
     /**
      * Constructor for your program, this sets up the
@@ -43,7 +47,7 @@ class Junglevision implements GLEventListener {
 		canvas.addGLEventListener(this);
 		
 		//Add Mouse event listener
-		MouseHandler mouseHandler = new MouseHandler(this);
+		mouseHandler = new MouseHandler(this);
 		canvas.addMouseListener(mouseHandler);
 		canvas.addMouseMotionListener(mouseHandler);
 		canvas.addMouseWheelListener(mouseHandler);
@@ -51,7 +55,7 @@ class Junglevision implements GLEventListener {
 		//Set up the window
 		Frame frame = new Frame("Maarten's Skeleton");
 		frame.add(canvas);
-		frame.setSize(800, 600);
+		frame.setSize(1800, 1100);
 		frame.addWindowListener(new WindowAdapter() {
 			public void windowClosing(WindowEvent e) { System.exit(0); }
 			});
@@ -61,7 +65,7 @@ class Junglevision implements GLEventListener {
 		fovy = 45.0f; 
 		aspect = (this.width / this.height); 
 		zNear = 0.1f;
-		zFar = 100.0f;	
+		zFar = 400.0f;	
 		
 		//Initial view
 		viewDist = -6;
@@ -74,7 +78,19 @@ class Junglevision implements GLEventListener {
 		
 		//Additional initializations
 		pickRequest = false;
+		updateRequest = true;
+		recenterRequest = false;
 		pickPoint = new Point();
+		namesToVisuals = new HashMap<Integer, FakeMetric>();
+				
+		//Universe initializers
+		location = new FakeLocationUpper(this, glu, 27);
+		Float[] initialLocation = {0.0f,0.0f,0.0f};
+		location.setLocation(initialLocation);
+		
+		//Visual updater definition
+		FakeUpdater updater = new FakeUpdater(this);
+		new Thread(updater).start();		
 		
 		FPSAnimator animator = new FPSAnimator(canvas,60);
 		animator.start();
@@ -132,11 +148,10 @@ class Junglevision implements GLEventListener {
 	    //Reset the modelview matrix
 	    gl.glLoadIdentity();
 	    
-	    //Change the view according to mouse input
+	    //Change the view according to mouse input	    
 		gl.glTranslatef(viewTranslation[0], viewTranslation[1], viewDist);
 		gl.glRotatef(viewRotation[0], 1,0,0);
-		gl.glRotatef(viewRotation[1], 0,1,0);
-		
+		gl.glRotatef(viewRotation[1], 0,1,0);		
 		
 		//Draw the current state of the universe
 		drawUniverse(gl, GL.GL_RENDER, selectedItem);
@@ -145,15 +160,29 @@ class Junglevision implements GLEventListener {
 		//computations we need to do for the NEXT frame
 		gl.glFlush();
 		
-		//Handle input (picking etc)		
+		//Handle input (picking, recentering etc)
 		if (pickRequest) {
 			selectedItem = pick(gl, pickPoint);
 			pickRequest = false;
 			
 			System.out.println("picked: " + selectedItem);
-		}		
+		}
+		if (recenterRequest) {
+			Float[] newCenter = namesToVisuals.get(selectedItem).getLocation();
+			Float[] oldLocation = location.getLocation();
+			Float[] newLocation = new Float[3];
+			newLocation[0] = oldLocation[0] - newCenter[0];
+			newLocation[1] = oldLocation[1] - newCenter[1];
+			newLocation[2] = oldLocation[2] - newCenter[2];
+			location.setLocation(newLocation);
+			recenterRequest = false;
+		}
 		
 		//Update visuals
+		if (updateRequest) {
+			location.update();
+			updateRequest = false;
+		}
 		
 		//wait for, and show the output
 		drawable.swapBuffers();
@@ -161,37 +190,7 @@ class Junglevision implements GLEventListener {
 	}
 	
 	private void drawUniverse(GL gl, int renderMode, int selectedItem) {
-		drawFakeNode(gl, renderMode, selectedItem);
-		
-		gl.glTranslatef( 1.5f, 0, 0);
-		drawFakeNode(gl, renderMode, selectedItem);
-		
-		gl.glTranslatef( 0, 0, 1.5f);
-		drawFakeNode(gl, renderMode, selectedItem);
-		
-		gl.glTranslatef(-1.5f, 0, 0);
-		drawFakeNode(gl, renderMode, selectedItem);
-	}
-	
-	private void drawFakeNode(GL gl, int renderMode, int selectedItem) {
-		gl.glPushMatrix();
-		
-		if (renderMode == GL.GL_SELECT) gl.glLoadName(1);
-		drawBar(gl, (float) Math.random(), 1.0f, 0.0f, 0.0f);
-				
-		gl.glTranslatef(0.3f, 0, 0);
-		if (renderMode == GL.GL_SELECT) gl.glLoadName(2);
-		drawBar(gl, (float) Math.random(), 0.0f, 1.0f, 0.0f);
-		
-		gl.glTranslatef(0, 0, 0.3f);
-		if (renderMode == GL.GL_SELECT) gl.glLoadName(3);
-		drawBar(gl, (float) Math.random(), 0.0f, 0.0f, 1.0f);
-		
-		gl.glTranslatef(-0.3f, 0, 0);
-		if (renderMode == GL.GL_SELECT) gl.glLoadName(4);
-		drawBar(gl, (float) Math.random(), 0.5f, 1.0f, 0.0f);
-		
-		gl.glPopMatrix();
+		location.drawThis(gl, renderMode, selectedItem);
 	}
 	
 	private int pick(GL gl, Point pickPoint) {
@@ -245,6 +244,12 @@ class Junglevision implements GLEventListener {
 	    return selection;
 	}
 	
+	int registerGLName(FakeMetric metric) {
+		int key = namesToVisuals.size();
+		namesToVisuals.put(key, metric);
+		return key;		
+	}
+	
 	private int processHits(int hits, int buffer[]) {	
 		int selection = -1;
 		
@@ -254,300 +259,7 @@ class Junglevision implements GLEventListener {
 	    }
 	    
 	    return selection;
-	}
-	
-	protected void drawBar(GL gl, float length, float rC, float gC, float bC) {	
-		//Save the current modelview matrix
-		gl.glPushMatrix();
-		
-		//use nice variables, so that the ogl code is readable
-		float o = 0.0f;			//(o)rigin
-		float x = 0.25f;		//(x) maximum coordinate
-		float y = 1.0f;		//(y) maximum coordinate
-		float z = 0.25f;		//(z) maximum coordinate	
-		float f = length * y; 	//(f)illed area
-		float r = y - f;		//(r)est area (non-filled, up until the maximum) 
-		float alpha = 0.4f;
-		
-		//Transparency
-		float lineAlpha = alpha;
-		
-		//Color for the lines around the box
-		float line_color_r = 0.8f;
-		float line_color_g = 0.8f;
-		float line_color_b = 0.8f;
-					
-		float quad_color_r = rC;
-		float quad_color_g = gC;
-		float quad_color_b = bC;
-						
-		//Center the drawing startpoint
-		gl.glTranslatef(-0.5f*x, 0.0f, -0.5f*z);		
-		
-		//The solid Element
-			gl.glBegin(GL.GL_LINE_LOOP);
-				//TOP of filled area
-				gl.glColor3f(line_color_r,line_color_g,line_color_b);			
-				gl.glVertex3f( x, f, o);			
-				gl.glVertex3f( o, f, o);			
-				gl.glVertex3f( o, f, z);			
-				gl.glVertex3f( x, f, z);			
-			gl.glEnd();		
-			
-			gl.glBegin(GL.GL_LINE_LOOP);
-				//BOTTOM
-				gl.glColor3f(line_color_r,line_color_g,line_color_b);			
-				gl.glVertex3f( x, o, z);			
-				gl.glVertex3f( o, o, z);			
-				gl.glVertex3f( o, o, o);			
-				gl.glVertex3f( x, o, o);			
-			gl.glEnd();	
-			
-			gl.glBegin(GL.GL_LINE_LOOP);
-				//FRONT
-				gl.glColor3f(line_color_r,line_color_g,line_color_b);			
-				gl.glVertex3f( x, f, z);			
-				gl.glVertex3f( o, f, z);			
-				gl.glVertex3f( o, o, z);			
-				gl.glVertex3f( x, o, z);			
-			gl.glEnd();
-			
-			gl.glBegin(GL.GL_LINE_LOOP);
-				//BACK
-				gl.glColor3f(line_color_r,line_color_g,line_color_b);			
-				gl.glVertex3f( x, o, o);			
-				gl.glVertex3f( o, o, o);			
-				gl.glVertex3f( o, f, o);			
-				gl.glVertex3f( x, f, o);			
-			gl.glEnd();	
-			
-			gl.glBegin(GL.GL_LINE_LOOP);
-				//LEFT
-				gl.glColor3f(line_color_r,line_color_g,line_color_b);			
-				gl.glVertex3f( o, f, z);			
-				gl.glVertex3f( o, f, o);			
-				gl.glVertex3f( o, o, o);			
-				gl.glVertex3f( o, o, z);			
-			gl.glEnd();
-			
-			gl.glBegin(GL.GL_LINE_LOOP);
-				//RIGHT
-				gl.glColor3f(line_color_r,line_color_g,line_color_b);			
-				gl.glVertex3f( x, f, o);			
-				gl.glVertex3f( x, f, z);			
-				gl.glVertex3f( x, o, z);			
-				gl.glVertex3f( x, o, o);
-			gl.glEnd();
-				
-			gl.glBegin(GL.GL_QUADS);		
-				//TOP
-				gl.glColor3f(quad_color_r, quad_color_g, quad_color_b);			
-				gl.glVertex3f( x, f, o);			
-				gl.glVertex3f( o, f, o);			
-				gl.glVertex3f( o, f, z);			
-				gl.glVertex3f( x, f, z);
-				
-				//BOTTOM
-				gl.glColor3f(quad_color_r, quad_color_g, quad_color_b);			
-				gl.glVertex3f( x, o, z);			
-				gl.glVertex3f( o, o, z);			
-				gl.glVertex3f( o, o, o);			
-				gl.glVertex3f( x, o, o);
-				
-				//FRONT
-				gl.glColor3f(quad_color_r, quad_color_g, quad_color_b);			
-				gl.glVertex3f( x, f, z);			
-				gl.glVertex3f( o, f, z);			
-				gl.glVertex3f( o, o, z);			
-				gl.glVertex3f( x, o, z);
-				
-				//BACK
-				gl.glColor3f(quad_color_r, quad_color_g, quad_color_b);			
-				gl.glVertex3f( x, o, o);			
-				gl.glVertex3f( o, o, o);			
-				gl.glVertex3f( o, f, o);			
-				gl.glVertex3f( x, f, o);
-				
-				//LEFT
-				gl.glColor3f(quad_color_r, quad_color_g, quad_color_b);			
-				gl.glVertex3f( o, f, z);			
-				gl.glVertex3f( o, f, o);			
-				gl.glVertex3f( o, o, o);			
-				gl.glVertex3f( o, o, z);
-				
-				//RIGHT
-				gl.glColor3f(quad_color_r, quad_color_g, quad_color_b);			
-				gl.glVertex3f( x, f, o);			
-				gl.glVertex3f( x, f, z);			
-				gl.glVertex3f( x, o, z);			
-				gl.glVertex3f( x, o, o);
-			gl.glEnd();	
-		
-		//The shadow (nonfilled) element		
-		gl.glTranslatef(0.0f, f, 0.0f);		
-		
-		gl.glBegin(GL.GL_LINE_LOOP);
-			//TOP of shadow area
-			gl.glColor4f(line_color_r,line_color_g,line_color_b, lineAlpha);			
-			gl.glVertex3f( x, r, o);			
-			gl.glVertex3f( o, r, o);			
-			gl.glVertex3f( o, r, z);			
-			gl.glVertex3f( x, r, z);			
-		gl.glEnd();		
-		
-		//Bottom left out, since it's the top of the solid area
-		
-		gl.glBegin(GL.GL_LINE_LOOP);
-			//FRONT
-			gl.glColor4f(line_color_r,line_color_g,line_color_b, lineAlpha);			
-			gl.glVertex3f( x, r, z);			
-			gl.glVertex3f( o, r, z);			
-			gl.glVertex3f( o, o, z);			
-			gl.glVertex3f( x, o, z);			
-		gl.glEnd();
-		
-		gl.glBegin(GL.GL_LINE_LOOP);
-			//BACK
-			gl.glColor4f(line_color_r,line_color_g,line_color_b, lineAlpha);			
-			gl.glVertex3f( x, o, o);			
-			gl.glVertex3f( o, o, o);			
-			gl.glVertex3f( o, r, o);			
-			gl.glVertex3f( x, r, o);			
-		gl.glEnd();	
-		
-		gl.glBegin(GL.GL_LINE_LOOP);
-			//LEFT
-			gl.glColor4f(line_color_r,line_color_g,line_color_b, lineAlpha);			
-			gl.glVertex3f( o, r, z);			
-			gl.glVertex3f( o, r, o);			
-			gl.glVertex3f( o, o, o);			
-			gl.glVertex3f( o, o, z);			
-		gl.glEnd();
-		
-		gl.glBegin(GL.GL_LINE_LOOP);
-			//RIGHT
-			gl.glColor4f(line_color_r,line_color_g,line_color_b, lineAlpha);			
-			gl.glVertex3f( x, r, o);			
-			gl.glVertex3f( x, r, z);			
-			gl.glVertex3f( x, o, z);			
-			gl.glVertex3f( x, o, o);
-		gl.glEnd();
-			
-		gl.glBegin(GL.GL_QUADS);		
-			//TOP
-			gl.glColor4f(quad_color_r, quad_color_g, quad_color_b, alpha);			
-			gl.glVertex3f( x, r, o);			
-			gl.glVertex3f( o, r, o);			
-			gl.glVertex3f( o, r, z);			
-			gl.glVertex3f( x, r, z);
-			
-			//BOTTOM left out
-			
-			//FRONT
-			gl.glColor4f(quad_color_r, quad_color_g, quad_color_b, alpha);			
-			gl.glVertex3f( x, r, z);			
-			gl.glVertex3f( o, r, z);			
-			gl.glVertex3f( o, o, z);			
-			gl.glVertex3f( x, o, z);
-			
-			//BACK
-			gl.glColor4f(quad_color_r, quad_color_g, quad_color_b, alpha);			
-			gl.glVertex3f( x, o, o);			
-			gl.glVertex3f( o, o, o);			
-			gl.glVertex3f( o, r, o);			
-			gl.glVertex3f( x, r, o);
-			
-			//LEFT
-			gl.glColor4f(quad_color_r, quad_color_g, quad_color_b, alpha);			
-			gl.glVertex3f( o, r, z);			
-			gl.glVertex3f( o, r, o);			
-			gl.glVertex3f( o, o, o);			
-			gl.glVertex3f( o, o, z);
-			
-			//RIGHT
-			gl.glColor4f(quad_color_r, quad_color_g, quad_color_b, alpha);			
-			gl.glVertex3f( x, r, o);			
-			gl.glVertex3f( x, r, z);			
-			gl.glVertex3f( x, o, z);			
-			gl.glVertex3f( x, o, o);
-		gl.glEnd();
-		
-		//Restore the old modelview matrix
-		gl.glPopMatrix();
-	}
-	
-	protected void drawTube(GL gl, float length, float rC, float gC, float bC) {
-		//Save the current modelview matrix
-		gl.glPushMatrix();
-		
-		final int SIDES = 12;
-		
-		float line_color_r = 0.8f;
-		float line_color_g = 0.8f;
-		float line_color_b = 0.8f;
-		
-		float quad_color_r = rC;
-		float quad_color_g = gC;
-		float quad_color_b = bC;
-		float alpha = 0.4f;
-		
-		float radius = 0.25f /2;
-		
-		float f = 1.0f * length;
-		
-		//Rotate to align with the y axis instead of the default z axis
-		gl.glRotatef(-90.0f, 1.0f, 0.0f, 0.0f);
-		
-		//Make a new quadratic object
-		GLUquadric qobj = glu.gluNewQuadric();
-				
-		//The Solid Element
-			//Bottom disk
-			gl.glColor3f(quad_color_r, quad_color_g, quad_color_b);
-			glu.gluDisk(qobj, 0.0, radius, SIDES, 1);
-						
-			//Sides
-			glu.gluCylinder(qobj, radius, radius, f, SIDES, 1);			
-			
-			//Edge of bottom disk
-			gl.glColor3f(line_color_r, line_color_g, line_color_b);
-			glu.gluCylinder(qobj, radius, radius, 0.01f, SIDES, 1);
-			
-			gl.glTranslatef(0.0f, 0.0f, f);
-			
-			//Top disk
-			gl.glColor3f(quad_color_r, quad_color_g, quad_color_b);
-			glu.gluDisk(qobj, 0.0, radius, SIDES, 1);
-			
-			//Edge of top disk
-			gl.glColor3f(line_color_r, line_color_g, line_color_b);
-			glu.gluCylinder(qobj, radius, radius, 0.01f, SIDES, 1);
-		
-		//The shadow Element				
-			//Bottom disk left out, since it's the top disk of the solid
-										
-			//Sides
-			gl.glColor4f(quad_color_r, quad_color_g, quad_color_b, alpha);
-			glu.gluCylinder(qobj, radius, radius, 1.0f-f, SIDES, 1);			
-			
-			//Edge of bottom disk also left out
-						
-			gl.glTranslatef(0.0f, 0.0f, 1.0f-f);
-			
-			//Top disk
-			gl.glColor4f(quad_color_r, quad_color_g, quad_color_b, alpha);
-			glu.gluDisk(qobj, 0.0, radius, SIDES, 1);
-			
-			//Edge of top disk
-			gl.glColor4f(line_color_r, line_color_g, line_color_b, alpha);
-			glu.gluCylinder(qobj, radius, radius, 0.01f, SIDES, 1);		
-		
-		//Cleanup
-		glu.gluDeleteQuadric(qobj);
-		
-		//Restore the old modelview matrix
-		gl.glPopMatrix();
-	}
+	}	
 
 	/**
 	 * reshape() specifies what happens when the user reshapes
@@ -594,6 +306,14 @@ class Junglevision implements GLEventListener {
 		viewTranslation = newViewTranslation;
 	}
 	
+	public Float[] getTranslation() {
+		Float[] translation = new Float[3];
+		translation[0] = viewTranslation[0];
+		translation[1] = viewTranslation[1];
+		translation[2] = viewTranslation[2];
+		return translation;
+	}
+	
 	public void setViewDist(float newViewDist) {
 		viewDist = newViewDist;
 	}
@@ -601,6 +321,14 @@ class Junglevision implements GLEventListener {
 	public void doPickRequest(Point p) {
 		pickRequest = true;
 		pickPoint = p;
+	}
+	
+	public void doUpdateRequest() {
+		updateRequest = true;
+	}
+	
+	public void doRecenterRequest() {
+		recenterRequest = true;
 	}
 
 	/**
