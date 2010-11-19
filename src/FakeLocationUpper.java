@@ -14,7 +14,7 @@ public class FakeLocationUpper {
 	FakeLocationUpper(Junglevision jv, GLU glu, int numberOfLocations) {		
 		this.locations = new FakeLocationLower[numberOfLocations];
 		this.location = new Float[3];		
-		this.currentShape = Shape.CUBE;
+		this.currentShape = Shape.SPHERE;
 		this.maxChildWidth  = 0.0f;
 		this.maxChildHeight = 0.0f;
 		
@@ -84,9 +84,9 @@ public class FakeLocationUpper {
 			
 			for (int k=0;k<locations.length;k++) {
 				r = Math.sqrt(1-(z*z));
-				pt[k][0] = location[0] + 4*((float) (Math.cos(olong)*r));
-				pt[k][1] = location[1] + 4*((float) (Math.sin(olong)*r));
-				pt[k][2] = location[2] + 4*((float) z);
+				pt[k][0] = location[0] + 40*((float) (Math.cos(olong)*r));
+				pt[k][1] = location[1] + 40*((float) (Math.sin(olong)*r));
+				pt[k][2] = location[2] + 40*((float) z);
 				z = z -dz;
 				olong = olong +dlong;				
 			}	

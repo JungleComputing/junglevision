@@ -84,7 +84,7 @@ class Junglevision implements GLEventListener {
 		namesToVisuals = new HashMap<Integer, FakeMetric>();
 				
 		//Universe initializers
-		location = new FakeLocationUpper(this, glu, 27);
+		location = new FakeLocationUpper(this, glu, 100);
 		Float[] initialLocation = {0.0f,0.0f,0.0f};
 		location.setLocation(initialLocation);
 		
