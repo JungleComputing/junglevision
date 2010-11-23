@@ -91,9 +91,7 @@ public class FakeLocationLower {
 			int rows 		= (int)Math.ceil(Math.pow(metricsCount,  (1.0/3.0)));
 			int columns 	= (int)Math.ceil(Math.pow(metricsCount, (1.0/3.0)));
 			int layers		= (int)Math.floor(Math.pow(metricsCount, (1.0/3.0)));
-			
-			System.out.println("rows "+rows+" columns "+ columns + " layers "+ layers);
-			
+						
 			float xzShiftPerChild = maxChildWidth  + SEPARATION;
 			float yShiftPerChild  = maxChildHeight + SEPARATION;
 			
@@ -105,7 +103,7 @@ public class FakeLocationLower {
 			
 			Float[] metricLocation = new Float[3];
 			
-			int row = 0, column = 0, layer = 0, i = 0;
+			int row = 0, column = 0, layer = 0;
 			for (FakeIbis node : ibises) {								
 				if (row == rows) {
 					row = 0;

@@ -97,12 +97,12 @@ public class MouseHandler implements MouseListener, MouseMotionListener, MouseWh
 			p.setRotation(rotation);
 		} else if (SwingUtilities.isLeftMouseButton(e)) {			
 			// y direction reversed because window coordinates are read from top to bottom
-			translationX =  ((e.getPoint().x - dragLeftXorigin)*dragCoefficient + translationXorigin);
-			translationY = -((e.getPoint().y - dragLeftYorigin)*dragCoefficient + translationYorigin);
-			translation[0] = translationX;				 
-			translation[1] = translationY;
-			translation[2] = 0.0f;
-			p.setTranslation(translation);
+			//translationX =  ((e.getPoint().x - dragLeftXorigin)*dragCoefficient + translationXorigin);
+			//translationY = -((e.getPoint().y - dragLeftYorigin)*dragCoefficient + translationYorigin);
+			//translation[0] = translationX;				 
+			//translation[1] = translationY;
+			//translation[2] = 0.0f;
+			//p.setTranslation(translation);
 		}
 	}
 
@@ -112,6 +112,8 @@ public class MouseHandler implements MouseListener, MouseMotionListener, MouseWh
 
 	public void mouseWheelMoved(MouseWheelEvent e) {	
 		viewDist += e.getWheelRotation();
+		if (viewDist > 0) { viewDist = 0; }
+		
 		dragCoefficient = 100* 1/(100 - viewDist);
 		
 		//System.out.println("viewdist "+ viewDist + " dragCoefficient " + dragCoefficient);

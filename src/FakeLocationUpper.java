@@ -14,7 +14,7 @@ public class FakeLocationUpper {
 	FakeLocationUpper(Junglevision jv, GLU glu, int numberOfLocations) {		
 		this.locations = new FakeLocationLower[numberOfLocations];
 		this.location = new Float[3];		
-		this.currentShape = Shape.CITYSCAPE;
+		this.currentShape = Shape.CUBE;
 		this.maxChildWidth  = 0.0f;
 		this.maxChildHeight = 0.0f;
 		
@@ -115,7 +115,7 @@ public class FakeLocationUpper {
 			
 			Float[] metricLocation = new Float[3];
 			
-			int row = 0, column = 0, layer = 0, i = 0;
+			int row = 0, column = 0, layer = 0;
 			for (FakeLocationLower location : locations) {								
 				if (row == rows) {
 					row = 0;
