@@ -3,6 +3,7 @@ import javax.media.opengl.glu.GLU;
 import javax.media.opengl.glu.GLUquadric;
 
 public class FakeMetric {
+	private static final boolean DISPLAYLISTS = true;
 	private GLU glu;
 	
 	public enum Shape { BAR, TUBE }  
@@ -11,6 +12,7 @@ public class FakeMetric {
 	private Shape currentShape;
 	private float currentValue;
 	private int glName;
+	private int[] barPointer;
 	
 	FakeMetric(Junglevision jv, GLU glu, Float[] color) {
 		this.glu = glu;		
@@ -18,6 +20,7 @@ public class FakeMetric {
 		this.color = color;
 		this.currentShape = Shape.BAR;
 		this.currentValue = 0.0f;
+		this.barPointer = jv.getBarPointer();
 		
 		glName = jv.registerGLName(this);
 	}
@@ -60,34 +63,49 @@ public class FakeMetric {
 		//Save the current modelview matrix
 		gl.glPushMatrix();
 		
-		//use nice variables, so that the ogl code is readable
-		float o = 0.0f;			//(o)rigin
-		float x = 0.25f;		//(x) maximum coordinate
-		float y = 1.0f;			//(y) maximum coordinate
-		float z = 0.25f;		//(z) maximum coordinate	
-		float f = length * y; 	//(f)illed area
-		float r = y - f;		//(r)est area (non-filled, up until the maximum) 
-		float alpha = 0.4f;
-		
-		//Transparency
-		float lineAlpha = alpha;
-		
-		//Color for the lines around the box
-		float line_color_r = 0.8f;
-		float line_color_g = 0.8f;
-		float line_color_b = 0.8f;
-					
-		float quad_color_r = color[0];
-		float quad_color_g = color[1];
-		float quad_color_b = color[2];
-								
-		//Translate to the desired coordinates
-		gl.glTranslatef(location[0], location[1], location[2]);
-		
-		//Center the drawing startpoint
-		gl.glTranslatef(-0.5f*x, -0.5f*y, -0.5f*z);	
-		
-		//The solid Element
+		if (DISPLAYLISTS) {
+			
+			//Translate to the desired coordinates
+			gl.glTranslatef(location[0], location[1], location[2]);
+	
+			int whichBar = (int) Math.floor(length*barPointer.length)/2;
+			if (length >= 0.95f) {
+				whichBar = (barPointer.length/2)-1;
+			}
+	
+			gl.glColor4f(color[0], color[1], color[2], 1.0f);
+			gl.glCallList(barPointer[(whichBar*2)]); 
+			gl.glColor4f(color[0], color[1], color[2], 0.4f);
+			gl.glCallList(barPointer[(whichBar*2)+1]);
+		} else {
+			//use nice variables, so that the ogl code is readable
+			float o = 0.0f;			//(o)rigin
+			float x = 0.25f;		//(x) maximum coordinate
+			float y = 1.0f;			//(y) maximum coordinate
+			float z = 0.25f;		//(z) maximum coordinate	
+			float f = length * y; 	//(f)illed area
+			float r = y - f;		//(r)est area (non-filled, up until the maximum) 
+			float alpha = 0.4f;
+			
+			//Transparency
+			float lineAlpha = alpha;
+			
+			//Color for the lines around the box
+			float line_color_r = 0.8f;
+			float line_color_g = 0.8f;
+			float line_color_b = 0.8f;
+						
+			float quad_color_r = color[0];
+			float quad_color_g = color[1];
+			float quad_color_b = color[2];
+									
+			//Translate to the desired coordinates
+			gl.glTranslatef(location[0], location[1], location[2]);
+			 
+			//Center the drawing startpoint
+			gl.glTranslatef(-0.5f*x, -0.5f*y, -0.5f*z);	
+						
+			//The solid Element
 			gl.glBegin(GL.GL_LINE_LOOP);
 				//TOP of filled area
 				gl.glColor3f(line_color_r,line_color_g,line_color_b);			
@@ -185,95 +203,96 @@ public class FakeMetric {
 				gl.glVertex3f( x, o, z);			
 				gl.glVertex3f( x, o, o);
 			gl.glEnd();	
-		
-		//The shadow (nonfilled) element		
-		gl.glTranslatef(0.0f, f, 0.0f);		
-		
-		gl.glBegin(GL.GL_LINE_LOOP);
-			//TOP of shadow area
-			gl.glColor4f(line_color_r,line_color_g,line_color_b, lineAlpha);			
-			gl.glVertex3f( x, r, o);			
-			gl.glVertex3f( o, r, o);			
-			gl.glVertex3f( o, r, z);			
-			gl.glVertex3f( x, r, z);			
-		gl.glEnd();		
-		
-		//Bottom left out, since it's the top of the solid area
-		
-		gl.glBegin(GL.GL_LINE_LOOP);
-			//FRONT
-			gl.glColor4f(line_color_r,line_color_g,line_color_b, lineAlpha);			
-			gl.glVertex3f( x, r, z);			
-			gl.glVertex3f( o, r, z);			
-			gl.glVertex3f( o, o, z);			
-			gl.glVertex3f( x, o, z);			
-		gl.glEnd();
-		
-		gl.glBegin(GL.GL_LINE_LOOP);
-			//BACK
-			gl.glColor4f(line_color_r,line_color_g,line_color_b, lineAlpha);			
-			gl.glVertex3f( x, o, o);			
-			gl.glVertex3f( o, o, o);			
-			gl.glVertex3f( o, r, o);			
-			gl.glVertex3f( x, r, o);			
-		gl.glEnd();	
-		
-		gl.glBegin(GL.GL_LINE_LOOP);
-			//LEFT
-			gl.glColor4f(line_color_r,line_color_g,line_color_b, lineAlpha);			
-			gl.glVertex3f( o, r, z);			
-			gl.glVertex3f( o, r, o);			
-			gl.glVertex3f( o, o, o);			
-			gl.glVertex3f( o, o, z);			
-		gl.glEnd();
-		
-		gl.glBegin(GL.GL_LINE_LOOP);
-			//RIGHT
-			gl.glColor4f(line_color_r,line_color_g,line_color_b, lineAlpha);			
-			gl.glVertex3f( x, r, o);			
-			gl.glVertex3f( x, r, z);			
-			gl.glVertex3f( x, o, z);			
-			gl.glVertex3f( x, o, o);
-		gl.glEnd();
+					
+			gl.glTranslatef(0.0f, f, 0.0f);		
 			
-		gl.glBegin(GL.GL_QUADS);		
-			//TOP
-			gl.glColor4f(quad_color_r, quad_color_g, quad_color_b, alpha);			
-			gl.glVertex3f( x, r, o);			
-			gl.glVertex3f( o, r, o);			
-			gl.glVertex3f( o, r, z);			
-			gl.glVertex3f( x, r, z);
+			gl.glBegin(GL.GL_LINE_LOOP);
+				//TOP of shadow area
+				gl.glColor4f(line_color_r,line_color_g,line_color_b, lineAlpha);			
+				gl.glVertex3f( x, r, o);			
+				gl.glVertex3f( o, r, o);			
+				gl.glVertex3f( o, r, z);			
+				gl.glVertex3f( x, r, z);			
+			gl.glEnd();		
 			
-			//BOTTOM left out
+			//Bottom left out, since it's the top of the solid area
 			
-			//FRONT
-			gl.glColor4f(quad_color_r, quad_color_g, quad_color_b, alpha);			
-			gl.glVertex3f( x, r, z);			
-			gl.glVertex3f( o, r, z);			
-			gl.glVertex3f( o, o, z);			
-			gl.glVertex3f( x, o, z);
+			gl.glBegin(GL.GL_LINE_LOOP);
+				//FRONT
+				gl.glColor4f(line_color_r,line_color_g,line_color_b, lineAlpha);			
+				gl.glVertex3f( x, r, z);			
+				gl.glVertex3f( o, r, z);			
+				gl.glVertex3f( o, o, z);			
+				gl.glVertex3f( x, o, z);			
+			gl.glEnd();
 			
-			//BACK
-			gl.glColor4f(quad_color_r, quad_color_g, quad_color_b, alpha);			
-			gl.glVertex3f( x, o, o);			
-			gl.glVertex3f( o, o, o);			
-			gl.glVertex3f( o, r, o);			
-			gl.glVertex3f( x, r, o);
+			gl.glBegin(GL.GL_LINE_LOOP);
+				//BACK
+				gl.glColor4f(line_color_r,line_color_g,line_color_b, lineAlpha);			
+				gl.glVertex3f( x, o, o);			
+				gl.glVertex3f( o, o, o);			
+				gl.glVertex3f( o, r, o);			
+				gl.glVertex3f( x, r, o);			
+			gl.glEnd();	
 			
-			//LEFT
-			gl.glColor4f(quad_color_r, quad_color_g, quad_color_b, alpha);			
-			gl.glVertex3f( o, r, z);			
-			gl.glVertex3f( o, r, o);			
-			gl.glVertex3f( o, o, o);			
-			gl.glVertex3f( o, o, z);
+			gl.glBegin(GL.GL_LINE_LOOP);
+				//LEFT
+				gl.glColor4f(line_color_r,line_color_g,line_color_b, lineAlpha);			
+				gl.glVertex3f( o, r, z);			
+				gl.glVertex3f( o, r, o);			
+				gl.glVertex3f( o, o, o);			
+				gl.glVertex3f( o, o, z);			
+			gl.glEnd();
 			
-			//RIGHT
-			gl.glColor4f(quad_color_r, quad_color_g, quad_color_b, alpha);			
-			gl.glVertex3f( x, r, o);			
-			gl.glVertex3f( x, r, z);			
-			gl.glVertex3f( x, o, z);			
-			gl.glVertex3f( x, o, o);
-		gl.glEnd();
+			gl.glBegin(GL.GL_LINE_LOOP);
+				//RIGHT
+				gl.glColor4f(line_color_r,line_color_g,line_color_b, lineAlpha);			
+				gl.glVertex3f( x, r, o);			
+				gl.glVertex3f( x, r, z);			
+				gl.glVertex3f( x, o, z);			
+				gl.glVertex3f( x, o, o);
+			gl.glEnd();
+				
+			gl.glBegin(GL.GL_QUADS);		
+				//TOP
+				gl.glColor4f(quad_color_r, quad_color_g, quad_color_b, alpha);			
+				gl.glVertex3f( x, r, o);			
+				gl.glVertex3f( o, r, o);			
+				gl.glVertex3f( o, r, z);			
+				gl.glVertex3f( x, r, z);
+				
+				//BOTTOM left out
+				
+				//FRONT
+				gl.glColor4f(quad_color_r, quad_color_g, quad_color_b, alpha);			
+				gl.glVertex3f( x, r, z);			
+				gl.glVertex3f( o, r, z);			
+				gl.glVertex3f( o, o, z);			
+				gl.glVertex3f( x, o, z);
+				
+				//BACK
+				gl.glColor4f(quad_color_r, quad_color_g, quad_color_b, alpha);			
+				gl.glVertex3f( x, o, o);			
+				gl.glVertex3f( o, o, o);			
+				gl.glVertex3f( o, r, o);			
+				gl.glVertex3f( x, r, o);
+				
+				//LEFT
+				gl.glColor4f(quad_color_r, quad_color_g, quad_color_b, alpha);			
+				gl.glVertex3f( o, r, z);			
+				gl.glVertex3f( o, r, o);			
+				gl.glVertex3f( o, o, o);			
+				gl.glVertex3f( o, o, z);
+				
+				//RIGHT
+				gl.glColor4f(quad_color_r, quad_color_g, quad_color_b, alpha);			
+				gl.glVertex3f( x, r, o);			
+				gl.glVertex3f( x, r, z);			
+				gl.glVertex3f( x, o, z);			
+				gl.glVertex3f( x, o, o);
+			gl.glEnd();
+		}	
+		
 		
 		//Restore the old modelview matrix
 		gl.glPopMatrix();

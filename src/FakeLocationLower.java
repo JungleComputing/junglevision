@@ -15,7 +15,7 @@ public class FakeLocationLower {
 	FakeLocationLower(Junglevision jv, GLU glu, int numberOfIbises) {		
 		this.ibises = new FakeIbis[numberOfIbises];
 		this.location = new Float[3];		
-		this.currentShape = Shape.SPHERE;
+		this.currentShape = Shape.CUBE;
 		this.maxChildWidth  = 0.0f;
 		this.maxChildHeight = 0.0f;
 		

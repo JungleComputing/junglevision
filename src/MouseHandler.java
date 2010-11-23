@@ -114,7 +114,7 @@ public class MouseHandler implements MouseListener, MouseMotionListener, MouseWh
 		viewDist += e.getWheelRotation();
 		dragCoefficient = 100* 1/(100 - viewDist);
 		
-		System.out.println("viewdist "+ viewDist + " dragCoefficient " + dragCoefficient);
+		//System.out.println("viewdist "+ viewDist + " dragCoefficient " + dragCoefficient);
 		p.setViewDist(viewDist);
 	}
 

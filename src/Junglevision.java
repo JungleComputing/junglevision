@@ -8,9 +8,11 @@ import javax.media.opengl.glu.GLU;
 
 import com.sun.opengl.util.BufferUtil;
 import com.sun.opengl.util.FPSAnimator;
+import com.sun.opengl.util.GLUT;
 
 class Junglevision implements GLEventListener {	
     GLU glu = new GLU();
+    GLUT glut = new GLUT();
     MouseHandler mouseHandler;
     
     //Perspective variables 
@@ -27,7 +29,13 @@ class Junglevision implements GLEventListener {
     private HashMap<Integer, FakeMetric> namesToVisuals;
     
     //Universe
+    private int barPointer[];
     private FakeLocationUpper location;
+    
+    //FPS counter
+    private long timeStart;
+    private double[] fpsList;    
+    private int fpsPointer;
 
     /**
      * Constructor for your program, this sets up the
@@ -82,11 +90,9 @@ class Junglevision implements GLEventListener {
 		recenterRequest = false;
 		pickPoint = new Point();
 		namesToVisuals = new HashMap<Integer, FakeMetric>();
-				
-		//Universe initializers
-		location = new FakeLocationUpper(this, glu, 100);
-		Float[] initialLocation = {0.0f,0.0f,0.0f};
-		location.setLocation(initialLocation);
+		barPointer = new int[40]; //ALWAYS AN EVEN NUMBER!
+		fpsList = new double[60];
+		fpsPointer = 0;
 		
 		//Visual updater definition
 		FakeUpdater updater = new FakeUpdater(this);
@@ -119,6 +125,11 @@ class Junglevision implements GLEventListener {
 		//Enable Blending (needed for both Transparency and Anti-Aliasing
 		gl.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA);				
 		gl.glEnable(GL.GL_BLEND);
+		
+		//Lighting test
+		//gl.glEnable(GL.GL_LIGHT0);
+	    //gl.glEnable(GL.GL_LIGHTING);
+		gl.glEnable(GL.GL_COLOR_MATERIAL);
 				
 		//General hint for optimum color quality
 		gl.glHint(GL.GL_PERSPECTIVE_CORRECTION_HINT, GL.GL_NICEST);
@@ -127,13 +138,238 @@ class Junglevision implements GLEventListener {
 		gl.setSwapInterval(1);
 		
 		//Set black as background color
-	    gl.glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+	    gl.glClearColor(0.0f, 0.0f, 0.0f, 0.0f);	 
+	    
+	    //Initialize display lists
+	    buildLists(gl, barPointer.length);
+				
+		//Universe initializers
+		location = new FakeLocationUpper(this, glu, 50);
+		Float[] initialLocation = {0.0f,0.0f,0.0f};
+		location.setLocation(initialLocation);
+	    
+	    //Start the timer for the FPS counter
+	    timeStart = System.currentTimeMillis();
 	    
 	    //and set the matrix mode to the modelview matrix in the end
 	    gl.glMatrixMode(GL.GL_MODELVIEW);
 	    gl.glLoadIdentity();
 	}
-
+	
+	private void buildLists(GL gl, int amount) {
+		final float WIDTH = 0.25f;
+		final float HEIGHT = 1.0f;
+		
+		float 	Xn = -0.5f*WIDTH,
+				Xp =  0.5f*WIDTH,
+				Yn = -0.5f*HEIGHT,
+				Yp =  0.5f*HEIGHT,
+				Zn = -0.5f*WIDTH,
+				Zp =  0.5f*WIDTH;
+		
+		float Yf = 0.0f;
+				
+		barPointer[0] = gl.glGenLists(amount);
+		
+		for (int i=0; i<amount; i+=2) {
+			barPointer[i] = barPointer[0]+i;
+			barPointer[i+1] = barPointer[0]+i+1;
+			
+			Yf = ((HEIGHT/amount)*i)-(0.5f*HEIGHT);
+			
+			//The solid area
+			gl.glNewList(barPointer[i], GL.GL_COMPILE);
+				gl.glBegin(GL.GL_QUADS);					
+					//TOP
+					gl.glVertex3f( Xn, Yf, Zn);
+					gl.glVertex3f( Xn, Yf, Zp);
+					gl.glVertex3f( Xp, Yf, Zp);
+					gl.glVertex3f( Xp, Yf, Zn);
+					
+					//BOTTOM
+					gl.glVertex3f( Xn, Yn, Zn);
+					gl.glVertex3f( Xp, Yn, Zn);
+					gl.glVertex3f( Xp, Yn, Zp);
+					gl.glVertex3f( Xn, Yn, Zp);
+					
+					//FRONT
+					gl.glVertex3f( Xn, Yf, Zp);
+					gl.glVertex3f( Xn, Yn, Zp);
+					gl.glVertex3f( Xp, Yn, Zp);
+					gl.glVertex3f( Xp, Yf, Zp);
+					
+					//BACK
+					gl.glVertex3f( Xp, Yf, Zn);
+					gl.glVertex3f( Xp, Yn, Zn);
+					gl.glVertex3f( Xn, Yn, Zn);
+					gl.glVertex3f( Xn, Yf, Zn);
+					
+					//LEFT
+					gl.glVertex3f( Xn, Yf, Zn);
+					gl.glVertex3f( Xn, Yn, Zn);
+					gl.glVertex3f( Xn, Yn, Zp);
+					gl.glVertex3f( Xn, Yf, Zp);
+					
+					//RIGHT
+					gl.glVertex3f( Xp, Yf, Zp);
+					gl.glVertex3f( Xp, Yn, Zp);
+					gl.glVertex3f( Xp, Yn, Zn);
+					gl.glVertex3f( Xp, Yf, Zn);
+				gl.glEnd();
+				
+				gl.glBegin(GL.GL_LINE_LOOP);
+					gl.glColor3f(0.8f,0.8f,0.8f);
+					//TOP
+					gl.glVertex3f( Xn, Yf, Zn);
+					gl.glVertex3f( Xn, Yf, Zp);
+					gl.glVertex3f( Xp, Yf, Zp);
+					gl.glVertex3f( Xp, Yf, Zn);
+				gl.glEnd();
+				
+				gl.glBegin(GL.GL_LINE_LOOP);
+					gl.glColor3f(0.8f,0.8f,0.8f);
+					//BOTTOM
+					gl.glVertex3f( Xn, Yn, Zn);
+					gl.glVertex3f( Xp, Yn, Zn);
+					gl.glVertex3f( Xp, Yn, Zp);
+					gl.glVertex3f( Xn, Yn, Zp);
+				gl.glEnd();
+				
+				gl.glBegin(GL.GL_LINE_LOOP);
+					gl.glColor3f(0.8f,0.8f,0.8f);
+					//FRONT
+					gl.glVertex3f( Xn, Yf, Zp);
+					gl.glVertex3f( Xn, Yn, Zp);
+					gl.glVertex3f( Xp, Yn, Zp);
+					gl.glVertex3f( Xp, Yf, Zp);
+				gl.glEnd();
+				
+				gl.glBegin(GL.GL_LINE_LOOP);
+					gl.glColor3f(0.8f,0.8f,0.8f);
+					//BACK
+					gl.glVertex3f( Xp, Yf, Zn);
+					gl.glVertex3f( Xp, Yn, Zn);
+					gl.glVertex3f( Xn, Yn, Zn);
+					gl.glVertex3f( Xn, Yf, Zn);
+				gl.glEnd();
+				
+				gl.glBegin(GL.GL_LINE_LOOP);
+					gl.glColor3f(0.8f,0.8f,0.8f);
+					//LEFT
+					gl.glVertex3f( Xn, Yf, Zn);
+					gl.glVertex3f( Xn, Yn, Zn);
+					gl.glVertex3f( Xn, Yn, Zp);
+					gl.glVertex3f( Xn, Yf, Zp);
+				gl.glEnd();
+				
+				gl.glBegin(GL.GL_LINE_LOOP);
+					gl.glColor3f(0.8f,0.8f,0.8f);
+					//RIGHT
+					gl.glVertex3f( Xp, Yf, Zp);
+					gl.glVertex3f( Xp, Yn, Zp);
+					gl.glVertex3f( Xp, Yn, Zn);
+					gl.glVertex3f( Xp, Yf, Zn);
+				gl.glEnd();
+			gl.glEndList();	
+			
+			//The transparent area
+			gl.glNewList(barPointer[i+1], GL.GL_COMPILE);
+				gl.glBegin(GL.GL_QUADS);					
+					//TOP
+					gl.glVertex3f( Xn, Yp, Zn);
+					gl.glVertex3f( Xn, Yp, Zp);
+					gl.glVertex3f( Xp, Yp, Zp);
+					gl.glVertex3f( Xp, Yp, Zn);
+					
+					//BOTTOM LEFT OUT
+					//gl.glVertex3f( Xn, Yn, Zn);
+					//gl.glVertex3f( Xp, Yn, Zn);
+					//gl.glVertex3f( Xp, Yn, Zp);
+					//gl.glVertex3f( Xn, Yn, Zp);
+					
+					//FRONT
+					gl.glVertex3f( Xn, Yp, Zp);
+					gl.glVertex3f( Xn, Yf, Zp);
+					gl.glVertex3f( Xp, Yf, Zp);
+					gl.glVertex3f( Xp, Yp, Zp);
+					
+					//BACK
+					gl.glVertex3f( Xp, Yp, Zn);
+					gl.glVertex3f( Xp, Yf, Zn);
+					gl.glVertex3f( Xn, Yf, Zn);
+					gl.glVertex3f( Xn, Yp, Zn);
+					
+					//LEFT
+					gl.glVertex3f( Xn, Yp, Zn);
+					gl.glVertex3f( Xn, Yf, Zn);
+					gl.glVertex3f( Xn, Yf, Zp);
+					gl.glVertex3f( Xn, Yp, Zp);
+					
+					//RIGHT
+					gl.glVertex3f( Xp, Yp, Zp);
+					gl.glVertex3f( Xp, Yf, Zp);
+					gl.glVertex3f( Xp, Yf, Zn);
+					gl.glVertex3f( Xp, Yp, Zn);
+				gl.glEnd();
+				
+				gl.glBegin(GL.GL_LINE_LOOP);
+					gl.glColor3f(0.8f,0.8f,0.8f);
+					//TOP
+					gl.glVertex3f( Xn, Yp, Zn);
+					gl.glVertex3f( Xn, Yp, Zp);
+					gl.glVertex3f( Xp, Yp, Zp);
+					gl.glVertex3f( Xp, Yp, Zn);
+				gl.glEnd();
+				
+				//gl.glBegin(GL.GL_LINE_LOOP);
+					//gl.glColor3f(0.8f,0.8f,0.8f);
+					//BOTTOM LEFT OUT
+					//gl.glVertex3f( Xn, Yn, Zn);
+					//gl.glVertex3f( Xp, Yn, Zn);
+					//gl.glVertex3f( Xp, Yn, Zp);
+					//gl.glVertex3f( Xn, Yn, Zp);
+				//gl.glEnd();
+				
+				gl.glBegin(GL.GL_LINE_LOOP);
+					gl.glColor3f(0.8f,0.8f,0.8f);
+					//FRONT
+					gl.glVertex3f( Xn, Yp, Zp);
+					gl.glVertex3f( Xn, Yf, Zp);
+					gl.glVertex3f( Xp, Yf, Zp);
+					gl.glVertex3f( Xp, Yp, Zp);
+				gl.glEnd();
+				
+				gl.glBegin(GL.GL_LINE_LOOP);
+					gl.glColor3f(0.8f,0.8f,0.8f);
+					//BACK
+					gl.glVertex3f( Xp, Yp, Zn);
+					gl.glVertex3f( Xp, Yf, Zn);
+					gl.glVertex3f( Xn, Yf, Zn);
+					gl.glVertex3f( Xn, Yp, Zn);
+				gl.glEnd();
+				
+				gl.glBegin(GL.GL_LINE_LOOP);
+					gl.glColor3f(0.8f,0.8f,0.8f);
+					//LEFT
+					gl.glVertex3f( Xn, Yp, Zn);
+					gl.glVertex3f( Xn, Yf, Zn);
+					gl.glVertex3f( Xn, Yf, Zp);
+					gl.glVertex3f( Xn, Yp, Zp);
+				gl.glEnd();
+				
+				gl.glBegin(GL.GL_LINE_LOOP);
+					gl.glColor3f(0.8f,0.8f,0.8f);
+					//RIGHT
+					gl.glVertex3f( Xp, Yp, Zp);
+					gl.glVertex3f( Xp, Yf, Zp);
+					gl.glVertex3f( Xp, Yf, Zn);
+					gl.glVertex3f( Xp, Yp, Zn);
+				gl.glEnd();
+			gl.glEndList();
+		}
+	}
+	
+	
 	/**
 	 * display() will be called repeatedly by the Animator
 	 * when Animator is done it will swap buffers and update
@@ -148,13 +384,16 @@ class Junglevision implements GLEventListener {
 	    //Reset the modelview matrix
 	    gl.glLoadIdentity();
 	    
-	    //Change the view according to mouse input	    
+	    //Change the view according to mouse input
 		gl.glTranslatef(viewTranslation[0], viewTranslation[1], viewDist);
 		gl.glRotatef(viewRotation[0], 1,0,0);
-		gl.glRotatef(viewRotation[1], 0,1,0);		
+		gl.glRotatef(viewRotation[1], 0,1,0);
 		
 		//Draw the current state of the universe
 		drawUniverse(gl, GL.GL_RENDER, selectedItem);
+		
+		//Draw the Heads Up Display
+		drawHud(gl);
 		
 		//Start the rendering process so that it runs in parallel with the 
 		//computations we need to do for the NEXT frame
@@ -191,6 +430,31 @@ class Junglevision implements GLEventListener {
 	
 	private void drawUniverse(GL gl, int renderMode, int selectedItem) {
 		location.drawThis(gl, renderMode, selectedItem);
+	}
+	
+	private void drawHud(GL gl) {		
+		long timeCurrent = System.currentTimeMillis();
+		long timeElapsed = timeCurrent - timeStart;
+		timeStart = timeCurrent;
+		
+		fpsList[fpsPointer] = (double) 1 / (timeElapsed / (double) 1000); 
+		fpsPointer++;
+		fpsPointer = fpsPointer % fpsList.length;
+				
+		double total = (double) 0;
+		for (int i=0; i<fpsList.length; i++) {
+			total += fpsList[i];
+		}
+		
+		double fps = total / fpsList.length;
+		
+		gl.glLoadIdentity();
+		gl.glTranslatef(0.0f, 0.0f, -1.0f);
+		
+		gl.glColor3f(1.0f,1.0f,1.0f);
+		
+		gl.glRasterPos2f(0.45f, -0.35f);
+		glut.glutBitmapString(GLUT.BITMAP_HELVETICA_18, "FPS: " + fps);				
 	}
 	
 	private int pick(GL gl, Point pickPoint) {
@@ -329,6 +593,10 @@ class Junglevision implements GLEventListener {
 	
 	public void doRecenterRequest() {
 		recenterRequest = true;
+	}
+	
+	public int[] getBarPointer() {
+		return barPointer;
 	}
 
 	/**
