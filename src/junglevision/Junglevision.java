@@ -1,3 +1,5 @@
+package junglevision;
+
 import java.awt.*;
 import java.awt.event.*;
 import java.nio.IntBuffer;
@@ -6,11 +8,15 @@ import java.util.HashMap;
 import javax.media.opengl.*;
 import javax.media.opengl.glu.GLU;
 
+import junglevision.visuals.FakeLocationUpper;
+import junglevision.visuals.FakeMetric;
+
+
 import com.sun.opengl.util.BufferUtil;
 import com.sun.opengl.util.FPSAnimator;
 import com.sun.opengl.util.GLUT;
 
-class Junglevision implements GLEventListener {	
+public class Junglevision implements GLEventListener {	
     GLU glu = new GLU();
     GLUT glut = new GLUT();
     MouseHandler mouseHandler;
@@ -148,7 +154,7 @@ class Junglevision implements GLEventListener {
 	    barPointer = listBuilder.getBarPointers();
 				
 		//Universe initializers
-		location = new FakeLocationUpper(this, glu, 8);		
+		location = new FakeLocationUpper(this, glu, 100);		
 		location.setLocation(m.getCurrentLocation());
 	    
 	    //Start the timer for the FPS counter
@@ -172,7 +178,7 @@ class Junglevision implements GLEventListener {
 	    gl.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT);
 	    		
 		//Draw the current state of the universe
-		drawUniverse(gl, GL.GL_RENDER, selectedItem);
+		drawUniverse(gl, GL.GL_RENDER);
 		
 		//Draw the Heads Up Display
 		drawHud(gl);
@@ -185,8 +191,6 @@ class Junglevision implements GLEventListener {
 		if (pickRequest) {
 			selectedItem = pick(gl, pickPoint);
 			pickRequest = false;
-			
-			System.out.println("picked: " + selectedItem);
 		}
 		if (recenterRequest) {
 			if (namesToVisuals.get(selectedItem) != null) {
@@ -210,7 +214,7 @@ class Junglevision implements GLEventListener {
 		
 	}
 	
-	private void drawUniverse(GL gl, int renderMode, int selectedItem) {
+	private void drawUniverse(GL gl, int renderMode) {
 		//Reset the modelview matrix
 	    gl.glLoadIdentity();
 	    
@@ -219,7 +223,7 @@ class Junglevision implements GLEventListener {
 		gl.glRotatef(viewRotation[0], 1,0,0);
 		gl.glRotatef(viewRotation[1], 0,1,0);
 		
-		location.drawThis(gl, renderMode, selectedItem);
+		location.drawThis(gl, renderMode);
 	}
 	
 	private void drawHud(GL gl) {		
@@ -280,7 +284,7 @@ class Junglevision implements GLEventListener {
 	    
 	    //Draw the models in selection mode
 	    gl.glMatrixMode(GL.GL_MODELVIEW);	    
-	    drawUniverse(gl, GL.GL_SELECT, selectedItem);
+	    drawUniverse(gl, GL.GL_SELECT);
 	    
 	    //Restore the original projection matrix
 	    gl.glMatrixMode(GL.GL_PROJECTION);
@@ -298,7 +302,7 @@ class Junglevision implements GLEventListener {
 	    return selection;
 	}
 	
-	int registerGLName(FakeMetric metric) {
+	public int registerGLName(FakeMetric metric) {
 		int key = namesToVisuals.size();
 		namesToVisuals.put(key, metric);
 		return key;		

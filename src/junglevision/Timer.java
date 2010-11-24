@@ -1,5 +1,6 @@
+package junglevision;
 
-public class Timer implements Runnable{
+public class Timer implements Runnable {
 	private Mover m;
 	
 	private long startTime = 0;

@@ -1,3 +1,4 @@
+package junglevision;
 
 public class Mover {
 	private Float[] oldLocation, currentLocation, newLocation;

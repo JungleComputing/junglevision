@@ -1,26 +1,27 @@
-import javax.media.opengl.GL;
+package junglevision.visuals;
+
 import javax.media.opengl.glu.GLU;
 
+import junglevision.Junglevision;
 
-public class FakeIbis {
+public class FakeLink implements Visual {
 	static final float SEPARATION = 0.05f;
 	static final float METRIC_SIZE_XZ = 0.25f;
-	static final float METRIC_SIZE_Y = 1.0f;
 	
-	public enum Shape { CITYSCAPE, CIRCLE }  
+	public enum Shape { CITYSCAPE }  
 	
 	private FakeMetric[] metrics;	
 	private Float[] location;
 	private Shape currentShape;
 	
-	FakeIbis(Junglevision jv, GLU glu, int numberOfMetrics) {		
+	public FakeLink(Junglevision jv, GLU glu, int numberOfMetrics, Visual source, Visual destination) {		
 		this.metrics = new FakeMetric[numberOfMetrics];
 		this.location = new Float[3];		
 		this.currentShape = Shape.CITYSCAPE;
 		
 		for (int i=0; i<numberOfMetrics; i++) {
-			Float[] color1 = {(float)Math.random(), (float)Math.random(), (float)Math.random()};
-			metrics[i] = new FakeMetric(jv, glu, color1);
+			Float[] color = {(float)Math.random(), (float)Math.random(), (float)Math.random()};
+			metrics[i] = new FakeMetric(jv, glu, color);
 		}
 	}
 	
@@ -62,32 +63,6 @@ public class FakeIbis {
 				    
 				i++;
 			}
-		} else if (currentShape == Shape.CIRCLE) {
-			
-		}
-	}
-	
-	public void setShape(Shape newShape) {
-		this.currentShape = newShape;
-	}
-	
-	public float getSizeXZ() {
-		return ((METRIC_SIZE_XZ+SEPARATION) * (int) Math.ceil(Math.sqrt(metrics.length))-SEPARATION);
-	}
-	
-	public float getSizeY() {
-		return (METRIC_SIZE_Y+SEPARATION);
-	}
-	
-	public void update() {
-		for (FakeMetric metric : metrics) {
-			metric.update();
-		}
-	}
-	
-	public void drawThis(GL gl, int renderMode, int selectedItem) {
-		for (FakeMetric metric : metrics) {			
-			metric.drawThis(gl, renderMode, selectedItem);
 		}
 	}
 }

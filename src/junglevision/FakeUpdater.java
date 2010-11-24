@@ -1,3 +1,4 @@
+package junglevision;
 
 public class FakeUpdater implements Runnable {
 	private Junglevision jv;

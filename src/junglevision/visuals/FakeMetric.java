@@ -1,51 +1,46 @@
+package junglevision.visuals;
+
 import javax.media.opengl.GL;
 import javax.media.opengl.glu.GLU;
 import javax.media.opengl.glu.GLUquadric;
 
-public class FakeMetric {
+import junglevision.Junglevision;
+
+public class FakeMetric extends VisualAbstract implements Visual {
+	private static final float WIDTH = 0.25f;
+	private static final float HEIGHT = 1.00f;
+	
 	private static final boolean DISPLAYLISTS = true;
 	private GLU glu;
 	
-	public enum Shape { BAR, TUBE }  
 	private Float[] color;
-	private Float[] location;
-	private Shape currentShape;
 	private float currentValue;
 	private int glName;
 	private int[] barPointer;
 	
 	FakeMetric(Junglevision jv, GLU glu, Float[] color) {
+		super();
+		
 		this.glu = glu;		
-		this.location = new Float[3];
 		this.color = color;
-		this.currentShape = Shape.BAR;
-		this.currentValue = 0.0f;
-		this.barPointer = jv.getBarPointer();
+		
+		currentValue = 0.0f;
+		barPointer = jv.getBarPointer();
+		
+		dimensions[0] = WIDTH;
+		dimensions[1] = HEIGHT;
+		dimensions[2] = WIDTH;
 		
 		glName = jv.registerGLName(this);
 	}
 	
-	public void drawThis(GL gl, int renderMode, int selectedItem) {
+	public void drawThis(GL gl, int renderMode) {
 		if (renderMode == GL.GL_SELECT) { gl.glLoadName(glName); }
-		if (currentShape == Shape.BAR) {
+		if (mShape == MetricShape.BAR) {
 			drawBar(gl, currentValue);
-		} else if (currentShape == Shape.TUBE) {
+		} else if (mShape == MetricShape.TUBE) {
 			drawTube(gl, currentValue);
 		}		
-	}
-	
-	public void setLocation(Float[] newLocation) {
-		this.location[0] = newLocation[0];
-		this.location[1] = newLocation[1];
-		this.location[2] = newLocation[2];		
-	}
-	
-	public Float[] getLocation() {
-		return location;
-	}
-	
-	public void setShape(Shape newShape) {
-		this.currentShape = newShape;
 	}
 	
 	public void update() {
@@ -63,8 +58,7 @@ public class FakeMetric {
 		//Save the current modelview matrix
 		gl.glPushMatrix();
 		
-		if (DISPLAYLISTS) {
-			
+		if (DISPLAYLISTS) {			
 			//Translate to the desired coordinates
 			gl.glTranslatef(location[0], location[1], location[2]);
 	
@@ -80,9 +74,9 @@ public class FakeMetric {
 		} else {
 			//use nice variables, so that the ogl code is readable
 			float o = 0.0f;			//(o)rigin
-			float x = 0.25f;		//(x) maximum coordinate
-			float y = 1.0f;			//(y) maximum coordinate
-			float z = 0.25f;		//(z) maximum coordinate	
+			float x = WIDTH;		//(x) maximum coordinate
+			float y = HEIGHT;		//(y) maximum coordinate
+			float z = WIDTH;		//(z) maximum coordinate	
 			float f = length * y; 	//(f)illed area
 			float r = y - f;		//(r)est area (non-filled, up until the maximum) 
 			float alpha = 0.4f;
@@ -307,9 +301,9 @@ public class FakeMetric {
 		
 		//use nice variables, so that the ogl code is readable
 		float o = 0.0f;			//(o)rigin
-		float x = 0.25f;		//(x) maximum coordinate
-		float y = 1.0f;			//(y) maximum coordinate
-		float z = 0.25f;		//(z) maximum coordinate	
+		float x = HEIGHT;		//(x) maximum coordinate
+		float y = HEIGHT;			//(y) maximum coordinate
+		float z = WIDTH;		//(z) maximum coordinate	
 		float f = length * y; 	//(f)illed area
 		float r = y - f;		//(r)est area (non-filled, up until the maximum) 
 		float alpha = 0.4f;
