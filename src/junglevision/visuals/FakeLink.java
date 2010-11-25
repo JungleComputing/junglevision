@@ -4,65 +4,80 @@ import javax.media.opengl.glu.GLU;
 
 import junglevision.Junglevision;
 
-public class FakeLink implements Visual {
-	static final float SEPARATION = 0.05f;
-	static final float METRIC_SIZE_XZ = 0.25f;
-	
-	public enum Shape { CITYSCAPE }  
-	
-	private FakeMetric[] metrics;	
-	private Float[] location;
-	private Shape currentShape;
+public class FakeLink extends VisualAbstract implements Visual {
+	private Visual source, destination;
 	
 	public FakeLink(Junglevision jv, GLU glu, int numberOfMetrics, Visual source, Visual destination) {		
-		this.metrics = new FakeMetric[numberOfMetrics];
-		this.location = new Float[3];		
-		this.currentShape = Shape.CITYSCAPE;
+		super();		
+		separation = 0.05f;
+		this.source = source;
+		this.destination = destination;
+		dimensions[0] = 0.25f;
+		dimensions[1] = 1.0f;
+		dimensions[2] = 0.25f;
 		
 		for (int i=0; i<numberOfMetrics; i++) {
 			Float[] color = {(float)Math.random(), (float)Math.random(), (float)Math.random()};
-			metrics[i] = new FakeMetric(jv, glu, color);
+			children.add(new FakeMetric(jv, glu, color));
 		}
-	}
-	
-	public void setLocation(Float[] newLocation) {		 
-		this.location[0] = newLocation[0];		
-		this.location[1] = newLocation[1];
-		this.location[2] = newLocation[2];
 		
-		if (currentShape == Shape.CITYSCAPE) {		
-			//get the breakoff point for rows and columns
-			int metricsCount = metrics.length;
-			int rows 		= (int)Math.ceil(Math.sqrt(metricsCount));
-			int columns 	= (int)Math.floor(Math.sqrt(metricsCount));
-			float xzShiftPerChild = METRIC_SIZE_XZ + SEPARATION;
-			
-			//Center the drawing around the location	
-			Float[] shiftedLocation = new Float[3];
-			shiftedLocation[0] = location[0] - ((xzShiftPerChild*rows   )-SEPARATION) * 0.5f;
-			shiftedLocation[1] = location[1];
-			shiftedLocation[2] = location[2] - ((xzShiftPerChild*columns)-SEPARATION) * 0.5f;
-			
-			Float[] metricLocation = new Float[3];
-			
-			int row = 0, column = 0, i = 0;
-			for (FakeMetric metric : metrics) {
-				row = i % rows;
-				
-				//Move to next row (if applicable)
-				if (i != 0 && row == 0) {
-					column++;						
-				}
-								
-				//cascade the new location
-				metricLocation[0] = shiftedLocation[0] + xzShiftPerChild*row;
-				metricLocation[1] = shiftedLocation[1];
-				metricLocation[2] = shiftedLocation[2] + xzShiftPerChild*column;
-				
-				metric.setLocation(metricLocation);
-				    
-				i++;
-			}
+		constructDimensions();
+	}
+		
+	public void initializeLinks() {	
+		Float[] newLocation = new Float[3];
+		
+		//Calculate the angles we need to turn towards the destination
+		Float[] origin = source.getLocation();
+		Float[] destination = this.destination.getLocation();
+		int xSign = 1, ySign = 1, zSign = 1;
+		
+		float xDist = destination[0] - origin[0];
+		if (xDist<0) xSign = -1;
+		xDist = Math.abs(xDist);
+		
+		float yDist = destination[1] - origin[1];
+		if (yDist<0) ySign = -1;
+		yDist = Math.abs(yDist);
+		
+		float zDist = destination[2] - origin[2];
+		if (zDist<0) zSign = -1;
+		zDist = Math.abs(zDist);
+		
+		//Calculate the length of this element : V( x^2 + y^2 + z^2 ) 
+		float length  = (float) Math.sqrt(	Math.pow(xDist,2)
+										  + Math.pow(yDist,2) 
+										  + Math.pow(zDist,2));
+		
+		float xzDist =  (float) Math.sqrt(	Math.pow(xDist,2)
+				  						  + Math.pow(zDist,2));
+					
+		float yAngle = 0.0f;
+		if (xSign < 0) {
+			yAngle = 180.0f + (zSign * (float) Math.toDegrees(Math.atan(zDist/xDist)));
+		} else {
+			yAngle = (-zSign * (float) Math.toDegrees(Math.atan(zDist/xDist)));
+		}
+		
+		float zAngle = ySign * (float) Math.toDegrees(Math.atan(yDist/xzDist));
+		
+		//Calculate the midpoint of the link		
+		newLocation[0] = origin[0] + 0.5f * (destination[0] - origin[0]);
+		newLocation[1] = origin[1] + 0.5f * (destination[1] - origin[1]);
+		newLocation[2] = origin[2] + 0.5f * (destination[2] - origin[2]);
+		location = newLocation;
+		
+		//Set the object rotation, x is not used
+		rotation[1] = yAngle;
+		rotation[2] = zAngle;
+		
+		//reduce the length by the radii of the origin and destination objects
+		dimensions[1] = length - (source.getRadius() + this.destination.getRadius());
+		
+		for (Visual metric : children) {
+			metric.setLocation(location);
+			metric.setRotation(rotation);
+			metric.setDimensions(dimensions);
 		}
 	}
 }

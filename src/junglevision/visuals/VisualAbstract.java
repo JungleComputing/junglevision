@@ -9,20 +9,34 @@ public abstract class VisualAbstract implements Visual {
 	private final static float CUBE_RADIUS_MULTIPLIER = 0.075f;
 	
 	protected List<Visual> children;
+	protected List<Visual> links;
 	protected Float[] location;
+	protected Float[] rotation;
 	protected Float[] dimensions, maxChildDimensions;
+	protected float maxAllChildDimensions;
 	protected CollectionShape cShape;
 	protected MetricShape mShape;
 	protected float separation;
 	
 	public VisualAbstract() {
 		children = new ArrayList<Visual>();
+		links = new ArrayList<Visual>();
 		location   = new Float[3];
+		rotation   = new Float[3];
+		rotation[0] = 0.0f;
+		rotation[1] = 0.0f;
+		rotation[2] = 0.0f;
+		
 		dimensions = new Float[3];
+		dimensions[0] = 0.0f;
+		dimensions[1] = 0.0f;
+		dimensions[2] = 0.0f;
+		
 		maxChildDimensions = new Float[3];
+		maxAllChildDimensions = 0.0f;
 		cShape = CollectionShape.CITYSCAPE;
 		mShape = MetricShape.BAR;
-		separation = 0.00f;
+		separation = 0.0f;
 	}
 	
 	public void setLocation(Float[] newLocation) {		 
@@ -31,7 +45,7 @@ public abstract class VisualAbstract implements Visual {
 		this.location[2] = newLocation[2];
 		
 		if (children.size() > 0) {
-			float maxAllDimensions = Math.max(Math.max(maxChildDimensions[0], maxChildDimensions[1]), maxChildDimensions[2]);
+			maxAllChildDimensions = Math.max(Math.max(maxChildDimensions[0], maxChildDimensions[1]), maxChildDimensions[2]);
 			
 			if (cShape == CollectionShape.CITYSCAPE) {		
 				//get the breakoff point for rows and columns
@@ -74,7 +88,7 @@ public abstract class VisualAbstract implements Visual {
 				double z     = 1 - (dz/2);
 				Float[][] pt = new Float[children.size()][3]; 
 				double r = 0;
-				float radius = CUBE_RADIUS_MULTIPLIER * (maxAllDimensions+separation) * children.size();
+				float radius = CUBE_RADIUS_MULTIPLIER * (maxAllChildDimensions+separation) * children.size();
 				
 				for (int k=0;k<children.size();k++) {
 					r = Math.sqrt(1-(z*z));
@@ -132,6 +146,30 @@ public abstract class VisualAbstract implements Visual {
 				}
 			}
 		}
+		for (Visual link : links) {
+			link.setLocation(newLocation);
+		}
+	}
+	
+	public void setRotation(Float[] newRotation) {
+		rotation[0] = newRotation[0];
+		rotation[1] = newRotation[1];
+		rotation[2] = newRotation[2];
+	}
+	
+	public void setDimensions(Float[] newDimensions) {
+		dimensions[0] = newDimensions[0];
+		dimensions[1] = newDimensions[1];
+		dimensions[2] = newDimensions[2];
+	}
+	
+	public void initializeLinks() {
+		for (Visual child : children) {
+			child.initializeLinks();
+		}
+		for (Visual link : links) {
+			link.initializeLinks();
+		}		
 	}
 	
 	public void setCollectionShape(CollectionShape newShape) {		
@@ -161,6 +199,10 @@ public abstract class VisualAbstract implements Visual {
 		return myDimensions;
 	}
 	
+	public float getRadius() {
+		return maxAllChildDimensions;
+	}
+	
 	public void update() {
 		for (Visual child : children) {
 			child.update();
@@ -170,6 +212,10 @@ public abstract class VisualAbstract implements Visual {
 	public void drawThis(GL gl, int renderMode) {
 		for (Visual ibis : children) {
 			ibis.drawThis(gl, renderMode);
+		}
+		
+		for (Visual link : links) {
+			link.drawThis(gl, renderMode);
 		}
 	}
 	
@@ -192,16 +238,16 @@ public abstract class VisualAbstract implements Visual {
 			}
 		}
 		
-		float maxAllDimensions = Math.max(Math.max(maxChildDimensions[0], maxChildDimensions[1]), maxChildDimensions[2]);
+		maxAllChildDimensions = Math.max(Math.max(maxChildDimensions[0], maxChildDimensions[1]), maxChildDimensions[2]);
 		
 		if (cShape == CollectionShape.CITYSCAPE) {
 			dimensions[0] = (maxChildDimensions[0]+separation) * (int) Math.ceil(Math.sqrt(children.size()))-separation; 
 			dimensions[1] = (maxChildDimensions[1]+separation) * (int) Math.floor(Math.sqrt(children.size()))-separation;
 			dimensions[2] = (maxChildDimensions[2]+separation);
 		} else if (cShape == CollectionShape.SPHERE) {
-			dimensions[0] = (maxAllDimensions+separation)*CUBE_RADIUS_MULTIPLIER * children.size()*2f;
-			dimensions[1] = (maxAllDimensions+separation)*CUBE_RADIUS_MULTIPLIER * children.size()*2f;
-			dimensions[2] = (maxAllDimensions+separation)*CUBE_RADIUS_MULTIPLIER * children.size()*2f;
+			dimensions[0] = (maxAllChildDimensions+separation)*CUBE_RADIUS_MULTIPLIER * children.size()*2f;
+			dimensions[1] = (maxAllChildDimensions+separation)*CUBE_RADIUS_MULTIPLIER * children.size()*2f;
+			dimensions[2] = (maxAllChildDimensions+separation)*CUBE_RADIUS_MULTIPLIER * children.size()*2f;
 		} else if (cShape == CollectionShape.CUBE) {
 			dimensions[0] = (maxChildDimensions[0]+separation) * (int) Math.ceil(Math.pow(children.size(),(1.0/3.0)))-separation; 
 			dimensions[1] = (maxChildDimensions[1]+separation) * (int) Math.floor(Math.pow(children.size(),(1.0/3.0)))-separation;

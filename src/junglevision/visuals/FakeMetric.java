@@ -9,8 +9,6 @@ import junglevision.Junglevision;
 public class FakeMetric extends VisualAbstract implements Visual {
 	private static final float WIDTH = 0.25f;
 	private static final float HEIGHT = 1.00f;
-	
-	private static final boolean DISPLAYLISTS = true;
 	private GLU glu;
 	
 	private Float[] color;
@@ -37,7 +35,7 @@ public class FakeMetric extends VisualAbstract implements Visual {
 	public void drawThis(GL gl, int renderMode) {
 		if (renderMode == GL.GL_SELECT) { gl.glLoadName(glName); }
 		if (mShape == MetricShape.BAR) {
-			drawBar(gl, currentValue);
+			drawBar(gl, currentValue, dimensions[1]);
 		} else if (mShape == MetricShape.TUBE) {
 			drawTube(gl, currentValue);
 		}		
@@ -54,14 +52,17 @@ public class FakeMetric extends VisualAbstract implements Visual {
 		currentValue = Math.min(1.0f, currentValue);
 	}
 
-	protected void drawBar(GL gl, float length) {	
+	protected void drawBar(GL gl, float length, float maxLength) {	
 		//Save the current modelview matrix
 		gl.glPushMatrix();
 		
-		if (DISPLAYLISTS) {			
-			//Translate to the desired coordinates
-			gl.glTranslatef(location[0], location[1], location[2]);
-	
+		//Translate to the desired coordinates and rotate if desired
+		gl.glTranslatef(location[0], location[1], location[2]);
+		gl.glRotatef(rotation[0], 1.0f, 0.0f, 0.0f);
+		gl.glRotatef(rotation[1], 0.0f, 1.0f, 0.0f);
+		gl.glRotatef(rotation[2], 0.0f, 0.0f, 1.0f);
+		
+		if (maxLength == HEIGHT) {	
 			int whichBar = (int) Math.floor(length*barPointer.length)/2;
 			if (length >= 0.95f) {
 				whichBar = (barPointer.length/2)-1;
@@ -71,219 +72,206 @@ public class FakeMetric extends VisualAbstract implements Visual {
 			gl.glCallList(barPointer[(whichBar*2)]); 
 			gl.glColor4f(color[0], color[1], color[2], 0.4f);
 			gl.glCallList(barPointer[(whichBar*2)+1]);
-		} else {
-			//use nice variables, so that the ogl code is readable
-			float o = 0.0f;			//(o)rigin
-			float x = WIDTH;		//(x) maximum coordinate
-			float y = HEIGHT;		//(y) maximum coordinate
-			float z = WIDTH;		//(z) maximum coordinate	
-			float f = length * y; 	//(f)illed area
-			float r = y - f;		//(r)est area (non-filled, up until the maximum) 
+		} else {			
 			float alpha = 0.4f;
-			
-			//Transparency
-			float lineAlpha = alpha;
-			
-			//Color for the lines around the box
-			float line_color_r = 0.8f;
-			float line_color_g = 0.8f;
-			float line_color_b = 0.8f;
+			 			
+			float 	Xn = -0.5f*dimensions[0],
+					Xp =  0.5f*dimensions[0],
+					Yn = -0.5f*dimensions[1],
+					Yp =  0.5f*dimensions[1],
+					Zn = -0.5f*dimensions[2],
+					Zp =  0.5f*dimensions[2];
+	
+			float Yf = 0.0f;
 						
-			float quad_color_r = color[0];
-			float quad_color_g = color[1];
-			float quad_color_b = color[2];
-									
-			//Translate to the desired coordinates
-			gl.glTranslatef(location[0], location[1], location[2]);
-			 
-			//Center the drawing startpoint
-			gl.glTranslatef(-0.5f*x, -0.5f*y, -0.5f*z);	
-						
-			//The solid Element
-			gl.glBegin(GL.GL_LINE_LOOP);
-				//TOP of filled area
-				gl.glColor3f(line_color_r,line_color_g,line_color_b);			
-				gl.glVertex3f( x, f, o);			
-				gl.glVertex3f( o, f, o);			
-				gl.glVertex3f( o, f, z);			
-				gl.glVertex3f( x, f, z);			
-			gl.glEnd();		
+			Yf = (length*dimensions[1])-(0.5f*dimensions[1]);
 			
-			gl.glBegin(GL.GL_LINE_LOOP);
-				//BOTTOM
-				gl.glColor3f(line_color_r,line_color_g,line_color_b);			
-				gl.glVertex3f( x, o, z);			
-				gl.glVertex3f( o, o, z);			
-				gl.glVertex3f( o, o, o);			
-				gl.glVertex3f( x, o, o);			
-			gl.glEnd();	
-			
-			gl.glBegin(GL.GL_LINE_LOOP);
-				//FRONT
-				gl.glColor3f(line_color_r,line_color_g,line_color_b);			
-				gl.glVertex3f( x, f, z);			
-				gl.glVertex3f( o, f, z);			
-				gl.glVertex3f( o, o, z);			
-				gl.glVertex3f( x, o, z);			
-			gl.glEnd();
-			
-			gl.glBegin(GL.GL_LINE_LOOP);
-				//BACK
-				gl.glColor3f(line_color_r,line_color_g,line_color_b);			
-				gl.glVertex3f( x, o, o);			
-				gl.glVertex3f( o, o, o);			
-				gl.glVertex3f( o, f, o);			
-				gl.glVertex3f( x, f, o);			
-			gl.glEnd();	
-			
-			gl.glBegin(GL.GL_LINE_LOOP);
-				//LEFT
-				gl.glColor3f(line_color_r,line_color_g,line_color_b);			
-				gl.glVertex3f( o, f, z);			
-				gl.glVertex3f( o, f, o);			
-				gl.glVertex3f( o, o, o);			
-				gl.glVertex3f( o, o, z);			
-			gl.glEnd();
-			
-			gl.glBegin(GL.GL_LINE_LOOP);
-				//RIGHT
-				gl.glColor3f(line_color_r,line_color_g,line_color_b);			
-				gl.glVertex3f( x, f, o);			
-				gl.glVertex3f( x, f, z);			
-				gl.glVertex3f( x, o, z);			
-				gl.glVertex3f( x, o, o);
-			gl.glEnd();
-				
-			gl.glBegin(GL.GL_QUADS);		
+			//The solid area
+			gl.glBegin(GL.GL_QUADS);	
+				gl.glColor3f(color[0],color[1],color[2]);
 				//TOP
-				gl.glColor3f(quad_color_r, quad_color_g, quad_color_b);			
-				gl.glVertex3f( x, f, o);			
-				gl.glVertex3f( o, f, o);			
-				gl.glVertex3f( o, f, z);			
-				gl.glVertex3f( x, f, z);
+				gl.glVertex3f( Xn, Yf, Zn);
+				gl.glVertex3f( Xn, Yf, Zp);
+				gl.glVertex3f( Xp, Yf, Zp);
+				gl.glVertex3f( Xp, Yf, Zn);
 				
 				//BOTTOM
-				gl.glColor3f(quad_color_r, quad_color_g, quad_color_b);			
-				gl.glVertex3f( x, o, z);			
-				gl.glVertex3f( o, o, z);			
-				gl.glVertex3f( o, o, o);			
-				gl.glVertex3f( x, o, o);
+				gl.glVertex3f( Xn, Yn, Zn);
+				gl.glVertex3f( Xp, Yn, Zn);
+				gl.glVertex3f( Xp, Yn, Zp);
+				gl.glVertex3f( Xn, Yn, Zp);
 				
 				//FRONT
-				gl.glColor3f(quad_color_r, quad_color_g, quad_color_b);			
-				gl.glVertex3f( x, f, z);			
-				gl.glVertex3f( o, f, z);			
-				gl.glVertex3f( o, o, z);			
-				gl.glVertex3f( x, o, z);
+				gl.glVertex3f( Xn, Yf, Zp);
+				gl.glVertex3f( Xn, Yn, Zp);
+				gl.glVertex3f( Xp, Yn, Zp);
+				gl.glVertex3f( Xp, Yf, Zp);
 				
 				//BACK
-				gl.glColor3f(quad_color_r, quad_color_g, quad_color_b);			
-				gl.glVertex3f( x, o, o);			
-				gl.glVertex3f( o, o, o);			
-				gl.glVertex3f( o, f, o);			
-				gl.glVertex3f( x, f, o);
+				gl.glVertex3f( Xp, Yf, Zn);
+				gl.glVertex3f( Xp, Yn, Zn);
+				gl.glVertex3f( Xn, Yn, Zn);
+				gl.glVertex3f( Xn, Yf, Zn);
 				
 				//LEFT
-				gl.glColor3f(quad_color_r, quad_color_g, quad_color_b);			
-				gl.glVertex3f( o, f, z);			
-				gl.glVertex3f( o, f, o);			
-				gl.glVertex3f( o, o, o);			
-				gl.glVertex3f( o, o, z);
+				gl.glVertex3f( Xn, Yf, Zn);
+				gl.glVertex3f( Xn, Yn, Zn);
+				gl.glVertex3f( Xn, Yn, Zp);
+				gl.glVertex3f( Xn, Yf, Zp);
 				
 				//RIGHT
-				gl.glColor3f(quad_color_r, quad_color_g, quad_color_b);			
-				gl.glVertex3f( x, f, o);			
-				gl.glVertex3f( x, f, z);			
-				gl.glVertex3f( x, o, z);			
-				gl.glVertex3f( x, o, o);
-			gl.glEnd();	
-					
-			gl.glTranslatef(0.0f, f, 0.0f);		
-			
-			gl.glBegin(GL.GL_LINE_LOOP);
-				//TOP of shadow area
-				gl.glColor4f(line_color_r,line_color_g,line_color_b, lineAlpha);			
-				gl.glVertex3f( x, r, o);			
-				gl.glVertex3f( o, r, o);			
-				gl.glVertex3f( o, r, z);			
-				gl.glVertex3f( x, r, z);			
-			gl.glEnd();		
-			
-			//Bottom left out, since it's the top of the solid area
-			
-			gl.glBegin(GL.GL_LINE_LOOP);
-				//FRONT
-				gl.glColor4f(line_color_r,line_color_g,line_color_b, lineAlpha);			
-				gl.glVertex3f( x, r, z);			
-				gl.glVertex3f( o, r, z);			
-				gl.glVertex3f( o, o, z);			
-				gl.glVertex3f( x, o, z);			
+				gl.glVertex3f( Xp, Yf, Zp);
+				gl.glVertex3f( Xp, Yn, Zp);
+				gl.glVertex3f( Xp, Yn, Zn);
+				gl.glVertex3f( Xp, Yf, Zn);
 			gl.glEnd();
 			
 			gl.glBegin(GL.GL_LINE_LOOP);
-				//BACK
-				gl.glColor4f(line_color_r,line_color_g,line_color_b, lineAlpha);			
-				gl.glVertex3f( x, o, o);			
-				gl.glVertex3f( o, o, o);			
-				gl.glVertex3f( o, r, o);			
-				gl.glVertex3f( x, r, o);			
-			gl.glEnd();	
-			
-			gl.glBegin(GL.GL_LINE_LOOP);
-				//LEFT
-				gl.glColor4f(line_color_r,line_color_g,line_color_b, lineAlpha);			
-				gl.glVertex3f( o, r, z);			
-				gl.glVertex3f( o, r, o);			
-				gl.glVertex3f( o, o, o);			
-				gl.glVertex3f( o, o, z);			
-			gl.glEnd();
-			
-			gl.glBegin(GL.GL_LINE_LOOP);
-				//RIGHT
-				gl.glColor4f(line_color_r,line_color_g,line_color_b, lineAlpha);			
-				gl.glVertex3f( x, r, o);			
-				gl.glVertex3f( x, r, z);			
-				gl.glVertex3f( x, o, z);			
-				gl.glVertex3f( x, o, o);
-			gl.glEnd();
-				
-			gl.glBegin(GL.GL_QUADS);		
+				gl.glColor3f(0.8f,0.8f,0.8f);
 				//TOP
-				gl.glColor4f(quad_color_r, quad_color_g, quad_color_b, alpha);			
-				gl.glVertex3f( x, r, o);			
-				gl.glVertex3f( o, r, o);			
-				gl.glVertex3f( o, r, z);			
-				gl.glVertex3f( x, r, z);
+				gl.glVertex3f( Xn, Yf, Zn);
+				gl.glVertex3f( Xn, Yf, Zp);
+				gl.glVertex3f( Xp, Yf, Zp);
+				gl.glVertex3f( Xp, Yf, Zn);
+			gl.glEnd();
+			
+			gl.glBegin(GL.GL_LINE_LOOP);
+				gl.glColor3f(0.8f,0.8f,0.8f);
+				//BOTTOM
+				gl.glVertex3f( Xn, Yn, Zn);
+				gl.glVertex3f( Xp, Yn, Zn);
+				gl.glVertex3f( Xp, Yn, Zp);
+				gl.glVertex3f( Xn, Yn, Zp);
+			gl.glEnd();
+			
+			gl.glBegin(GL.GL_LINE_LOOP);
+				gl.glColor3f(0.8f,0.8f,0.8f);
+				//FRONT
+				gl.glVertex3f( Xn, Yf, Zp);
+				gl.glVertex3f( Xn, Yn, Zp);
+				gl.glVertex3f( Xp, Yn, Zp);
+				gl.glVertex3f( Xp, Yf, Zp);
+			gl.glEnd();
+			
+			gl.glBegin(GL.GL_LINE_LOOP);
+				gl.glColor3f(0.8f,0.8f,0.8f);
+				//BACK
+				gl.glVertex3f( Xp, Yf, Zn);
+				gl.glVertex3f( Xp, Yn, Zn);
+				gl.glVertex3f( Xn, Yn, Zn);
+				gl.glVertex3f( Xn, Yf, Zn);
+			gl.glEnd();
+			
+			gl.glBegin(GL.GL_LINE_LOOP);
+				gl.glColor3f(0.8f,0.8f,0.8f);
+				//LEFT
+				gl.glVertex3f( Xn, Yf, Zn);
+				gl.glVertex3f( Xn, Yn, Zn);
+				gl.glVertex3f( Xn, Yn, Zp);
+				gl.glVertex3f( Xn, Yf, Zp);
+			gl.glEnd();
+			
+			gl.glBegin(GL.GL_LINE_LOOP);
+				gl.glColor3f(0.8f,0.8f,0.8f);
+				//RIGHT
+				gl.glVertex3f( Xp, Yf, Zp);
+				gl.glVertex3f( Xp, Yn, Zp);
+				gl.glVertex3f( Xp, Yn, Zn);
+				gl.glVertex3f( Xp, Yf, Zn);
+			gl.glEnd();
+			
+			//The transparent area			
+			gl.glBegin(GL.GL_QUADS);
+			gl.glColor4f(color[0],color[1],color[2], alpha);
+				//TOP
+				gl.glVertex3f( Xn, Yp, Zn);
+				gl.glVertex3f( Xn, Yp, Zp);
+				gl.glVertex3f( Xp, Yp, Zp);
+				gl.glVertex3f( Xp, Yp, Zn);
 				
-				//BOTTOM left out
+				//BOTTOM LEFT OUT
+				//gl.glVertex3f( Xn, Yn, Zn);
+				//gl.glVertex3f( Xp, Yn, Zn);
+				//gl.glVertex3f( Xp, Yn, Zp);
+				//gl.glVertex3f( Xn, Yn, Zp);
 				
 				//FRONT
-				gl.glColor4f(quad_color_r, quad_color_g, quad_color_b, alpha);			
-				gl.glVertex3f( x, r, z);			
-				gl.glVertex3f( o, r, z);			
-				gl.glVertex3f( o, o, z);			
-				gl.glVertex3f( x, o, z);
+				gl.glVertex3f( Xn, Yp, Zp);
+				gl.glVertex3f( Xn, Yf, Zp);
+				gl.glVertex3f( Xp, Yf, Zp);
+				gl.glVertex3f( Xp, Yp, Zp);
 				
 				//BACK
-				gl.glColor4f(quad_color_r, quad_color_g, quad_color_b, alpha);			
-				gl.glVertex3f( x, o, o);			
-				gl.glVertex3f( o, o, o);			
-				gl.glVertex3f( o, r, o);			
-				gl.glVertex3f( x, r, o);
+				gl.glVertex3f( Xp, Yp, Zn);
+				gl.glVertex3f( Xp, Yf, Zn);
+				gl.glVertex3f( Xn, Yf, Zn);
+				gl.glVertex3f( Xn, Yp, Zn);
 				
 				//LEFT
-				gl.glColor4f(quad_color_r, quad_color_g, quad_color_b, alpha);			
-				gl.glVertex3f( o, r, z);			
-				gl.glVertex3f( o, r, o);			
-				gl.glVertex3f( o, o, o);			
-				gl.glVertex3f( o, o, z);
+				gl.glVertex3f( Xn, Yp, Zn);
+				gl.glVertex3f( Xn, Yf, Zn);
+				gl.glVertex3f( Xn, Yf, Zp);
+				gl.glVertex3f( Xn, Yp, Zp);
 				
 				//RIGHT
-				gl.glColor4f(quad_color_r, quad_color_g, quad_color_b, alpha);			
-				gl.glVertex3f( x, r, o);			
-				gl.glVertex3f( x, r, z);			
-				gl.glVertex3f( x, o, z);			
-				gl.glVertex3f( x, o, o);
+				gl.glVertex3f( Xp, Yp, Zp);
+				gl.glVertex3f( Xp, Yf, Zp);
+				gl.glVertex3f( Xp, Yf, Zn);
+				gl.glVertex3f( Xp, Yp, Zn);
+			gl.glEnd();
+			
+			gl.glBegin(GL.GL_LINE_LOOP);
+				gl.glColor3f(0.8f,0.8f,0.8f);
+				//TOP
+				gl.glVertex3f( Xn, Yp, Zn);
+				gl.glVertex3f( Xn, Yp, Zp);
+				gl.glVertex3f( Xp, Yp, Zp);
+				gl.glVertex3f( Xp, Yp, Zn);
+			gl.glEnd();
+			
+			//gl.glBegin(GL.GL_LINE_LOOP);
+				//gl.glColor3f(0.8f,0.8f,0.8f);
+				//BOTTOM LEFT OUT
+				//gl.glVertex3f( Xn, Yn, Zn);
+				//gl.glVertex3f( Xp, Yn, Zn);
+				//gl.glVertex3f( Xp, Yn, Zp);
+				//gl.glVertex3f( Xn, Yn, Zp);
+			//gl.glEnd();
+			
+			gl.glBegin(GL.GL_LINE_LOOP);
+				gl.glColor3f(0.8f,0.8f,0.8f);
+				//FRONT
+				gl.glVertex3f( Xn, Yp, Zp);
+				gl.glVertex3f( Xn, Yf, Zp);
+				gl.glVertex3f( Xp, Yf, Zp);
+				gl.glVertex3f( Xp, Yp, Zp);
+			gl.glEnd();
+			
+			gl.glBegin(GL.GL_LINE_LOOP);
+				gl.glColor3f(0.8f,0.8f,0.8f);
+				//BACK
+				gl.glVertex3f( Xp, Yp, Zn);
+				gl.glVertex3f( Xp, Yf, Zn);
+				gl.glVertex3f( Xn, Yf, Zn);
+				gl.glVertex3f( Xn, Yp, Zn);
+			gl.glEnd();
+			
+			gl.glBegin(GL.GL_LINE_LOOP);
+				gl.glColor3f(0.8f,0.8f,0.8f);
+				//LEFT
+				gl.glVertex3f( Xn, Yp, Zn);
+				gl.glVertex3f( Xn, Yf, Zn);
+				gl.glVertex3f( Xn, Yf, Zp);
+				gl.glVertex3f( Xn, Yp, Zp);
+			gl.glEnd();
+			
+			gl.glBegin(GL.GL_LINE_LOOP);
+				gl.glColor3f(0.8f,0.8f,0.8f);
+				//RIGHT
+				gl.glVertex3f( Xp, Yp, Zp);
+				gl.glVertex3f( Xp, Yf, Zp);
+				gl.glVertex3f( Xp, Yf, Zn);
+				gl.glVertex3f( Xp, Yp, Zn);
 			gl.glEnd();
 		}	
 		

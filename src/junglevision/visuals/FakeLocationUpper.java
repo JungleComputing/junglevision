@@ -12,7 +12,7 @@ public class FakeLocationUpper extends VisualAbstract implements Visual {
 		cShape = CollectionShape.SPHERE;
 		
 		for (int i=0; i<numberOfLocations; i++) {
-			children.add(new FakeLocationLower(jv, glu, (int) (Math.random()*64)));
+			children.add(new FakeLocationLower(jv, glu, (int) (Math.random()*64), 16));
 		}
 		
 		constructDimensions();

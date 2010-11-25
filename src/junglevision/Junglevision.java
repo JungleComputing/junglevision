@@ -42,9 +42,7 @@ public class Junglevision implements GLEventListener {
     Mover m;
     
     //FPS counter
-    private long timeStart;
-    private double[] fpsList;    
-    private int fpsPointer;
+    private int framesPassed, fps;
 
     /**
      * Constructor for your program, this sets up the
@@ -99,8 +97,8 @@ public class Junglevision implements GLEventListener {
 		recenterRequest = false;
 		pickPoint = new Point();
 		namesToVisuals = new HashMap<Integer, FakeMetric>();
-		fpsList = new double[60];
-		fpsPointer = 0;
+		new javax.swing.Timer(1000, fpsRecorder).start();
+				
 		this.m = new Mover();
 		
 		//Visual updater definition
@@ -154,11 +152,11 @@ public class Junglevision implements GLEventListener {
 	    barPointer = listBuilder.getBarPointers();
 				
 		//Universe initializers
-		location = new FakeLocationUpper(this, glu, 100);		
+		location = new FakeLocationUpper(this, glu, 10);
 		location.setLocation(m.getCurrentLocation());
 	    
 	    //Start the timer for the FPS counter
-	    timeStart = System.currentTimeMillis();
+	    //timeStart = System.currentTimeMillis();
 	    
 	    //and set the matrix mode to the modelview matrix in the end
 	    gl.glMatrixMode(GL.GL_MODELVIEW);
@@ -203,15 +201,12 @@ public class Junglevision implements GLEventListener {
 		
 		//Update visuals
 		location.setLocation(m.getCurrentLocation());
+		location.initializeLinks();
 		
 		if (updateRequest) {
 			location.update();			
 			updateRequest = false;
 		}
-		
-		//wait for, and show the output
-		drawable.swapBuffers();
-		
 	}
 	
 	private void drawUniverse(GL gl, int renderMode) {
@@ -226,21 +221,8 @@ public class Junglevision implements GLEventListener {
 		location.drawThis(gl, renderMode);
 	}
 	
-	private void drawHud(GL gl) {		
-		long timeCurrent = System.currentTimeMillis();
-		long timeElapsed = timeCurrent - timeStart;
-		timeStart = timeCurrent;
-		
-		fpsList[fpsPointer] = (double) 1 / (timeElapsed / (double) 1000); 
-		fpsPointer++;
-		fpsPointer = fpsPointer % fpsList.length;
-				
-		double total = (double) 0;
-		for (int i=0; i<fpsList.length; i++) {
-			total += fpsList[i];
-		}
-		
-		double fps = total / fpsList.length;
+	private void drawHud(GL gl) {
+		framesPassed++;
 		
 		gl.glLoadIdentity();
 		gl.glTranslatef(0.0f, 0.0f, -1.0f);
@@ -407,4 +389,11 @@ public class Junglevision implements GLEventListener {
     public static void main(String[] args) {
     	new Junglevision();		
 	}
+
+	ActionListener fpsRecorder = new ActionListener() {
+		public void actionPerformed(ActionEvent e) {
+			fps = framesPassed;
+			framesPassed = 0;
+		}
+	};
 }
