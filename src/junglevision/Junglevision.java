@@ -22,6 +22,7 @@ import com.sun.opengl.util.GLUT;
 public class Junglevision implements GLEventListener {
 	private final static int MAX_NUMBER_OF_CHILDREN = 16;
 	private final static int MAX_NUMBER_OF_LINKS = 300;
+	private final static int MAX_METRICS_PER_LINK = 3;
 	
     GLU glu = new GLU();
     GLUT glut = new GLUT();
@@ -262,16 +263,15 @@ public class Junglevision implements GLEventListener {
 			FakeLink newLink;
 			
 			do {
-				source 		= visualRegistry.get(Math.min( MAX_NUMBER_OF_LINKS,(int) (Math.random()*visualRegistry.size()))); 
-				destination	= visualRegistry.get(Math.min( MAX_NUMBER_OF_LINKS,(int) (Math.random()*visualRegistry.size())));
-				newLink = new FakeLink(this, glu, (int) (Math.random()*3), source, destination);
+				source 		= visualRegistry.get(Math.min( visualRegistry.size(),(int) (Math.random()*visualRegistry.size()))); 
+				destination	= visualRegistry.get(Math.min( visualRegistry.size(),(int) (Math.random()*visualRegistry.size())));
+				newLink = new FakeLink(this, glu, (int) (Math.random()*MAX_METRICS_PER_LINK), source, destination);
 			} while (source == destination || linkList.contains(newLink));
 			
 			linkList.add(newLink);
 			
 			newLink.setMetricShape(Visual.MetricShape.TUBE);
 		}
-		System.out.println("links: " +linkList.size());
 	}
 	
 	private void drawHud(GL gl) {
