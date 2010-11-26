@@ -10,7 +10,7 @@ public class FakeLocationUpper extends VisualAbstract implements Visual {
 	public FakeLocationUpper(Junglevision jv, GLU glu, int numberOfLocations) {
 		super();
 		separation = 3.0f;
-		cShape = CollectionShape.CUBE;
+		cShape = CollectionShape.SPHERE;
 		
 		jv.registerVisual(this);
 		

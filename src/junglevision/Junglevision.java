@@ -20,7 +20,7 @@ import com.sun.opengl.util.FPSAnimator;
 import com.sun.opengl.util.GLUT;
 
 public class Junglevision implements GLEventListener {
-	private final static int MAX_NUMBER_OF_CHILDREN = 16;
+	private final static int MAX_NUMBER_OF_CHILDREN = 25;
 	private final static int MAX_NUMBER_OF_LINKS = 300;
 	private final static int MAX_METRICS_PER_LINK = 3;
 	
