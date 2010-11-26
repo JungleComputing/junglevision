@@ -36,16 +36,7 @@ public class MouseHandler implements MouseListener, MouseMotionListener, MouseWh
 		this.p = p;
 		
 		rotation = new Float[3];
-		translation = new Float[3];		
-	}
-	
-	public void resetTranslation() {
-		this.translation = new Float[3];
-		this.translationX = 0.0f;
-		this.translationY = 0.0f;
-		
-		this.translationXorigin = 0.0f;
-		this.translationYorigin = 0.0f;
+		translation = new Float[3];	
 	}
 	
 	public void mouseClicked(MouseEvent e) {		
@@ -73,9 +64,6 @@ public class MouseHandler implements MouseListener, MouseMotionListener, MouseWh
 		if (SwingUtilities.isLeftMouseButton(e)) {			
 			dragLeftXorigin = e.getPoint().x;
 			dragLeftYorigin = e.getPoint().y;
-		} else if (SwingUtilities.isMiddleMouseButton(e)) {
-			dragRightXorigin = e.getPoint().x;
-			dragRightYorigin = e.getPoint().y;
 		}
 	}
 
@@ -88,22 +76,14 @@ public class MouseHandler implements MouseListener, MouseMotionListener, MouseWh
 	}
 
 	public void mouseDragged(MouseEvent e) { 
-		if (SwingUtilities.isMiddleMouseButton(e)) {
+		if (SwingUtilities.isLeftMouseButton(e)) {
 			// x/y reversed because of axis orientation
-			rotationY = ((e.getPoint().x - dragRightXorigin) + rotationYorigin) % 360;
-			rotationX = ((e.getPoint().y - dragRightYorigin) + rotationXorigin) % 360;
+			rotationY = ((e.getPoint().x - dragLeftXorigin) + rotationYorigin) % 360;
+			rotationX = ((e.getPoint().y - dragLeftYorigin) + rotationXorigin) % 360;
 			rotation[0] = rotationX;
 			rotation[1] = rotationY;
 			rotation[2] = 0.0f;
 			p.setRotation(rotation);
-		} else if (SwingUtilities.isLeftMouseButton(e)) {			
-			// y direction reversed because window coordinates are read from top to bottom
-			//translationX =  ((e.getPoint().x - dragLeftXorigin)*dragCoefficient + translationXorigin);
-			//translationY = -((e.getPoint().y - dragLeftYorigin)*dragCoefficient + translationYorigin);
-			//translation[0] = translationX;				 
-			//translation[1] = translationY;
-			//translation[2] = 0.0f;
-			//p.setTranslation(translation);
 		}
 	}
 
@@ -120,5 +100,4 @@ public class MouseHandler implements MouseListener, MouseMotionListener, MouseWh
 		//System.out.println("viewdist "+ viewDist + " dragCoefficient " + dragCoefficient);
 		p.setViewDist(viewDist);
 	}
-
 }

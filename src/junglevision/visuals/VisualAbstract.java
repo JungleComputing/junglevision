@@ -163,15 +163,6 @@ public abstract class VisualAbstract implements Visual {
 		dimensions[2] = newDimensions[2];
 	}
 	
-	public void initializeLinks() {
-		for (Visual child : children) {
-			child.initializeLinks();
-		}
-		for (Visual link : links) {
-			link.initializeLinks();
-		}		
-	}
-	
 	public void setCollectionShape(CollectionShape newShape) {		
 		cShape = newShape;
 		constructDimensions();
@@ -206,6 +197,9 @@ public abstract class VisualAbstract implements Visual {
 	public void update() {
 		for (Visual child : children) {
 			child.update();
+		}
+		for (Visual link : links) {
+			link.update();
 		}
 	}
 	

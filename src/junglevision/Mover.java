@@ -4,6 +4,8 @@ public class Mover {
 	private Float[] oldLocation, currentLocation, newLocation;
 	private Timer timer;
 	
+	private boolean locationChanged;
+	
 	public Mover() {
 		oldLocation = new Float[3];
 		oldLocation[0] = 0.0f;
@@ -22,6 +24,8 @@ public class Mover {
 		
 		timer = new Timer(this);
 		new Thread(timer).start();
+		
+		locationChanged = false;
 	}
 	
 	public Float[] getCurrentLocation() {
@@ -45,5 +49,16 @@ public class Mover {
 		currentLocation[0] = oldLocation[0] + (fraction * ( newLocation[0] - oldLocation[0] ));
 		currentLocation[1] = oldLocation[1] + (fraction * ( newLocation[1] - oldLocation[1] ));
 		currentLocation[2] = oldLocation[2] + (fraction * ( newLocation[2] - oldLocation[2] ));
+
+		locationChanged = true;
+	}
+	
+	public boolean locationChanged() {
+		if (locationChanged) {
+			locationChanged = false;
+			return true;
+		} else {
+			return false;
+		}		
 	}
 }

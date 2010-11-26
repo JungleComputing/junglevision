@@ -10,7 +10,6 @@ public interface Visual {
 	public void setRotation(Float[] newRotation);
 	public void setDimensions(Float[] newDimensions);
 	
-	public void initializeLinks();
 	public void setCollectionShape(CollectionShape newShape);
 	public void setMetricShape(MetricShape newShape);
 	

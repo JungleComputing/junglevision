@@ -60,7 +60,7 @@ public class FakeMetric extends VisualAbstract implements Visual {
 		gl.glTranslatef(location[0], location[1], location[2]);
 		gl.glRotatef(rotation[0], 1.0f, 0.0f, 0.0f);
 		gl.glRotatef(rotation[1], 0.0f, 1.0f, 0.0f);
-		gl.glRotatef(rotation[2], 0.0f, 0.0f, 1.0f);
+		gl.glRotatef(rotation[2], 0.0f, 0.0f, 1.0f);		
 		
 		if (maxLength == HEIGHT) {	
 			int whichBar = (int) Math.floor(length*barPointer.length)/2;
