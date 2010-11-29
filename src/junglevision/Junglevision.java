@@ -20,8 +20,8 @@ import com.sun.opengl.util.FPSAnimator;
 import com.sun.opengl.util.GLUT;
 
 public class Junglevision implements GLEventListener {
-	private final static int MAX_NUMBER_OF_CHILDREN = 25;
-	private final static int MAX_NUMBER_OF_LINKS = 300;
+	private final static int MAX_NUMBER_OF_CHILDREN = 5;
+	private final static int MAX_NUMBER_OF_LINKS = 30;
 	private final static int MAX_METRICS_PER_LINK = 3;
 	
     GLU glu = new GLU();
@@ -146,7 +146,10 @@ public class Junglevision implements GLEventListener {
 	    //Depth testing
 	    gl.glEnable(GL.GL_DEPTH_TEST);
 		gl.glDepthFunc(GL.GL_LEQUAL);
-		gl.glClearDepth(1.0f);		
+		gl.glClearDepth(1.0f);
+		
+		//Culling
+		gl.glEnable(GL.GL_CULL_FACE);
 		
 		//Enable Blending (needed for both Transparency and Anti-Aliasing
 		gl.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA);				
@@ -168,7 +171,7 @@ public class Junglevision implements GLEventListener {
 	    
 	    //Initialize display lists
 	    DisplayListBuilder listBuilder = new DisplayListBuilder(gl);
-	    barPointer = listBuilder.getBarPointers();
+	    barPointer = listBuilder.getBarAndOutlinePointers();
 				
 		//Universe initializers
 	    resetUniverse();
