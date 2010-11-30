@@ -6,6 +6,8 @@ public class DisplayListBuilder {
 	private static final int ACCURACY = 20;
 	private float LINE_WIDTH = 0.3f;
 	
+	public static enum DisplayList { BAR_AND_OUTLINE, BAR }
+	
 	private int[] barAndOutlinePointer;
 	private int[] barPointer;
 	
@@ -16,12 +18,14 @@ public class DisplayListBuilder {
 		buildBars(gl, ACCURACY);
 	}
 	
-	public int[] getBarAndOutlinePointers() {
-		return barAndOutlinePointer;
-	}
-	
-	public int[] getBarPointers() {
-		return barPointer;
+	public int[] getPointer(DisplayList whichPointer) {
+		int[] pointer = null;
+		if (whichPointer == DisplayList.BAR_AND_OUTLINE) {
+			pointer = barAndOutlinePointer;
+		} else if (whichPointer == DisplayList.BAR) {
+			pointer = barPointer;
+		}
+		return pointer;
 	}
 	
 	private void buildBarsAndOutlines(GL gl, int amount) {
@@ -38,7 +42,6 @@ public class DisplayListBuilder {
 		
 		float Yf = 0.0f;
 				
-		//barPointer[0] = gl.glGenLists(amount);
 		barAndOutlinePointer[0] = gl.glGenLists(amount*2);
 		
 		for (int i=0; i<(amount*2); i+=2) {
@@ -253,13 +256,12 @@ public class DisplayListBuilder {
 		
 		float Yf = 0.0f;
 				
-		//barPointer[0] = gl.glGenLists(amount);
 		barPointer[0] = gl.glGenLists(amount);
 		
 		for (int i=0; i<(amount); i++) {
 			barPointer[i]   = barPointer[0]+i;
 			
-			Yf = ((HEIGHT/amount)*(i/2))-(0.5f*HEIGHT);
+			Yf = ((HEIGHT/amount)*(i))-(0.5f*HEIGHT);
 			
 			//The solid area
 			gl.glNewList(barPointer[i], GL.GL_COMPILE);

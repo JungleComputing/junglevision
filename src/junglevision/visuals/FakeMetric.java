@@ -4,6 +4,7 @@ import javax.media.opengl.GL;
 import javax.media.opengl.glu.GLU;
 import javax.media.opengl.glu.GLUquadric;
 
+import junglevision.DisplayListBuilder;
 import junglevision.Junglevision;
 
 public class FakeMetric extends VisualAbstract implements Visual {
@@ -15,15 +16,25 @@ public class FakeMetric extends VisualAbstract implements Visual {
 	private float currentValue;
 	private int glName;
 	private int[] barPointer;
+	private int[] barAndOutlinePointer;
+	
+	//On-demand generated displaylists
+	private int currentList;
+	boolean listBuilt = false;
+	
+	private DisplayListBuilder.DisplayList currentDL;
 	
 	FakeMetric(Junglevision jv, GLU glu, Float[] color) {
 		super();
 		
-		this.glu = glu;		
+		this.glu = glu;
 		this.color = color;
 		
 		currentValue = 0.0f;
-		barPointer = jv.getBarPointer();
+		barAndOutlinePointer = jv.getDisplayListPointer(DisplayListBuilder.DisplayList.BAR_AND_OUTLINE);
+		barPointer = jv.getDisplayListPointer(DisplayListBuilder.DisplayList.BAR);
+				
+		currentDL = DisplayListBuilder.DisplayList.BAR;
 		
 		dimensions[0] = WIDTH;
 		dimensions[1] = HEIGHT;
@@ -42,6 +53,8 @@ public class FakeMetric extends VisualAbstract implements Visual {
 	}
 	
 	public void update() {
+		listBuilt = false;
+		
 		if (Math.random()>0.5) {
 			currentValue += Math.random()/10;
 		} else {
@@ -52,7 +65,7 @@ public class FakeMetric extends VisualAbstract implements Visual {
 		currentValue = Math.min(1.0f, currentValue);
 	}
 
-	protected void drawBar(GL gl, float length, float maxLength) {	
+	protected void drawBar(GL gl, float length, float maxLength) {
 		//Save the current modelview matrix
 		gl.glPushMatrix();
 		
@@ -62,17 +75,31 @@ public class FakeMetric extends VisualAbstract implements Visual {
 		gl.glRotatef(rotation[1], 0.0f, 1.0f, 0.0f);
 		gl.glRotatef(rotation[2], 0.0f, 0.0f, 1.0f);		
 		
-		if (maxLength == HEIGHT) {	
-			int whichBar = (int) Math.floor(length*barPointer.length)/2;
+		if (currentDL == DisplayListBuilder.DisplayList.BAR_AND_OUTLINE && maxLength == HEIGHT) {	//BAR AND OUTLINE
+			int whichBar = (int) Math.floor(length*barAndOutlinePointer.length)/2;
 			if (length >= 0.95f) {
-				whichBar = (barPointer.length/2)-1;
+				whichBar = (barAndOutlinePointer.length/2)-1;
 			}
 	
 			gl.glColor4f(color[0], color[1], color[2], 1.0f);
-			gl.glCallList(barPointer[(whichBar*2)]); 
+			gl.glCallList(barAndOutlinePointer[(whichBar*2)]); 
 			gl.glColor4f(color[0], color[1], color[2], 0.4f);
-			gl.glCallList(barPointer[(whichBar*2)+1]);
-		} else {			
+			gl.glCallList(barAndOutlinePointer[(whichBar*2)+1]);
+		} else if (currentDL == DisplayListBuilder.DisplayList.BAR &&maxLength == HEIGHT) {	//BAR
+			int whichBar = (int) Math.floor(length*barPointer.length);
+			if (length >= 0.95f) {
+				whichBar = (barPointer.length)-1;
+			}
+	
+			gl.glColor4f(color[0], color[1], color[2], 1.0f);
+			gl.glCallList(barPointer[whichBar]);
+		} else if (listBuilt) {
+			gl.glCallList(currentList);
+		} else {
+			//On-demand generated list
+			currentList = gl.glGenLists(1);
+			listBuilt = true;
+			
 			float alpha = 0.4f;
 			 			
 			float 	Xn = -0.5f*dimensions[0],
@@ -86,195 +113,197 @@ public class FakeMetric extends VisualAbstract implements Visual {
 						
 			Yf = (length*dimensions[1])-(0.5f*dimensions[1]);
 			
-			//The solid area
-			gl.glBegin(GL.GL_QUADS);	
-				gl.glColor3f(color[0],color[1],color[2]);
-				//TOP
-				gl.glVertex3f( Xn, Yf, Zn);
-				gl.glVertex3f( Xn, Yf, Zp);
-				gl.glVertex3f( Xp, Yf, Zp);
-				gl.glVertex3f( Xp, Yf, Zn);
+			gl.glNewList(currentList, GL.GL_COMPILE_AND_EXECUTE);
+			
+				//The solid area
+				gl.glBegin(GL.GL_QUADS);	
+					gl.glColor3f(color[0],color[1],color[2]);
+					//TOP
+					gl.glVertex3f( Xn, Yf, Zn);
+					gl.glVertex3f( Xn, Yf, Zp);
+					gl.glVertex3f( Xp, Yf, Zp);
+					gl.glVertex3f( Xp, Yf, Zn);
+					
+					//BOTTOM
+					gl.glVertex3f( Xn, Yn, Zn);
+					gl.glVertex3f( Xp, Yn, Zn);
+					gl.glVertex3f( Xp, Yn, Zp);
+					gl.glVertex3f( Xn, Yn, Zp);
+					
+					//FRONT
+					gl.glVertex3f( Xn, Yf, Zp);
+					gl.glVertex3f( Xn, Yn, Zp);
+					gl.glVertex3f( Xp, Yn, Zp);
+					gl.glVertex3f( Xp, Yf, Zp);
+					
+					//BACK
+					gl.glVertex3f( Xp, Yf, Zn);
+					gl.glVertex3f( Xp, Yn, Zn);
+					gl.glVertex3f( Xn, Yn, Zn);
+					gl.glVertex3f( Xn, Yf, Zn);
+					
+					//LEFT
+					gl.glVertex3f( Xn, Yf, Zn);
+					gl.glVertex3f( Xn, Yn, Zn);
+					gl.glVertex3f( Xn, Yn, Zp);
+					gl.glVertex3f( Xn, Yf, Zp);
+					
+					//RIGHT
+					gl.glVertex3f( Xp, Yf, Zp);
+					gl.glVertex3f( Xp, Yn, Zp);
+					gl.glVertex3f( Xp, Yn, Zn);
+					gl.glVertex3f( Xp, Yf, Zn);
+				gl.glEnd();
 				
-				//BOTTOM
-				gl.glVertex3f( Xn, Yn, Zn);
-				gl.glVertex3f( Xp, Yn, Zn);
-				gl.glVertex3f( Xp, Yn, Zp);
-				gl.glVertex3f( Xn, Yn, Zp);
+				gl.glBegin(GL.GL_LINE_LOOP);
+					gl.glColor3f(0.8f,0.8f,0.8f);
+					//TOP
+					gl.glVertex3f( Xn, Yf, Zn);
+					gl.glVertex3f( Xn, Yf, Zp);
+					gl.glVertex3f( Xp, Yf, Zp);
+					gl.glVertex3f( Xp, Yf, Zn);
+				gl.glEnd();
 				
-				//FRONT
-				gl.glVertex3f( Xn, Yf, Zp);
-				gl.glVertex3f( Xn, Yn, Zp);
-				gl.glVertex3f( Xp, Yn, Zp);
-				gl.glVertex3f( Xp, Yf, Zp);
+				gl.glBegin(GL.GL_LINE_LOOP);
+					gl.glColor3f(0.8f,0.8f,0.8f);
+					//BOTTOM
+					gl.glVertex3f( Xn, Yn, Zn);
+					gl.glVertex3f( Xp, Yn, Zn);
+					gl.glVertex3f( Xp, Yn, Zp);
+					gl.glVertex3f( Xn, Yn, Zp);
+				gl.glEnd();
 				
-				//BACK
-				gl.glVertex3f( Xp, Yf, Zn);
-				gl.glVertex3f( Xp, Yn, Zn);
-				gl.glVertex3f( Xn, Yn, Zn);
-				gl.glVertex3f( Xn, Yf, Zn);
+				gl.glBegin(GL.GL_LINE_LOOP);
+					gl.glColor3f(0.8f,0.8f,0.8f);
+					//FRONT
+					gl.glVertex3f( Xn, Yf, Zp);
+					gl.glVertex3f( Xn, Yn, Zp);
+					gl.glVertex3f( Xp, Yn, Zp);
+					gl.glVertex3f( Xp, Yf, Zp);
+				gl.glEnd();
 				
-				//LEFT
-				gl.glVertex3f( Xn, Yf, Zn);
-				gl.glVertex3f( Xn, Yn, Zn);
-				gl.glVertex3f( Xn, Yn, Zp);
-				gl.glVertex3f( Xn, Yf, Zp);
+				gl.glBegin(GL.GL_LINE_LOOP);
+					gl.glColor3f(0.8f,0.8f,0.8f);
+					//BACK
+					gl.glVertex3f( Xp, Yf, Zn);
+					gl.glVertex3f( Xp, Yn, Zn);
+					gl.glVertex3f( Xn, Yn, Zn);
+					gl.glVertex3f( Xn, Yf, Zn);
+				gl.glEnd();
 				
-				//RIGHT
-				gl.glVertex3f( Xp, Yf, Zp);
-				gl.glVertex3f( Xp, Yn, Zp);
-				gl.glVertex3f( Xp, Yn, Zn);
-				gl.glVertex3f( Xp, Yf, Zn);
-			gl.glEnd();
-			
-			gl.glBegin(GL.GL_LINE_LOOP);
-				gl.glColor3f(0.8f,0.8f,0.8f);
-				//TOP
-				gl.glVertex3f( Xn, Yf, Zn);
-				gl.glVertex3f( Xn, Yf, Zp);
-				gl.glVertex3f( Xp, Yf, Zp);
-				gl.glVertex3f( Xp, Yf, Zn);
-			gl.glEnd();
-			
-			gl.glBegin(GL.GL_LINE_LOOP);
-				gl.glColor3f(0.8f,0.8f,0.8f);
-				//BOTTOM
-				gl.glVertex3f( Xn, Yn, Zn);
-				gl.glVertex3f( Xp, Yn, Zn);
-				gl.glVertex3f( Xp, Yn, Zp);
-				gl.glVertex3f( Xn, Yn, Zp);
-			gl.glEnd();
-			
-			gl.glBegin(GL.GL_LINE_LOOP);
-				gl.glColor3f(0.8f,0.8f,0.8f);
-				//FRONT
-				gl.glVertex3f( Xn, Yf, Zp);
-				gl.glVertex3f( Xn, Yn, Zp);
-				gl.glVertex3f( Xp, Yn, Zp);
-				gl.glVertex3f( Xp, Yf, Zp);
-			gl.glEnd();
-			
-			gl.glBegin(GL.GL_LINE_LOOP);
-				gl.glColor3f(0.8f,0.8f,0.8f);
-				//BACK
-				gl.glVertex3f( Xp, Yf, Zn);
-				gl.glVertex3f( Xp, Yn, Zn);
-				gl.glVertex3f( Xn, Yn, Zn);
-				gl.glVertex3f( Xn, Yf, Zn);
-			gl.glEnd();
-			
-			gl.glBegin(GL.GL_LINE_LOOP);
-				gl.glColor3f(0.8f,0.8f,0.8f);
-				//LEFT
-				gl.glVertex3f( Xn, Yf, Zn);
-				gl.glVertex3f( Xn, Yn, Zn);
-				gl.glVertex3f( Xn, Yn, Zp);
-				gl.glVertex3f( Xn, Yf, Zp);
-			gl.glEnd();
-			
-			gl.glBegin(GL.GL_LINE_LOOP);
-				gl.glColor3f(0.8f,0.8f,0.8f);
-				//RIGHT
-				gl.glVertex3f( Xp, Yf, Zp);
-				gl.glVertex3f( Xp, Yn, Zp);
-				gl.glVertex3f( Xp, Yn, Zn);
-				gl.glVertex3f( Xp, Yf, Zn);
-			gl.glEnd();
-			
-			//The transparent area			
-			gl.glBegin(GL.GL_QUADS);
-			gl.glColor4f(color[0],color[1],color[2], alpha);
-				//TOP
-				gl.glVertex3f( Xn, Yp, Zn);
-				gl.glVertex3f( Xn, Yp, Zp);
-				gl.glVertex3f( Xp, Yp, Zp);
-				gl.glVertex3f( Xp, Yp, Zn);
+				gl.glBegin(GL.GL_LINE_LOOP);
+					gl.glColor3f(0.8f,0.8f,0.8f);
+					//LEFT
+					gl.glVertex3f( Xn, Yf, Zn);
+					gl.glVertex3f( Xn, Yn, Zn);
+					gl.glVertex3f( Xn, Yn, Zp);
+					gl.glVertex3f( Xn, Yf, Zp);
+				gl.glEnd();
 				
-				//BOTTOM LEFT OUT
-				//gl.glVertex3f( Xn, Yn, Zn);
-				//gl.glVertex3f( Xp, Yn, Zn);
-				//gl.glVertex3f( Xp, Yn, Zp);
-				//gl.glVertex3f( Xn, Yn, Zp);
+				gl.glBegin(GL.GL_LINE_LOOP);
+					gl.glColor3f(0.8f,0.8f,0.8f);
+					//RIGHT
+					gl.glVertex3f( Xp, Yf, Zp);
+					gl.glVertex3f( Xp, Yn, Zp);
+					gl.glVertex3f( Xp, Yn, Zn);
+					gl.glVertex3f( Xp, Yf, Zn);
+				gl.glEnd();
 				
-				//FRONT
-				gl.glVertex3f( Xn, Yp, Zp);
-				gl.glVertex3f( Xn, Yf, Zp);
-				gl.glVertex3f( Xp, Yf, Zp);
-				gl.glVertex3f( Xp, Yp, Zp);
+				//The transparent area			
+				gl.glBegin(GL.GL_QUADS);
+				gl.glColor4f(color[0],color[1],color[2], alpha);
+					//TOP
+					gl.glVertex3f( Xn, Yp, Zn);
+					gl.glVertex3f( Xn, Yp, Zp);
+					gl.glVertex3f( Xp, Yp, Zp);
+					gl.glVertex3f( Xp, Yp, Zn);
+					
+					//BOTTOM LEFT OUT
+					//gl.glVertex3f( Xn, Yn, Zn);
+					//gl.glVertex3f( Xp, Yn, Zn);
+					//gl.glVertex3f( Xp, Yn, Zp);
+					//gl.glVertex3f( Xn, Yn, Zp);
+					
+					//FRONT
+					gl.glVertex3f( Xn, Yp, Zp);
+					gl.glVertex3f( Xn, Yf, Zp);
+					gl.glVertex3f( Xp, Yf, Zp);
+					gl.glVertex3f( Xp, Yp, Zp);
+					
+					//BACK
+					gl.glVertex3f( Xp, Yp, Zn);
+					gl.glVertex3f( Xp, Yf, Zn);
+					gl.glVertex3f( Xn, Yf, Zn);
+					gl.glVertex3f( Xn, Yp, Zn);
+					
+					//LEFT
+					gl.glVertex3f( Xn, Yp, Zn);
+					gl.glVertex3f( Xn, Yf, Zn);
+					gl.glVertex3f( Xn, Yf, Zp);
+					gl.glVertex3f( Xn, Yp, Zp);
+					
+					//RIGHT
+					gl.glVertex3f( Xp, Yp, Zp);
+					gl.glVertex3f( Xp, Yf, Zp);
+					gl.glVertex3f( Xp, Yf, Zn);
+					gl.glVertex3f( Xp, Yp, Zn);
+				gl.glEnd();
 				
-				//BACK
-				gl.glVertex3f( Xp, Yp, Zn);
-				gl.glVertex3f( Xp, Yf, Zn);
-				gl.glVertex3f( Xn, Yf, Zn);
-				gl.glVertex3f( Xn, Yp, Zn);
+				gl.glBegin(GL.GL_LINE_LOOP);
+					gl.glColor3f(0.8f,0.8f,0.8f);
+					//TOP
+					gl.glVertex3f( Xn, Yp, Zn);
+					gl.glVertex3f( Xn, Yp, Zp);
+					gl.glVertex3f( Xp, Yp, Zp);
+					gl.glVertex3f( Xp, Yp, Zn);
+				gl.glEnd();
 				
-				//LEFT
-				gl.glVertex3f( Xn, Yp, Zn);
-				gl.glVertex3f( Xn, Yf, Zn);
-				gl.glVertex3f( Xn, Yf, Zp);
-				gl.glVertex3f( Xn, Yp, Zp);
+				//gl.glBegin(GL.GL_LINE_LOOP);
+					//gl.glColor3f(0.8f,0.8f,0.8f);
+					//BOTTOM LEFT OUT
+					//gl.glVertex3f( Xn, Yn, Zn);
+					//gl.glVertex3f( Xp, Yn, Zn);
+					//gl.glVertex3f( Xp, Yn, Zp);
+					//gl.glVertex3f( Xn, Yn, Zp);
+				//gl.glEnd();
 				
-				//RIGHT
-				gl.glVertex3f( Xp, Yp, Zp);
-				gl.glVertex3f( Xp, Yf, Zp);
-				gl.glVertex3f( Xp, Yf, Zn);
-				gl.glVertex3f( Xp, Yp, Zn);
-			gl.glEnd();
-			
-			gl.glBegin(GL.GL_LINE_LOOP);
-				gl.glColor3f(0.8f,0.8f,0.8f);
-				//TOP
-				gl.glVertex3f( Xn, Yp, Zn);
-				gl.glVertex3f( Xn, Yp, Zp);
-				gl.glVertex3f( Xp, Yp, Zp);
-				gl.glVertex3f( Xp, Yp, Zn);
-			gl.glEnd();
-			
-			//gl.glBegin(GL.GL_LINE_LOOP);
-				//gl.glColor3f(0.8f,0.8f,0.8f);
-				//BOTTOM LEFT OUT
-				//gl.glVertex3f( Xn, Yn, Zn);
-				//gl.glVertex3f( Xp, Yn, Zn);
-				//gl.glVertex3f( Xp, Yn, Zp);
-				//gl.glVertex3f( Xn, Yn, Zp);
-			//gl.glEnd();
-			
-			gl.glBegin(GL.GL_LINE_LOOP);
-				gl.glColor3f(0.8f,0.8f,0.8f);
-				//FRONT
-				gl.glVertex3f( Xn, Yp, Zp);
-				gl.glVertex3f( Xn, Yf, Zp);
-				gl.glVertex3f( Xp, Yf, Zp);
-				gl.glVertex3f( Xp, Yp, Zp);
-			gl.glEnd();
-			
-			gl.glBegin(GL.GL_LINE_LOOP);
-				gl.glColor3f(0.8f,0.8f,0.8f);
-				//BACK
-				gl.glVertex3f( Xp, Yp, Zn);
-				gl.glVertex3f( Xp, Yf, Zn);
-				gl.glVertex3f( Xn, Yf, Zn);
-				gl.glVertex3f( Xn, Yp, Zn);
-			gl.glEnd();
-			
-			gl.glBegin(GL.GL_LINE_LOOP);
-				gl.glColor3f(0.8f,0.8f,0.8f);
-				//LEFT
-				gl.glVertex3f( Xn, Yp, Zn);
-				gl.glVertex3f( Xn, Yf, Zn);
-				gl.glVertex3f( Xn, Yf, Zp);
-				gl.glVertex3f( Xn, Yp, Zp);
-			gl.glEnd();
-			
-			gl.glBegin(GL.GL_LINE_LOOP);
-				gl.glColor3f(0.8f,0.8f,0.8f);
-				//RIGHT
-				gl.glVertex3f( Xp, Yp, Zp);
-				gl.glVertex3f( Xp, Yf, Zp);
-				gl.glVertex3f( Xp, Yf, Zn);
-				gl.glVertex3f( Xp, Yp, Zn);
-			gl.glEnd();
-		}	
-		
+				gl.glBegin(GL.GL_LINE_LOOP);
+					gl.glColor3f(0.8f,0.8f,0.8f);
+					//FRONT
+					gl.glVertex3f( Xn, Yp, Zp);
+					gl.glVertex3f( Xn, Yf, Zp);
+					gl.glVertex3f( Xp, Yf, Zp);
+					gl.glVertex3f( Xp, Yp, Zp);
+				gl.glEnd();
+				
+				gl.glBegin(GL.GL_LINE_LOOP);
+					gl.glColor3f(0.8f,0.8f,0.8f);
+					//BACK
+					gl.glVertex3f( Xp, Yp, Zn);
+					gl.glVertex3f( Xp, Yf, Zn);
+					gl.glVertex3f( Xn, Yf, Zn);
+					gl.glVertex3f( Xn, Yp, Zn);
+				gl.glEnd();
+				
+				gl.glBegin(GL.GL_LINE_LOOP);
+					gl.glColor3f(0.8f,0.8f,0.8f);
+					//LEFT
+					gl.glVertex3f( Xn, Yp, Zn);
+					gl.glVertex3f( Xn, Yf, Zn);
+					gl.glVertex3f( Xn, Yf, Zp);
+					gl.glVertex3f( Xn, Yp, Zp);
+				gl.glEnd();
+				
+				gl.glBegin(GL.GL_LINE_LOOP);
+					gl.glColor3f(0.8f,0.8f,0.8f);
+					//RIGHT
+					gl.glVertex3f( Xp, Yp, Zp);
+					gl.glVertex3f( Xp, Yf, Zp);
+					gl.glVertex3f( Xp, Yf, Zn);
+					gl.glVertex3f( Xp, Yp, Zn);
+				gl.glEnd();
+			}	
+		gl.glEndList();
 		
 		//Restore the old modelview matrix
 		gl.glPopMatrix();

@@ -20,7 +20,7 @@ import com.sun.opengl.util.FPSAnimator;
 import com.sun.opengl.util.GLUT;
 
 public class Junglevision implements GLEventListener {
-	private final static int MAX_NUMBER_OF_CHILDREN = 5;
+	private final static int MAX_NUMBER_OF_CHILDREN = 10;
 	private final static int MAX_NUMBER_OF_LINKS = 30;
 	private final static int MAX_METRICS_PER_LINK = 3;
 	
@@ -43,7 +43,7 @@ public class Junglevision implements GLEventListener {
     private HashMap<Integer, FakeMetric> namesToVisuals;
     
     //Universe
-    private int[] barPointer;
+    DisplayListBuilder listBuilder;
     private FakeLocationUpper location;
     private ArrayList<Visual> visualRegistry;
     private ArrayList<FakeLink> linkList;
@@ -94,7 +94,7 @@ public class Junglevision implements GLEventListener {
 		fovy = 45.0f; 
 		aspect = (this.width / this.height); 
 		zNear = 0.1f;
-		zFar = 400.0f;	
+		zFar = 1500.0f;	
 		
 		//Initial view
 		viewDist = -6;
@@ -170,8 +170,7 @@ public class Junglevision implements GLEventListener {
 	    gl.glClearColor(0.0f, 0.0f, 0.0f, 0.0f);	 
 	    
 	    //Initialize display lists
-	    DisplayListBuilder listBuilder = new DisplayListBuilder(gl);
-	    barPointer = listBuilder.getBarAndOutlinePointers();
+	    listBuilder = new DisplayListBuilder(gl);
 				
 		//Universe initializers
 	    resetUniverse();
@@ -413,8 +412,8 @@ public class Junglevision implements GLEventListener {
 		recenterRequest = true;
 	}
 	
-	public int[] getBarPointer() {
-		return barPointer;
+	public int[] getDisplayListPointer(DisplayListBuilder.DisplayList whichPointer) {
+		return listBuilder.getPointer(whichPointer);
 	}
 	
 	public void resetUniverse() {
