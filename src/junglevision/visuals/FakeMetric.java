@@ -48,7 +48,7 @@ public class FakeMetric extends VisualAbstract implements Visual {
 		if (mShape == MetricShape.BAR) {
 			drawBar(gl, currentValue, dimensions[1]);
 		} else if (mShape == MetricShape.TUBE) {
-			drawTube(gl, currentValue);
+			drawTube(gl, currentValue, dimensions[1]);
 		}		
 	}
 	
@@ -104,14 +104,14 @@ public class FakeMetric extends VisualAbstract implements Visual {
 			 			
 			float 	Xn = -0.5f*dimensions[0],
 					Xp =  0.5f*dimensions[0],
-					Yn = -0.5f*dimensions[1],
-					Yp =  0.5f*dimensions[1],
+					Yn = -0.5f*maxLength,
+					Yp =  0.5f*maxLength,
 					Zn = -0.5f*dimensions[2],
 					Zp =  0.5f*dimensions[2];
 	
 			float Yf = 0.0f;
 						
-			Yf = (length*dimensions[1])-(0.5f*dimensions[1]);
+			Yf = (length*maxLength)-(0.5f*maxLength);
 			
 			gl.glNewList(currentList, GL.GL_COMPILE_AND_EXECUTE);
 			
@@ -309,87 +309,92 @@ public class FakeMetric extends VisualAbstract implements Visual {
 		gl.glPopMatrix();
 	}
 	
-	protected void drawTube(GL gl, float length) {
+	protected void drawTube(GL gl, float length, float maxLength) {
 		//Save the current modelview matrix
 		gl.glPushMatrix();
 		
-		final int SIDES = 12;
-		final float EDGE_SIZE = 0.01f;
-		
-		//use nice variables, so that the ogl code is readable
-		float o = 0.0f;			//(o)rigin
-		float x = HEIGHT;		//(x) maximum coordinate
-		float y = HEIGHT;			//(y) maximum coordinate
-		float z = WIDTH;		//(z) maximum coordinate	
-		float f = length * y; 	//(f)illed area
-		float r = y - f;		//(r)est area (non-filled, up until the maximum) 
-		float alpha = 0.4f;
-		
-		float line_color_r = 0.8f;
-		float line_color_g = 0.8f;
-		float line_color_b = 0.8f;
-		
-		float quad_color_r = color[0];
-		float quad_color_g = color[1];
-		float quad_color_b = color[2];
-		
-		float radius = Math.max(x,z) / 2;
-		
-		//Translate to the desired coordinates
+		//Translate to the desired coordinates and rotate if desired
 		gl.glTranslatef(location[0], location[1], location[2]);
+		gl.glRotatef(rotation[0], 1.0f, 0.0f, 0.0f);
+		gl.glRotatef(rotation[1], 0.0f, 1.0f, 0.0f);
+		gl.glRotatef(rotation[2], 0.0f, 0.0f, 1.0f);
 		
-		//Center the drawing startpoint
-		gl.glTranslatef(-0.5f*x, -0.5f*y, -0.5f*z);		
-
-		//Rotate to align with the y axis instead of the default z axis
-		gl.glRotatef(-90.0f, 1.0f, 0.0f, 0.0f);
-		
-		//Make a new quadratic object
-		GLUquadric qobj = glu.gluNewQuadric();
+		if (listBuilt) {
+			gl.glCallList(currentList);
+		} else {		
+			final int SIDES = 12;
+			final float EDGE_SIZE = 0.01f;
+			
+			//On-demand generated list
+			currentList = gl.glGenLists(1);
+			listBuilt = true;
+			
+			float alpha = 0.4f;
+			 			
+			float 	Yn = -0.5f*maxLength,
+					Yp =  0.5f*maxLength;
+	
+			float Yf = 0.0f;
+						
+			Yf = (length*maxLength)-(0.5f*maxLength);
+			
+			float quad_color_r = color[0];
+			float quad_color_g = color[1];
+			float quad_color_b = color[2];
+			
+			float radius = WIDTH / 2;
+			
+			gl.glNewList(currentList, GL.GL_COMPILE_AND_EXECUTE);				
+				//Make a new quadratic object
+				GLUquadric qobj = glu.gluNewQuadric();
+						
+				//The Solid Element
+					gl.glTranslatef(0.0f, Yn, 0.0f);
+					
+					//Bottom disk
+					gl.glColor3f(quad_color_r, quad_color_g, quad_color_b);
+					glu.gluDisk(qobj, 0.0, radius, SIDES, 1);
+								
+					//Sides
+					glu.gluCylinder(qobj, radius, radius, Yf, SIDES, 1);			
+					
+					//Edge of bottom disk
+					gl.glColor3f(0.8f,0.8f,0.8f);
+					glu.gluCylinder(qobj, radius, radius, EDGE_SIZE, SIDES, 1);
+					
+					gl.glTranslatef(0.0f, Yf, 0.0f);
+					
+					//Top disk
+					gl.glColor3f(quad_color_r, quad_color_g, quad_color_b);
+					glu.gluDisk(qobj, 0.0, radius, SIDES, 1);
+					
+					//Edge of top disk
+					gl.glColor3f(0.8f,0.8f,0.8f);
+					glu.gluCylinder(qobj, radius, radius, EDGE_SIZE, SIDES, 1);
 				
-		//The Solid Element
-			//Bottom disk
-			gl.glColor3f(quad_color_r, quad_color_g, quad_color_b);
-			glu.gluDisk(qobj, 0.0, radius, SIDES, 1);
-						
-			//Sides
-			glu.gluCylinder(qobj, radius, radius, f, SIDES, 1);			
-			
-			//Edge of bottom disk
-			gl.glColor3f(line_color_r, line_color_g, line_color_b);
-			glu.gluCylinder(qobj, radius, radius, EDGE_SIZE, SIDES, 1);
-			
-			gl.glTranslatef(o, o, f);
-			
-			//Top disk
-			gl.glColor3f(quad_color_r, quad_color_g, quad_color_b);
-			glu.gluDisk(qobj, 0.0, radius, SIDES, 1);
-			
-			//Edge of top disk
-			gl.glColor3f(line_color_r, line_color_g, line_color_b);
-			glu.gluCylinder(qobj, radius, radius, EDGE_SIZE, SIDES, 1);
-		
-		//The shadow Element				
-			//Bottom disk left out, since it's the top disk of the solid
-										
-			//Sides
-			gl.glColor4f(quad_color_r, quad_color_g, quad_color_b, alpha);
-			glu.gluCylinder(qobj, radius, radius, r, SIDES, 1);			
-			
-			//Edge of bottom disk also left out
-						
-			gl.glTranslatef(o, o, r);
-			
-			//Top disk
-			gl.glColor4f(quad_color_r, quad_color_g, quad_color_b, alpha);
-			glu.gluDisk(qobj, 0.0, radius, SIDES, 1);
-			
-			//Edge of top disk
-			gl.glColor4f(line_color_r, line_color_g, line_color_b, alpha);
-			glu.gluCylinder(qobj, radius, radius, EDGE_SIZE, SIDES, 1);		
-		
-		//Cleanup
-		glu.gluDeleteQuadric(qobj);
+				//The shadow Element				
+					//Bottom disk left out, since it's the top disk of the solid
+												
+					//Sides
+					gl.glColor4f(quad_color_r, quad_color_g, quad_color_b, alpha);
+					glu.gluCylinder(qobj, radius, radius, Yp-Yf, SIDES, 1);			
+					
+					//Edge of bottom disk also left out
+								
+					gl.glTranslatef(0.0f, Yp-Yf, 0.0f);
+					
+					//Top disk
+					gl.glColor4f(quad_color_r, quad_color_g, quad_color_b, alpha);
+					glu.gluDisk(qobj, 0.0, radius, SIDES, 1);
+					
+					//Edge of top disk
+					gl.glColor4f(0.8f,0.8f,0.8f, alpha);
+					glu.gluCylinder(qobj, radius, radius, EDGE_SIZE, SIDES, 1);		
+				
+				//Cleanup
+				glu.gluDeleteQuadric(qobj);
+			gl.glEndList();
+		}
 		
 		//Restore the old modelview matrix
 		gl.glPopMatrix();

@@ -20,7 +20,7 @@ import com.sun.opengl.util.FPSAnimator;
 import com.sun.opengl.util.GLUT;
 
 public class Junglevision implements GLEventListener {
-	private final static int MAX_NUMBER_OF_CHILDREN = 10;
+	private final static int MAX_NUMBER_OF_CHILDREN = 20;
 	private final static int MAX_NUMBER_OF_LINKS = 30;
 	private final static int MAX_METRICS_PER_LINK = 3;
 	
@@ -174,9 +174,6 @@ public class Junglevision implements GLEventListener {
 				
 		//Universe initializers
 	    resetUniverse();
-		//location = new FakeLocationUpper(this, glu, MAX_NUMBER_OF_CHILDREN);
-		//location.setLocation(m.getCurrentLocation());
-		//createLinks();
 	    
 	    //and set the matrix mode to the modelview matrix in the end
 	    gl.glMatrixMode(GL.GL_MODELVIEW);

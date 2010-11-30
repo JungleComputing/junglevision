@@ -170,6 +170,9 @@ public abstract class VisualAbstract implements Visual {
 	
 	public void setMetricShape(MetricShape newShape) {
 		mShape = newShape;
+		for (Visual child : children) {
+			child.setMetricShape(newShape);
+		}
 	}
 	
 	public Float[] getLocation() {
