@@ -9,6 +9,7 @@ public abstract class VisualAbstract implements Visual {
 	private final static float CUBE_RADIUS_MULTIPLIER = 0.075f;
 	
 	protected List<Visual> children;
+	protected List<Visual> ibises;
 	protected List<Visual> links;
 	protected Float[] location;
 	protected Float[] rotation;
@@ -20,6 +21,7 @@ public abstract class VisualAbstract implements Visual {
 	
 	public VisualAbstract() {
 		children = new ArrayList<Visual>();
+		ibises = new ArrayList<Visual>();
 		links = new ArrayList<Visual>();
 		location   = new Float[3];
 		rotation   = new Float[3];
@@ -37,6 +39,15 @@ public abstract class VisualAbstract implements Visual {
 		cShape = CollectionShape.CITYSCAPE;
 		mShape = MetricShape.BAR;
 		separation = 0.0f;
+	}
+	
+	public void init(GL gl) {
+		for (Visual child : children) {
+			child.init(gl);
+		}
+		for (Visual ibis : ibises) {
+			ibis.init(gl);
+		}
 	}
 	
 	public void setLocation(Float[] newLocation) {		 
@@ -173,6 +184,9 @@ public abstract class VisualAbstract implements Visual {
 		for (Visual child : children) {
 			child.setMetricShape(newShape);
 		}
+		for (Visual ibis : ibises) {
+			ibis.setMetricShape(newShape);
+		}
 	}
 	
 	public Float[] getLocation() {
@@ -201,6 +215,9 @@ public abstract class VisualAbstract implements Visual {
 		for (Visual child : children) {
 			child.update();
 		}
+		for (Visual ibis : ibises) {
+			ibis.update();
+		}
 		for (Visual link : links) {
 			link.update();
 		}
@@ -210,7 +227,9 @@ public abstract class VisualAbstract implements Visual {
 		for (Visual ibis : children) {
 			ibis.drawThis(gl, renderMode);
 		}
-		
+		for (Visual ibis : ibises) {
+			ibis.drawThis(gl, renderMode);
+		}		
 		for (Visual link : links) {
 			link.drawThis(gl, renderMode);
 		}
@@ -239,8 +258,8 @@ public abstract class VisualAbstract implements Visual {
 		
 		if (cShape == CollectionShape.CITYSCAPE) {
 			dimensions[0] = (maxChildDimensions[0]+separation) * (int) Math.ceil(Math.sqrt(children.size()))-separation; 
-			dimensions[1] = (maxChildDimensions[1]+separation) * (int) Math.floor(Math.sqrt(children.size()))-separation;
-			dimensions[2] = (maxChildDimensions[2]+separation);
+			dimensions[1] = (maxChildDimensions[1]+separation);
+			dimensions[2] = (maxChildDimensions[2]+separation) * (int) Math.floor(Math.sqrt(children.size()))-separation;
 		} else if (cShape == CollectionShape.SPHERE) {
 			dimensions[0] = (maxAllChildDimensions+separation)*CUBE_RADIUS_MULTIPLIER * children.size()*2f;
 			dimensions[1] = (maxAllChildDimensions+separation)*CUBE_RADIUS_MULTIPLIER * children.size()*2f;

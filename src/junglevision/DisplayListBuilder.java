@@ -250,7 +250,7 @@ public class DisplayListBuilder {
 		float 	Xn = -0.5f*WIDTH,
 				Xp =  0.5f*WIDTH,
 				Yn = -0.5f*HEIGHT,
-				Yp =  0.5f*HEIGHT,
+				//Yp =  0.5f*HEIGHT,
 				Zn = -0.5f*WIDTH,
 				Zp =  0.5f*WIDTH;
 		

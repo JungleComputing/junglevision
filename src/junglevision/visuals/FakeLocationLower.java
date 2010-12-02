@@ -10,7 +10,7 @@ public class FakeLocationLower extends VisualAbstract implements Visual {
 	public FakeLocationLower(Junglevision jv, GLU glu, int numberOfIbises) {
 		super();
 		separation = 1.0f;
-		cShape = CollectionShape.SPHERE;
+		cShape = CollectionShape.CITYSCAPE;
 		
 		jv.registerVisual(this);
 		

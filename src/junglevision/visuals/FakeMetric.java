@@ -10,6 +10,7 @@ import junglevision.Junglevision;
 public class FakeMetric extends VisualAbstract implements Visual {
 	private static final float WIDTH = 0.25f;
 	private static final float HEIGHT = 1.00f;
+	private static final int ACCURACY = 20;
 	private GLU glu;
 	
 	private Float[] color;
@@ -18,9 +19,14 @@ public class FakeMetric extends VisualAbstract implements Visual {
 	private int[] barPointer;
 	private int[] barAndOutlinePointer;
 	
+	//Tryout
+	private int[] onDemandList;
+	private boolean[] onDemandListsBuilt;
+	
 	//On-demand generated displaylists
 	private int currentList;
 	boolean listBuilt = false;
+	int whichList = 0;
 	
 	private DisplayListBuilder.DisplayList currentDL;
 	
@@ -30,17 +36,38 @@ public class FakeMetric extends VisualAbstract implements Visual {
 		this.glu = glu;
 		this.color = color;
 		
-		currentValue = 0.0f;
+		currentValue = 0.0f;		
+		
 		barAndOutlinePointer = jv.getDisplayListPointer(DisplayListBuilder.DisplayList.BAR_AND_OUTLINE);
 		barPointer = jv.getDisplayListPointer(DisplayListBuilder.DisplayList.BAR);
-				
 		currentDL = DisplayListBuilder.DisplayList.BAR;
 		
 		dimensions[0] = WIDTH;
 		dimensions[1] = HEIGHT;
 		dimensions[2] = WIDTH;
 		
+		//Tryout
+		onDemandList 		= new int[ACCURACY];
+		onDemandListsBuilt 	= new boolean[ACCURACY];	
+		
 		glName = jv.registerGLName(this);
+	}
+	
+	public void init(GL gl) {
+		onDemandList[0] = gl.glGenLists(ACCURACY);
+		
+		for (int i=0; i<ACCURACY; i++) {
+			onDemandListsBuilt[i] = false;
+			onDemandList[i] = onDemandList[0]+i;
+		}
+	}
+	
+	public void setLocation(Float[] newLocation) {
+		for (int i=0; i<ACCURACY; i++) {
+			onDemandListsBuilt[i] = false;
+		}
+		
+		super.setLocation(newLocation);
 	}
 	
 	public void drawThis(GL gl, int renderMode) {
@@ -53,7 +80,7 @@ public class FakeMetric extends VisualAbstract implements Visual {
 	}
 	
 	public void update() {
-		listBuilt = false;
+		//listBuilt = false;	
 		
 		if (Math.random()>0.5) {
 			currentValue += Math.random()/10;
@@ -63,6 +90,8 @@ public class FakeMetric extends VisualAbstract implements Visual {
 		
 		currentValue = Math.max(0.0f, currentValue);
 		currentValue = Math.min(1.0f, currentValue);
+		
+		whichList = Math.min(ACCURACY-1,(int)Math.floor(currentValue*ACCURACY));	
 	}
 
 	protected void drawBar(GL gl, float length, float maxLength) {
@@ -85,7 +114,7 @@ public class FakeMetric extends VisualAbstract implements Visual {
 			gl.glCallList(barAndOutlinePointer[(whichBar*2)]); 
 			gl.glColor4f(color[0], color[1], color[2], 0.4f);
 			gl.glCallList(barAndOutlinePointer[(whichBar*2)+1]);
-		} else if (currentDL == DisplayListBuilder.DisplayList.BAR &&maxLength == HEIGHT) {	//BAR
+		} else if (currentDL == DisplayListBuilder.DisplayList.BAR && maxLength == HEIGHT) {	//BAR
 			int whichBar = (int) Math.floor(length*barPointer.length);
 			if (length >= 0.95f) {
 				whichBar = (barPointer.length)-1;
@@ -93,12 +122,10 @@ public class FakeMetric extends VisualAbstract implements Visual {
 	
 			gl.glColor4f(color[0], color[1], color[2], 1.0f);
 			gl.glCallList(barPointer[whichBar]);
-		} else if (listBuilt) {
-			gl.glCallList(currentList);
-		} else {
-			//On-demand generated list
-			currentList = gl.glGenLists(1);
-			listBuilt = true;
+		} else if (onDemandListsBuilt[whichList]) {
+			gl.glCallList(onDemandList[whichList]);
+		} else {		
+			onDemandListsBuilt[whichList] = true;
 			
 			float alpha = 0.4f;
 			 			
@@ -113,8 +140,8 @@ public class FakeMetric extends VisualAbstract implements Visual {
 						
 			Yf = (length*maxLength)-(0.5f*maxLength);
 			
-			gl.glNewList(currentList, GL.GL_COMPILE_AND_EXECUTE);
-			
+			gl.glNewList(onDemandList[whichList], GL.GL_COMPILE_AND_EXECUTE);
+				
 				//The solid area
 				gl.glBegin(GL.GL_QUADS);	
 					gl.glColor3f(color[0],color[1],color[2]);
@@ -303,6 +330,7 @@ public class FakeMetric extends VisualAbstract implements Visual {
 					gl.glVertex3f( Xp, Yp, Zn);
 				gl.glEnd();
 			}	
+
 		gl.glEndList();
 		
 		//Restore the old modelview matrix
@@ -319,8 +347,8 @@ public class FakeMetric extends VisualAbstract implements Visual {
 		gl.glRotatef(rotation[1], 0.0f, 1.0f, 0.0f);
 		gl.glRotatef(rotation[2], 0.0f, 0.0f, 1.0f);
 		
-		if (listBuilt) {
-			gl.glCallList(currentList);
+		if (onDemandListsBuilt[whichList]) {
+			gl.glCallList(onDemandList[whichList]);
 		} else {		
 			final int SIDES = 12;
 			final float EDGE_SIZE = 0.01f;

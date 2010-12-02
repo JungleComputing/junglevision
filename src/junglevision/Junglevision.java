@@ -20,10 +20,11 @@ import com.sun.opengl.util.FPSAnimator;
 import com.sun.opengl.util.GLUT;
 
 public class Junglevision implements GLEventListener {
-	private final static int MAX_NUMBER_OF_CHILDREN = 20;
-	private final static int MAX_NUMBER_OF_LINKS = 30;
+	private final static int MAX_NUMBER_OF_CHILDREN = 10;
+	private final static int MAX_NUMBER_OF_LINKS = 5000;
 	private final static int MAX_METRICS_PER_LINK = 3;
 	
+	GL gl;
     GLU glu = new GLU();
     GLUT glut = new GLUT();
     MouseHandler mouseHandler;
@@ -132,7 +133,7 @@ public class Junglevision implements GLEventListener {
      * Init() will be called when your program starts
      */
 	public void init(GLAutoDrawable drawable) {
-		GL gl = drawable.getGL();
+		gl = drawable.getGL();
 		
 		//Shader Model
 		gl.glShadeModel(GL.GL_SMOOTH);
@@ -173,7 +174,7 @@ public class Junglevision implements GLEventListener {
 	    listBuilder = new DisplayListBuilder(gl);
 				
 		//Universe initializers
-	    resetUniverse();
+	    resetUniverse();	    
 	    
 	    //and set the matrix mode to the modelview matrix in the end
 	    gl.glMatrixMode(GL.GL_MODELVIEW);
@@ -241,9 +242,9 @@ public class Junglevision implements GLEventListener {
 		gl.glTranslatef(viewTranslation[0], viewTranslation[1], viewDist);
 		gl.glRotatef(viewRotation[0], 1,0,0);
 		gl.glRotatef(viewRotation[1], 0,1,0);
-		
+				
 		location.drawThis(gl, renderMode);
-		
+			
 		for (FakeLink link : linkList) {
 			link.drawThis(gl, renderMode);
 		}
@@ -269,7 +270,7 @@ public class Junglevision implements GLEventListener {
 			
 			linkList.add(newLink);
 			
-			newLink.setMetricShape(Visual.MetricShape.TUBE);
+			//newLink.setMetricShape(Visual.MetricShape.TUBE);
 		}
 	}
 	
@@ -418,11 +419,13 @@ public class Junglevision implements GLEventListener {
 		
 		location = new FakeLocationUpper(this, glu, MAX_NUMBER_OF_CHILDREN);
 		location.setLocation(m.getCurrentLocation().clone());
+		location.init(gl);
+		
 		createLinks();
 		for (FakeLink link : linkList) {
 			link.setLocation(m.getCurrentLocation().clone());
-		}
-		
+			link.init(gl);
+		}		
 	}
 	
     public static void main(String[] args) {

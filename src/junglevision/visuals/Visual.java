@@ -6,6 +6,8 @@ public interface Visual {
 	enum CollectionShape { CITYSCAPE, CUBE, SPHERE } 
 	enum MetricShape { BAR, TUBE, SPHERE }
 	
+	public void init(GL gl);
+	
 	public void setLocation(Float[] newLocation);
 	public void setRotation(Float[] newRotation);
 	public void setDimensions(Float[] newDimensions);
