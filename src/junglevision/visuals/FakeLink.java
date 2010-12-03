@@ -15,7 +15,7 @@ public class FakeLink extends VisualAbstract implements Visual {
 		
 		for (int i=0; i<numberOfMetrics; i++) {
 			Float[] color = {(float)Math.random(), (float)Math.random(), (float)Math.random()};
-			children.add(new FakeMetric(jv, glu, color));
+			children.add(new LinkMetric(jv, glu, color));
 		}
 		
 		constructDimensions();

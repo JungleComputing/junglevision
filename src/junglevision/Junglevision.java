@@ -11,7 +11,6 @@ import javax.media.opengl.glu.GLU;
 
 import junglevision.visuals.FakeLink;
 import junglevision.visuals.FakeLocationUpper;
-import junglevision.visuals.FakeMetric;
 import junglevision.visuals.Visual;
 
 
@@ -20,9 +19,9 @@ import com.sun.opengl.util.FPSAnimator;
 import com.sun.opengl.util.GLUT;
 
 public class Junglevision implements GLEventListener {
-	private final static int MAX_NUMBER_OF_CHILDREN = 10;
-	private final static int MAX_NUMBER_OF_LINKS = 5000;
-	private final static int MAX_METRICS_PER_LINK = 3;
+	private final static int MAX_NUMBER_OF_CHILDREN = 2;
+	private final static int MAX_NUMBER_OF_LINKS = 5;
+	private final static int MAX_METRICS_PER_LINK = 9;
 	
 	GL gl;
     GLU glu = new GLU();
@@ -41,7 +40,7 @@ public class Junglevision implements GLEventListener {
     private boolean pickRequest, updateRequest, recenterRequest;
     private Point pickPoint;
     private int selectedItem;
-    private HashMap<Integer, FakeMetric> namesToVisuals;
+    private HashMap<Integer, Visual> namesToVisuals;
     
     //Universe
     DisplayListBuilder listBuilder;
@@ -116,7 +115,7 @@ public class Junglevision implements GLEventListener {
 		updateRequest = true;
 		recenterRequest = false;
 		pickPoint = new Point();
-		namesToVisuals = new HashMap<Integer, FakeMetric>();
+		namesToVisuals = new HashMap<Integer, Visual>();
 		new javax.swing.Timer(1000, fpsRecorder).start();
 				
 		this.m = new Mover();
@@ -337,7 +336,7 @@ public class Junglevision implements GLEventListener {
 	    return selection;
 	}
 	
-	public int registerGLName(FakeMetric metric) {
+	public int registerGLName(Visual metric) {
 		int key = namesToVisuals.size();
 		namesToVisuals.put(key, metric);
 		return key;		
@@ -423,8 +422,8 @@ public class Junglevision implements GLEventListener {
 		
 		createLinks();
 		for (FakeLink link : linkList) {
-			link.setLocation(m.getCurrentLocation().clone());
 			link.init(gl);
+			link.setLocation(m.getCurrentLocation().clone());			
 		}		
 	}
 	

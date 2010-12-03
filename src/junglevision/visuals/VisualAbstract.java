@@ -171,7 +171,7 @@ public abstract class VisualAbstract implements Visual {
 	public void setDimensions(Float[] newDimensions) {
 		dimensions[0] = newDimensions[0];
 		dimensions[1] = newDimensions[1];
-		dimensions[2] = newDimensions[2];
+		dimensions[2] = newDimensions[2];		
 	}
 	
 	public void setCollectionShape(CollectionShape newShape) {		
