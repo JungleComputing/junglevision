@@ -256,7 +256,7 @@ public class DisplayListBuilder {
 		
 		float Yf = 0.0f;
 				
-		barPointer[0] = gl.glGenLists(amount);
+		barPointer[0] = gl.glGenLists(amount);		
 		
 		for (int i=0; i<(amount); i++) {
 			barPointer[i]   = barPointer[0]+i;

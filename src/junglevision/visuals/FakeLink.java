@@ -13,9 +13,8 @@ public class FakeLink extends VisualAbstract implements Visual {
 		this.source = source;
 		this.destination = destination;
 		
-		for (int i=0; i<numberOfMetrics; i++) {
-			Float[] color = {(float)Math.random(), (float)Math.random(), (float)Math.random()};
-			children.add(new LinkMetric(jv, glu, color));
+		for (int i=0; i<numberOfMetrics; i++) {			
+			children.add(new LinkMetric(jv, glu, new junglevision.gathering.metrics.RandomMetric().getMetric()));
 		}
 		
 		constructDimensions();

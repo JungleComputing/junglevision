@@ -1,14 +1,16 @@
 package junglevision;
+import java.awt.PopupMenu;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
 
+import javax.media.opengl.GLCanvas;
 import javax.swing.SwingUtilities;
 
 public class MouseHandler implements MouseListener, MouseMotionListener, MouseWheelListener{	
-	private Junglevision p;
+	private Junglevision jv;
 		
 	private float viewDist = -6; 
 	private float dragCoefficient = 10.0f;
@@ -32,8 +34,8 @@ public class MouseHandler implements MouseListener, MouseMotionListener, MouseWh
 	private float translationYorigin = 0; 
 	private float translationY = 0;
 	
-	MouseHandler(Junglevision p) {
-		this.p = p;
+	MouseHandler(Junglevision jv) {
+		this.jv = jv;
 		
 		rotation = new Float[3];
 		translation = new Float[3];	
@@ -41,14 +43,17 @@ public class MouseHandler implements MouseListener, MouseMotionListener, MouseWh
 	
 	public void mouseClicked(MouseEvent e) {		
 		if (SwingUtilities.isLeftMouseButton(e)) {
-			p.doPickRequest(e.getPoint());
+			jv.doPickRequest(e.getPoint());
 			if (e.getClickCount() != 1) {
-				p.doRecenterRequest();
+				jv.doRecenterRequest();
 			}			
 		} else if (SwingUtilities.isMiddleMouseButton(e)) {
 			//Nothing yet
 		} else if (SwingUtilities.isRightMouseButton(e)) {
-			//Nothing yet
+			PopupMenu popup = jv.menuRequest();
+			GLCanvas canvas = jv.getCanvas();
+			canvas.add(popup);
+			popup.show(canvas, e.getX(), e.getY());
 		}		
 	}
 
@@ -83,7 +88,7 @@ public class MouseHandler implements MouseListener, MouseMotionListener, MouseWh
 			rotation[0] = rotationX;
 			rotation[1] = rotationY;
 			rotation[2] = 0.0f;
-			p.setRotation(rotation);
+			jv.setRotation(rotation);
 		}
 	}
 
@@ -98,6 +103,6 @@ public class MouseHandler implements MouseListener, MouseMotionListener, MouseWh
 		dragCoefficient = 100* 1/(100 - viewDist);
 		
 		//System.out.println("viewdist "+ viewDist + " dragCoefficient " + dragCoefficient);
-		p.setViewDist(viewDist);
+		jv.setViewDist(viewDist);
 	}
 }

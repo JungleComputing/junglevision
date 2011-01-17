@@ -15,7 +15,7 @@ public class KeyHandler implements KeyListener {
 		int code = e.getKeyCode();
 		
 		if (code == 82) {
-			jv.resetUniverse();
+			jv.doReset();
 		}		
 	}
 

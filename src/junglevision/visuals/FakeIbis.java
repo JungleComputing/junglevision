@@ -3,6 +3,7 @@ package junglevision.visuals;
 import javax.media.opengl.glu.GLU;
 
 import junglevision.Junglevision;
+import junglevision.gathering.metrics.RandomMetric;
 
 public class FakeIbis extends VisualAbstract implements Visual  {	
 	
@@ -12,9 +13,8 @@ public class FakeIbis extends VisualAbstract implements Visual  {
 		
 		jv.registerVisual(this);
 		
-		for (int i=0; i<numberOfMetrics; i++) {
-			Float[] color = {(float)Math.random(), (float)Math.random(), (float)Math.random()};
-			children.add(new FakeMetric(jv, glu, color));
+		for (int i=0; i<numberOfMetrics; i++) {			
+			children.add(new Metric(jv, glu, new RandomMetric().getMetric()));
 		}
 		
 		constructDimensions();

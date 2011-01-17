@@ -1,5 +1,8 @@
 package junglevision;
 
+import ibis.ipl.server.ManagementServiceInterface;
+import ibis.ipl.server.RegistryServiceInterface;
+
 import java.awt.*;
 import java.awt.event.*;
 import java.nio.IntBuffer;
@@ -9,6 +12,7 @@ import java.util.HashMap;
 import javax.media.opengl.*;
 import javax.media.opengl.glu.GLU;
 
+import junglevision.gathering.impl.Collector;
 import junglevision.visuals.FakeLink;
 import junglevision.visuals.FakeLocationUpper;
 import junglevision.visuals.Visual;
@@ -19,13 +23,14 @@ import com.sun.opengl.util.FPSAnimator;
 import com.sun.opengl.util.GLUT;
 
 public class Junglevision implements GLEventListener {
-	private final static int MAX_NUMBER_OF_CHILDREN = 2;
-	private final static int MAX_NUMBER_OF_LINKS = 5;
+	private final static int MAX_NUMBER_OF_CHILDREN = 5;
+	private final static int MAX_NUMBER_OF_LINKS = 10;
 	private final static int MAX_METRICS_PER_LINK = 9;
 	
 	GL gl;
     GLU glu = new GLU();
     GLUT glut = new GLUT();
+    GLCanvas canvas;
     MouseHandler mouseHandler;
     KeyHandler keyHandler;
     
@@ -37,7 +42,7 @@ public class Junglevision implements GLEventListener {
     private Float[] viewTranslation, viewRotation;
     
     //picking
-    private boolean pickRequest, updateRequest, recenterRequest;
+    private boolean pickRequest, updateRequest, recenterRequest, resetRequest;
     private Point pickPoint;
     private int selectedItem;
     private HashMap<Integer, Visual> namesToVisuals;
@@ -48,14 +53,24 @@ public class Junglevision implements GLEventListener {
     private ArrayList<Visual> visualRegistry;
     private ArrayList<FakeLink> linkList;
     
-    //Location
+    //JMX variables
+	private RegistryServiceInterface regInterface;
+	private ManagementServiceInterface manInterface;
+    
+    //Viewer Location
     Mover m;
     
     //FPS counter
     private int framesPassed, fps;
+    
+    
 
+	/* ------------------------------------------------------------------------------------------------ 
+	 *  Initialization section 
+	 * */    
+    
     /**
-     * Constructor for your program, this sets up the
+     * Constructor for Junglevision, this sets up the
      * window (Frame), creates a GLCanvas and starts the Animator
      */
     public Junglevision() {
@@ -68,7 +83,7 @@ public class Junglevision implements GLEventListener {
 		glCapabilities.setSampleBuffers(true);
 		glCapabilities.setNumSamples(4);
     	
-    	GLCanvas canvas = new GLCanvas(glCapabilities);    	
+    	canvas = new GLCanvas(glCapabilities);    	
 		canvas.addGLEventListener(this);
 		
 		//Add Mouse event listener
@@ -82,7 +97,7 @@ public class Junglevision implements GLEventListener {
 		canvas.addKeyListener(keyHandler);
 		
 		//Set up the window
-		Frame frame = new Frame("Maarten's Skeleton");
+		Frame frame = new Frame("Junglevision");
 		frame.add(canvas);
 		frame.setSize(1800, 1100);
 		frame.addWindowListener(new WindowAdapter() {
@@ -122,14 +137,18 @@ public class Junglevision implements GLEventListener {
 		
 		//Visual updater definition
 		FakeUpdater updater = new FakeUpdater(this);
-		new Thread(updater).start();		
+		new Thread(updater).start();
+		
+		//Collector definition
+		Collector collector = new Collector(manInterface, regInterface);
+		new Thread(collector).start();
 		
 		FPSAnimator animator = new FPSAnimator(canvas,60);
 		animator.start();
     }
     
     /**
-     * Init() will be called when your program starts
+     * Init() will be called when Junglevision starts
      */
 	public void init(GLAutoDrawable drawable) {
 		gl = drawable.getGL();
@@ -173,13 +192,123 @@ public class Junglevision implements GLEventListener {
 	    listBuilder = new DisplayListBuilder(gl);
 				
 		//Universe initializers
-	    resetUniverse();	    
+	    initializeUniverse();	    
 	    
 	    //and set the matrix mode to the modelview matrix in the end
 	    gl.glMatrixMode(GL.GL_MODELVIEW);
 	    gl.glLoadIdentity();
 	}
+	
+	/**
+	 * Function that is called when the canvas is resized. 
+	 */
+	public void reshape(GLAutoDrawable drawable, int x, int y, int w, int h) {
+		GL gl = drawable.getGL();
+		
+		//Set the new viewport
+		gl.glViewport(0, 0, w, h);
+
+		//Change to the projection mode
+		gl.glMatrixMode(GL.GL_PROJECTION);
+		gl.glLoadIdentity();
+
+		//Calculate and set the new perspective
+		this.width = (double) w;
+		this.height = (double) h;
+		
+		aspect = this.width / this.height;
+		
+		glu.gluPerspective(fovy, aspect, zNear, zFar);
+		
+		//Return to normal mode
+		gl.glMatrixMode(GL.GL_MODELVIEW);
+		gl.glLoadIdentity();
+	}	
+	
+	
+	/**
+	 * Mandatory function to complete the implementation of GLEventListener, but unneeded and therefore left blank.
+	 */
+	public void displayChanged(GLAutoDrawable drawable, boolean modeChanged, boolean deviceChanged) {}
+	
+	
+	/**
+	 * Functions that register visual elements and GLNames during initialization, to enable picking later.
+	 */
+	public void registerVisual(Visual newVisual) {
+		visualRegistry.add(newVisual);
+	}
+	
+	public int registerGLName(Visual metric) {
+		int key = namesToVisuals.size();
+		namesToVisuals.put(key, metric);
+		return key;		
+	}
+	
+	/**
+	 * Function used to speed up the display process by using pre-built display lists.
+	 */
+	public int[] getDisplayListPointer(DisplayListBuilder.DisplayList whichPointer) {
+		return listBuilder.getPointer(whichPointer);
+	}
+		
+	/**
+	 * This function sets the current state to the original state.
+	 */
+	public void initializeUniverse() {
+		visualRegistry.clear();
+		
+		location = new FakeLocationUpper(this, glu, MAX_NUMBER_OF_CHILDREN);
+		location.setLocation(m.getCurrentLocation().clone());
+		location.init(gl);
+		
+		createLinks();
+		for (FakeLink link : linkList) {
+			link.init(gl);
+			link.setLocation(m.getCurrentLocation().clone());			
+		}		
+	}
+	
+	/**
+	 * Function to intinialize links
+	 */
+	private void createLinks() {
+		linkList.clear();
+		int numberOfLinks = (int) (Math.min(MAX_NUMBER_OF_LINKS, ((visualRegistry.size()*(visualRegistry.size()-1))/2)) );		
+		
+		for (int i=0; i<numberOfLinks; i++) {
+			Visual source = null, destination = source;
+			FakeLink newLink;
 			
+			do {
+				source 		= visualRegistry.get(Math.min( visualRegistry.size(),(int) (Math.random()*visualRegistry.size()))); 
+				destination	= visualRegistry.get(Math.min( visualRegistry.size(),(int) (Math.random()*visualRegistry.size())));
+				newLink = new FakeLink(this, glu, (int) (Math.random()*MAX_METRICS_PER_LINK), source, destination);
+			} while (source == destination || linkList.contains(newLink));
+			
+			linkList.add(newLink);
+		}
+	}	
+	
+	ActionListener fpsRecorder = new ActionListener() {
+		public void actionPerformed(ActionEvent e) {
+			fps = framesPassed;
+			framesPassed = 0;
+		}
+	};
+	
+    /**
+     * main function for the standalone Junglevision program. Not to be used once integrated into deploy.
+     */
+    public static void main(String[] args) {
+    	new Junglevision();		
+	}
+
+	
+	
+	/* ------------------------------------------------------------------------------------------------ 
+	 *  Drawing section
+	 * */	
 	
 	/**
 	 * display() will be called repeatedly by the Animator
@@ -217,6 +346,11 @@ public class Junglevision implements GLEventListener {
 		}
 		
 		//Update visuals
+		if (resetRequest) {
+			initializeUniverse();
+			resetRequest = false;
+		}
+		
 		if (m.locationChanged()) {
 			location.setLocation(m.getCurrentLocation().clone());
 			for (FakeLink link : linkList) {
@@ -249,30 +383,6 @@ public class Junglevision implements GLEventListener {
 		}
 	}
 	
-	public void registerVisual(Visual newVisual) {
-		visualRegistry.add(newVisual);
-	}
-	
-	private void createLinks() {
-		linkList.clear();
-		int numberOfLinks = (int) (Math.min(MAX_NUMBER_OF_LINKS, ((visualRegistry.size()*(visualRegistry.size()-1))/2)) );		
-		
-		for (int i=0; i<numberOfLinks; i++) {
-			Visual source = null, destination = source;
-			FakeLink newLink;
-			
-			do {
-				source 		= visualRegistry.get(Math.min( visualRegistry.size(),(int) (Math.random()*visualRegistry.size()))); 
-				destination	= visualRegistry.get(Math.min( visualRegistry.size(),(int) (Math.random()*visualRegistry.size())));
-				newLink = new FakeLink(this, glu, (int) (Math.random()*MAX_METRICS_PER_LINK), source, destination);
-			} while (source == destination || linkList.contains(newLink));
-			
-			linkList.add(newLink);
-			
-			//newLink.setMetricShape(Visual.MetricShape.TUBE);
-		}
-	}
-	
 	private void drawHud(GL gl) {
 		framesPassed++;
 		
@@ -285,6 +395,55 @@ public class Junglevision implements GLEventListener {
 		glut.glutBitmapString(GLUT.BITMAP_HELVETICA_18, "FPS: " + fps);				
 	}
 	
+	/**
+	 * Function called by the updater thread to enable updating on the next cycle.
+	 */
+	public void doUpdateRequest() {
+		updateRequest = true;
+	}
+	
+	/* ------------------------------------------------------------------------------------------------ 
+	 *  Interaction section
+	 * */	
+	
+	/**
+	 * Functions called by the MouseHandler class
+	 */
+	public void setRotation(Float[] newViewRotation) {
+		viewRotation = newViewRotation;
+	}
+	
+	public void setViewDist(float newViewDist) {
+		viewDist = newViewDist;
+	}
+	
+	public void doPickRequest(Point p) {
+		pickRequest = true;
+		pickPoint = p;
+	}
+	
+	public PopupMenu menuRequest() {
+		return new PopupMenu();
+	}
+	
+	public GLCanvas getCanvas() {
+		return canvas;
+	}
+		
+	/**
+	 * Functions called by the KeyHandler class
+	 */
+	public void doRecenterRequest() {
+		recenterRequest = true;
+	}
+	
+	public void doReset() {
+		resetRequest = true;
+	}
+		
+	/**
+	 * Functions to enable picking
+	 */
 	private int pick(GL gl, Point pickPoint) {
 		final int BUFSIZE = 512;
 		
@@ -336,11 +495,7 @@ public class Junglevision implements GLEventListener {
 	    return selection;
 	}
 	
-	public int registerGLName(Visual metric) {
-		int key = namesToVisuals.size();
-		namesToVisuals.put(key, metric);
-		return key;		
-	}
+
 	
 	private int processHits(int hits, int buffer[]) {	
 		int selection = -1;
@@ -360,81 +515,4 @@ public class Junglevision implements GLEventListener {
 	    
 	    return selection;
 	}	
-
-	public void reshape(GLAutoDrawable drawable, int x, int y, int w, int h) {
-		GL gl = drawable.getGL();
-		
-		//Set the new viewport
-		gl.glViewport(0, 0, w, h);
-
-		//Change to the projection mode
-		gl.glMatrixMode(GL.GL_PROJECTION);
-		gl.glLoadIdentity();
-
-		//Calculate and set the new perspective
-		this.width = (double) w;
-		this.height = (double) h;
-		
-		aspect = this.width / this.height;
-		
-		glu.gluPerspective(fovy, aspect, zNear, zFar);
-		
-		//Return to normal mode
-		gl.glMatrixMode(GL.GL_MODELVIEW);
-		gl.glLoadIdentity();
-	}
-
-	public void displayChanged(GLAutoDrawable drawable, boolean modeChanged, boolean deviceChanged) {
-		
-	}
-	
-	public void setRotation(Float[] newViewRotation) {
-		viewRotation = newViewRotation;
-	}
-	
-	public void setViewDist(float newViewDist) {
-		viewDist = newViewDist;
-	}
-	
-	public void doPickRequest(Point p) {
-		pickRequest = true;
-		pickPoint = p;
-	}
-	
-	public void doUpdateRequest() {
-		updateRequest = true;
-	}
-	
-	public void doRecenterRequest() {
-		recenterRequest = true;
-	}
-	
-	public int[] getDisplayListPointer(DisplayListBuilder.DisplayList whichPointer) {
-		return listBuilder.getPointer(whichPointer);
-	}
-	
-	public void resetUniverse() {
-		visualRegistry.clear();
-		
-		location = new FakeLocationUpper(this, glu, MAX_NUMBER_OF_CHILDREN);
-		location.setLocation(m.getCurrentLocation().clone());
-		location.init(gl);
-		
-		createLinks();
-		for (FakeLink link : linkList) {
-			link.init(gl);
-			link.setLocation(m.getCurrentLocation().clone());			
-		}		
-	}
-	
-    public static void main(String[] args) {
-    	new Junglevision();		
-	}
-
-	ActionListener fpsRecorder = new ActionListener() {
-		public void actionPerformed(ActionEvent e) {
-			fps = framesPassed;
-			framesPassed = 0;
-		}
-	};
 }

@@ -5,6 +5,8 @@ import javax.media.opengl.glu.GLU;
 import javax.media.opengl.glu.GLUquadric;
 
 import junglevision.Junglevision;
+import junglevision.gathering.MetricDescription.MetricOutput;
+import junglevision.gathering.exceptions.OutputUnavailableException;
 
 public class LinkMetric extends VisualAbstract implements Visual {
 	private static final float WIDTH = 0.1f;
@@ -14,8 +16,10 @@ public class LinkMetric extends VisualAbstract implements Visual {
 	
 	private GLU glu;
 	
+	private junglevision.gathering.Metric metric;
 	private Float[] color;
 	private float currentValue;
+	private MetricOutput currentOutputMethod = MetricOutput.PERCENT;
 	private int glName;
 		
 	//On-demand generated displaylists
@@ -23,26 +27,33 @@ public class LinkMetric extends VisualAbstract implements Visual {
 	private boolean[] onDemandListsBuilt;
 	int whichList;
 	
-	LinkMetric(Junglevision jv, GLU glu, Float[] color) {
+	LinkMetric(Junglevision jv, GLU glu, junglevision.gathering.Metric metric) {
 		super();
 		
 		this.glu = glu;
-		this.color = color;
+		this.metric = metric;
+		this.color = metric.getDescription().getColor();
 		
-		currentValue = 0.0f;		
+		try {
+			currentValue = (Float) metric.getCurrentValue(currentOutputMethod);
+		} catch (OutputUnavailableException e) {
+			//This shouldn't happen if the metric is defined properly
+			e.printStackTrace();
+		}
 		
 		dimensions[0] = WIDTH;
 		dimensions[1] = HEIGHT;
 		dimensions[2] = WIDTH;
 		
 		onDemandList 		= new int[ACCURACY+1];
-		onDemandListsBuilt 	= new boolean[ACCURACY+1];	
+		onDemandListsBuilt 	= new boolean[ACCURACY+1];
 		whichList = 0;
 		
 		glName = jv.registerGLName(this);
 	}
 	
 	public void init(GL gl) {
+		gl.glDeleteLists(onDemandList[0], ACCURACY+1);
 		onDemandList[0] = gl.glGenLists(ACCURACY+1);
 		
 		for (int i=0; i<ACCURACY+1; i++) {
@@ -69,17 +80,13 @@ public class LinkMetric extends VisualAbstract implements Visual {
 		}		
 	}
 	
-	public void update() {
-		if (Math.random()>0.5) {
-			currentValue += Math.random()/10;
-		} else {
-			currentValue -= Math.random()/10;
-		}
-		
-		currentValue = Math.max(0.0f, currentValue);
-		currentValue = Math.min(1.0f, currentValue);
-		
-		whichList = (int) Math.floor(currentValue*ACCURACY);			
+	public void update() {				
+		try {
+			currentValue = (Float) metric.getCurrentValue(currentOutputMethod);
+		} catch (OutputUnavailableException e) {
+			//This shouldn't happen if the metric is defined properly
+			e.printStackTrace();
+		}	
 	}
 
 	protected void drawBar(GL gl, float length, float maxLength) {
