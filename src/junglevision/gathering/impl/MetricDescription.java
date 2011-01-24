@@ -2,6 +2,9 @@ package junglevision.gathering.impl;
 
 import java.util.ArrayList;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import ibis.ipl.support.management.AttributeDescription;
 
 /**
@@ -10,7 +13,10 @@ import ibis.ipl.support.management.AttributeDescription;
  */
 
 public abstract class MetricDescription implements junglevision.gathering.MetricDescription {
+	private static final Logger logger = LoggerFactory.getLogger("ibis.deploy.gui.junglevision.gathering.impl.MetricDescription");
+	
 	protected String name;
+	protected MetricType type;
 	protected Float[] color;
 	protected ArrayList<MetricOutput> outputTypes; 
 	protected ArrayList<AttributeDescription> necessaryAttributes;
@@ -26,6 +32,10 @@ public abstract class MetricDescription implements junglevision.gathering.Metric
 		return name;
 	}
 	
+	public MetricType getType() {
+		return type;
+	}
+	
 	public Float[] getColor() {
 		return color;
 	}
@@ -38,7 +48,7 @@ public abstract class MetricDescription implements junglevision.gathering.Metric
 		return necessaryAttributes;
 	}
 	
-	public junglevision.gathering.Metric getMetric() {
-		return new Metric(this);
+	public junglevision.gathering.Metric getMetric(junglevision.gathering.Element element) {
+		return new Metric(element, this);
 	}
 }

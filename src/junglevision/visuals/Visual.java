@@ -8,14 +8,14 @@ public interface Visual {
 	
 	public void init(GL gl);
 	
-	public void setLocation(Float[] newLocation);
+	public void setCoordinates(Float[] newCoordinates);
 	public void setRotation(Float[] newRotation);
 	public void setDimensions(Float[] newDimensions);
 	
 	public void setCollectionShape(CollectionShape newShape);
 	public void setMetricShape(MetricShape newShape);
 	
-	public Float[] getLocation();	
+	public Float[] getCoordinates();	
 	public Float[] getDimensions();
 	public float getRadius();
 		

@@ -4,8 +4,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map.Entry;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import junglevision.gathering.Link;
 import junglevision.gathering.MetricDescription.MetricOutput;
+import junglevision.gathering.MetricDescription.MetricType;
 import junglevision.gathering.exceptions.OutputUnavailableException;
 
 /**
@@ -13,6 +17,8 @@ import junglevision.gathering.exceptions.OutputUnavailableException;
  * @author Maarten van Meersbergen
  */
 public class Location extends Element implements junglevision.gathering.Location {
+	private static final Logger logger = LoggerFactory.getLogger("ibis.deploy.gui.junglevision.gathering.impl.Location");
+	
 	private String name;
 	private Float[] color;
 	
@@ -34,6 +40,16 @@ public class Location extends Element implements junglevision.gathering.Location
 	//Getters
 	public String getName() {
 		return name;
+	}
+	
+	public junglevision.gathering.Metric[] getMetrics() {
+		ArrayList<junglevision.gathering.Metric> result = new ArrayList<junglevision.gathering.Metric>();
+		for (junglevision.gathering.Metric metric : metrics.values()) {
+			if (metric.getDescription().getType() == MetricType.NODE) {
+				result.add(metric);
+			}
+		}		
+		return result.toArray(new junglevision.gathering.Metric[0]);
 	}
 	
 	public Float[] getColor() {
@@ -62,8 +78,7 @@ public class Location extends Element implements junglevision.gathering.Location
 							result = metricvalue;
 						}
 					} catch (OutputUnavailableException e) {
-						//This shouldn't happen if the metric is well defined
-						e.printStackTrace();
+						logger.debug("OutputUnavailableException caught. Metric is probably undefined.");
 					}					
 				}
 			} else if (function == Reducefunction.LOCATIONSPECIFIC_MAXIMUM) {
@@ -76,8 +91,7 @@ public class Location extends Element implements junglevision.gathering.Location
 							result = metricvalue;
 						}
 					} catch (OutputUnavailableException e) {
-						//This shouldn't happen if the metric is well defined
-						e.printStackTrace();
+						logger.debug("OutputUnavailableException caught. Metric is probably undefined.");
 					}					
 				}
 			} else if (function == Reducefunction.LOCATIONSPECIFIC_AVERAGE) {
@@ -88,8 +102,7 @@ public class Location extends Element implements junglevision.gathering.Location
 						metricvalue = (Integer) ibis.getMetric(metric).getCurrentValue(outputmethod);
 						result += metricvalue;	
 					} catch (OutputUnavailableException e) {
-						//This shouldn't happen if the metric is well defined
-						e.printStackTrace();
+						logger.debug("OutputUnavailableException caught. Metric is probably undefined.");
 					}				
 				}
 				if (ibises.size() > 0) {
@@ -105,8 +118,7 @@ public class Location extends Element implements junglevision.gathering.Location
 							result = metricvalue;
 						}
 					} catch (OutputUnavailableException e) {
-						//This shouldn't happen if the metric is well defined
-						e.printStackTrace();
+						logger.debug("OutputUnavailableException caught. Metric is probably undefined.");
 					}					
 				}
 				
@@ -126,8 +138,7 @@ public class Location extends Element implements junglevision.gathering.Location
 							result = metricvalue;
 						}
 					} catch (OutputUnavailableException e) {
-						//This shouldn't happen if the metric is well defined
-						e.printStackTrace();
+						logger.debug("OutputUnavailableException caught. Metric is probably undefined.");
 					}					
 				}
 				
@@ -147,8 +158,7 @@ public class Location extends Element implements junglevision.gathering.Location
 						metricvalue = (Integer) ibis.getMetric(metric).getCurrentValue(outputmethod);
 						result += metricvalue;	
 					} catch (OutputUnavailableException e) {
-						//This shouldn't happen if the metric is well defined
-						e.printStackTrace();
+						logger.debug("OutputUnavailableException caught. Metric is probably undefined.");
 					}				
 				}
 								
@@ -175,8 +185,7 @@ public class Location extends Element implements junglevision.gathering.Location
 							result = metricvalue;
 						}
 					} catch (OutputUnavailableException e) {
-						//This shouldn't happen if the metric is well defined
-						e.printStackTrace();
+						logger.debug("OutputUnavailableException caught. Metric is probably undefined.");
 					}					
 				}
 			} else if (function == Reducefunction.LOCATIONSPECIFIC_MAXIMUM) {
@@ -189,8 +198,7 @@ public class Location extends Element implements junglevision.gathering.Location
 							result = metricvalue;
 						}
 					} catch (OutputUnavailableException e) {
-						//This shouldn't happen if the metric is well defined
-						e.printStackTrace();
+						logger.debug("OutputUnavailableException caught. Metric is probably undefined.");
 					}					
 				}
 			} else if (function == Reducefunction.LOCATIONSPECIFIC_AVERAGE) {
@@ -201,8 +209,7 @@ public class Location extends Element implements junglevision.gathering.Location
 						metricvalue = (Float) ibis.getMetric(metric).getCurrentValue(outputmethod);
 						result += metricvalue;	
 					} catch (OutputUnavailableException e) {
-						//This shouldn't happen if the metric is well defined
-						e.printStackTrace();
+						logger.debug("OutputUnavailableException caught. Metric is probably undefined.");
 					}				
 				}
 				if (ibises.size() > 0) {
@@ -218,8 +225,7 @@ public class Location extends Element implements junglevision.gathering.Location
 							result = metricvalue;
 						}
 					} catch (OutputUnavailableException e) {
-						//This shouldn't happen if the metric is well defined
-						e.printStackTrace();
+						logger.debug("OutputUnavailableException caught. Metric is probably undefined.");
 					}					
 				}
 				
@@ -239,8 +245,7 @@ public class Location extends Element implements junglevision.gathering.Location
 							result = metricvalue;
 						}
 					} catch (OutputUnavailableException e) {
-						//This shouldn't happen if the metric is well defined
-						e.printStackTrace();
+						logger.debug("OutputUnavailableException caught. Metric is probably undefined.");
 					}					
 				}
 				
@@ -260,8 +265,7 @@ public class Location extends Element implements junglevision.gathering.Location
 						metricvalue = (Float) ibis.getMetric(metric).getCurrentValue(outputmethod);
 						result += metricvalue;	
 					} catch (OutputUnavailableException e) {
-						//This shouldn't happen if the metric is well defined
-						e.printStackTrace();
+						logger.debug("OutputUnavailableException caught. Metric is probably undefined.");
 					}				
 				}
 								
@@ -290,8 +294,7 @@ public class Location extends Element implements junglevision.gathering.Location
 						result.add(entry.getValue());
 					}
 				} catch (OutputUnavailableException e) {
-					//This shouldn't happen if the metric is well defined
-					e.printStackTrace();
+					logger.debug("OutputUnavailableException caught. Metric is probably undefined.");
 				}				
 			}			
 		} else {
@@ -303,8 +306,7 @@ public class Location extends Element implements junglevision.gathering.Location
 						result.add(entry.getValue());
 					}
 				} catch (OutputUnavailableException e) {
-					//This shouldn't happen if the metric is well defined
-					e.printStackTrace();
+					logger.debug("OutputUnavailableException caught. Metric is probably undefined.");
 				}				
 			}	
 		}	
@@ -324,7 +326,16 @@ public class Location extends Element implements junglevision.gathering.Location
 		
 		return result;
 	} 
-
+	
+	public String debugPrint() {
+		String result = name + " has "+ibises.size()+" ibises. \n" ;
+		for (junglevision.gathering.Location child : children) {
+			result += child.debugPrint();
+		}
+		return result;
+	}
+	
+	//Setters
 	public void addIbis(junglevision.gathering.Ibis ibis) {
 		ibises.add(ibis);
 	}
@@ -334,7 +345,9 @@ public class Location extends Element implements junglevision.gathering.Location
 	}
 	
 	public void addChild(junglevision.gathering.Location location) {
-		children.add(location);
+		if (!children.contains(location)) {
+			children.add(location);
+		}
 	}
 	
 	public void removeChild(junglevision.gathering.Location location) {
@@ -347,5 +360,14 @@ public class Location extends Element implements junglevision.gathering.Location
 	
 	public void removeLink(junglevision.gathering.Element destination) {
 		links.remove(destination);
+	}
+	
+	public void setMetrics(junglevision.gathering.MetricDescription[] newMetrics) {
+		for (junglevision.gathering.Ibis ibis : ibises) {
+			ibis.setMetrics(newMetrics);
+		}
+		for (junglevision.gathering.Location child : children) {
+			child.setMetrics(newMetrics);
+		}
 	}
 }

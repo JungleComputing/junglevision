@@ -1,18 +1,23 @@
 package junglevision.gathering.metrics;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import junglevision.gathering.Metric;
+import junglevision.gathering.exceptions.BeyondAllowedRangeException;
 import ibis.ipl.support.management.AttributeDescription;
 
-public class CPUMetric extends junglevision.gathering.impl.MetricDescription implements junglevision.gathering.MetricDescription {
-	public static final String NAME = "CPU";
-	
+public class CPUUsage extends junglevision.gathering.impl.MetricDescription implements junglevision.gathering.MetricDescription {
+	private static final Logger logger = LoggerFactory.getLogger("ibis.deploy.gui.junglevision.gathering.metrics.CPUUsage");
+		
 	//Metric-specific variables
 	private long cpu_prev, upt_prev;
 	
-	public CPUMetric() {
+	public CPUUsage() {
 		super();
 		
-		name = "CPU";		
+		name = "CPU";
+		type = MetricType.NODE;
 				
 		color[0] = 1.0f;
 		color[1] = 0.0f;
@@ -36,6 +41,10 @@ public class CPUMetric extends junglevision.gathering.impl.MetricDescription imp
 		cpu_prev = cpu_elapsed;
 		upt_prev = upt_elapsed;
 		
-		metric.setValue(MetricOutput.PERCENT, (cpuUsage / 100));
+		try {			 
+			metric.setValue(MetricOutput.PERCENT, (cpuUsage / 100));
+		} catch (BeyondAllowedRangeException e) {
+			logger.debug(name +" metric failed trying to set value out of bounds.");
+		}
 	}
 }

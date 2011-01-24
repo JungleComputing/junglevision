@@ -4,7 +4,6 @@ import javax.media.opengl.GL;
 import javax.media.opengl.glu.GLU;
 import javax.media.opengl.glu.GLUquadric;
 
-import junglevision.Junglevision;
 import junglevision.gathering.MetricDescription.MetricOutput;
 import junglevision.gathering.exceptions.OutputUnavailableException;
 
@@ -27,7 +26,7 @@ public class LinkMetric extends VisualAbstract implements Visual {
 	private boolean[] onDemandListsBuilt;
 	int whichList;
 	
-	LinkMetric(Junglevision jv, GLU glu, junglevision.gathering.Metric metric) {
+	LinkMetric(JungleGoggles jv, GLU glu, junglevision.gathering.Metric metric) {
 		super();
 		
 		this.glu = glu;
@@ -62,13 +61,13 @@ public class LinkMetric extends VisualAbstract implements Visual {
 		}
 	}
 	
-	public void setLocation(Float[] newLocation) {
+	public void setCoordinates(Float[] newLocation) {
 		
 		for (int i=0; i<ACCURACY+1; i++) {
 			onDemandListsBuilt[i] = false;
 		}
 		
-		super.setLocation(newLocation);
+		super.setCoordinates(newLocation);
 	}
 	
 	public void drawThis(GL gl, int renderMode) {
@@ -94,7 +93,7 @@ public class LinkMetric extends VisualAbstract implements Visual {
 		gl.glPushMatrix();
 		
 		//Translate to the desired coordinates and rotate if desired
-		gl.glTranslatef(location[0], location[1], location[2]);
+		gl.glTranslatef(coordinates[0], coordinates[1], coordinates[2]);
 		gl.glRotatef(rotation[0], 1.0f, 0.0f, 0.0f);
 		gl.glRotatef(rotation[1], 0.0f, 1.0f, 0.0f);
 		gl.glRotatef(rotation[2], 0.0f, 0.0f, 1.0f);
@@ -319,7 +318,7 @@ public class LinkMetric extends VisualAbstract implements Visual {
 		gl.glPushMatrix();
 		
 		//Translate to the desired coordinates and rotate if desired
-		gl.glTranslatef(location[0], location[1], location[2]);
+		gl.glTranslatef(coordinates[0], coordinates[1], coordinates[2]);
 		gl.glRotatef(rotation[0], 1.0f, 0.0f, 0.0f);
 		gl.glRotatef(rotation[1], 0.0f, 1.0f, 0.0f);
 		gl.glRotatef(rotation[2], 0.0f, 0.0f, 1.0f);

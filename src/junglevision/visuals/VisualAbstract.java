@@ -11,7 +11,7 @@ public abstract class VisualAbstract implements Visual {
 	protected List<Visual> children;
 	protected List<Visual> ibises;
 	protected List<Visual> links;
-	protected Float[] location;
+	protected Float[] coordinates;
 	protected Float[] rotation;
 	protected Float[] dimensions, maxChildDimensions;
 	protected float maxAllChildDimensions;
@@ -23,7 +23,7 @@ public abstract class VisualAbstract implements Visual {
 		children = new ArrayList<Visual>();
 		ibises = new ArrayList<Visual>();
 		links = new ArrayList<Visual>();
-		location   = new Float[3];
+		coordinates   = new Float[3];
 		rotation   = new Float[3];
 		rotation[0] = 0.0f;
 		rotation[1] = 0.0f;
@@ -50,10 +50,10 @@ public abstract class VisualAbstract implements Visual {
 		}
 	}
 	
-	public void setLocation(Float[] newLocation) {		 
-		this.location[0] = newLocation[0];		
-		this.location[1] = newLocation[1];
-		this.location[2] = newLocation[2];
+	public void setCoordinates(Float[] newCoordinates) {		 
+		this.coordinates[0] = newCoordinates[0];		
+		this.coordinates[1] = newCoordinates[1];
+		this.coordinates[2] = newCoordinates[2];
 		
 		if (children.size() > 0) {
 			maxAllChildDimensions = Math.max(Math.max(maxChildDimensions[0], maxChildDimensions[1]), maxChildDimensions[2]);
@@ -68,9 +68,9 @@ public abstract class VisualAbstract implements Visual {
 				
 				//Center the drawing around the location	
 				Float[] shiftedLocation = new Float[3];
-				shiftedLocation[0] = location[0] - ((xShiftPerChild*rows   )-separation) * 0.5f;
-				shiftedLocation[1] = location[1];
-				shiftedLocation[2] = location[2] - ((zShiftPerChild*columns)-separation) * 0.5f;
+				shiftedLocation[0] = coordinates[0] - ((xShiftPerChild*rows   )-separation) * 0.5f;
+				shiftedLocation[1] = coordinates[1];
+				shiftedLocation[2] = coordinates[2] - ((zShiftPerChild*columns)-separation) * 0.5f;
 				
 				Float[] metricLocation = new Float[3];
 				
@@ -88,7 +88,7 @@ public abstract class VisualAbstract implements Visual {
 					metricLocation[1] = shiftedLocation[1];
 					metricLocation[2] = shiftedLocation[2] + zShiftPerChild*column;
 					
-					metric.setLocation(metricLocation);
+					metric.setCoordinates(metricLocation);
 					    
 					i++;
 				}
@@ -103,9 +103,9 @@ public abstract class VisualAbstract implements Visual {
 				
 				for (int k=0;k<children.size();k++) {
 					r = Math.sqrt(1-(z*z));
-					pt[k][0] = location[0] + radius*((float) (Math.cos(olong)*r));
-					pt[k][1] = location[1] + radius*((float) (Math.sin(olong)*r));
-					pt[k][2] = location[2] + radius*((float) z);
+					pt[k][0] = coordinates[0] + radius*((float) (Math.cos(olong)*r));
+					pt[k][1] = coordinates[1] + radius*((float) (Math.sin(olong)*r));
+					pt[k][2] = coordinates[2] + radius*((float) z);
 					z = z -dz;
 					olong = olong +dlong;				
 				}	
@@ -113,7 +113,7 @@ public abstract class VisualAbstract implements Visual {
 				int k=0;				
 				for (Visual node : children) {						
 					//set the location						
-					node.setLocation(pt[k]);							
+					node.setCoordinates(pt[k]);							
 					k++;
 				}			
 			} else if (cShape == CollectionShape.CUBE) {		
@@ -129,9 +129,9 @@ public abstract class VisualAbstract implements Visual {
 				
 				//Center the drawing around the location	
 				Float[] shiftedLocation = new Float[3];
-				shiftedLocation[0] = location[0] - ((xShiftPerChild*rows   )-separation) * 0.5f;
-				shiftedLocation[1] = location[1] - ((yShiftPerChild*layers )-separation) * 0.5f;
-				shiftedLocation[2] = location[2] - ((zShiftPerChild*columns)-separation) * 0.5f;
+				shiftedLocation[0] = coordinates[0] - ((xShiftPerChild*rows   )-separation) * 0.5f;
+				shiftedLocation[1] = coordinates[1] - ((yShiftPerChild*layers )-separation) * 0.5f;
+				shiftedLocation[2] = coordinates[2] - ((zShiftPerChild*columns)-separation) * 0.5f;
 				
 				Float[] metricLocation = new Float[3];
 				
@@ -151,14 +151,14 @@ public abstract class VisualAbstract implements Visual {
 					metricLocation[1] = shiftedLocation[1] + yShiftPerChild*layer;
 					metricLocation[2] = shiftedLocation[2] + zShiftPerChild*column;
 					
-					node.setLocation(metricLocation);
+					node.setCoordinates(metricLocation);
 					    
 					row++;
 				}
 			}
 		}
 		for (Visual link : links) {
-			link.setLocation(newLocation);
+			link.setCoordinates(newCoordinates);
 		}
 	}
 	
@@ -189,13 +189,13 @@ public abstract class VisualAbstract implements Visual {
 		}
 	}
 	
-	public Float[] getLocation() {
-		Float[] myLocation = new Float[3];
-		myLocation[0] = location[0];
-		myLocation[1] = location[1];
-		myLocation[2] = location[2];
+	public Float[] getCoordinates() {
+		Float[] myCoordinates = new Float[3];
+		myCoordinates[0] = coordinates[0];
+		myCoordinates[1] = coordinates[1];
+		myCoordinates[2] = coordinates[2];
 		
-		return myLocation;
+		return myCoordinates;
 	}
 	
 	public Float[] getDimensions() {

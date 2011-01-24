@@ -19,12 +19,17 @@ import ibis.ipl.support.management.AttributeDescription;
  */
 
 public interface MetricDescription {
+	public static enum MetricType {
+		NODE, LINK
+	}
 	public static enum MetricOutput {
 		PERCENT, RPOS, R, N
 	}
 	
 	//Getters
 	public String getName();
+	
+	public MetricType getType();
 	
 	public Float[] getColor();
 		
@@ -53,8 +58,10 @@ public interface MetricDescription {
 	
 	/**
 	 * Returns a new metric based on this description
+	 * @param element
+	 * 		the element for which the metric should count.
 	 * @return
 	 * 		a new instance of the Metric class
 	 */
-	public Metric getMetric();
+	public Metric getMetric(Element element);
 }

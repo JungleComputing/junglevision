@@ -1,9 +1,9 @@
-package junglevision;
+package junglevision.visuals;
 
-public class FakeUpdater implements Runnable {
-	private Junglevision jv;
+public class UpdateTimer implements Runnable {
+	private JungleGoggles jv;
 	
-	public FakeUpdater(Junglevision jv) {
+	public UpdateTimer(JungleGoggles jv) {
 		this.jv = jv;
 	}
 	

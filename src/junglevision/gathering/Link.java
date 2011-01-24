@@ -8,8 +8,6 @@ import java.util.ArrayList;
  */
 public interface Link extends Element {
 	
-	public Location getLocation();
-	
 	public ArrayList<junglevision.gathering.Link> getChildren();
 	
 	public void addChild(junglevision.gathering.Link link);

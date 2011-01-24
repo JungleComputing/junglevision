@@ -1,4 +1,4 @@
-package junglevision;
+package junglevision.visuals;
 import javax.media.opengl.GL;
 
 

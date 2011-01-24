@@ -12,6 +12,8 @@ public interface Element {
 	public Metric[] getMetrics();
 	public Metric getMetric(MetricDescription desc);
 	public Metric getMetric(String metricName);
+	public Link getLink(Element destination);
+	public Link[] getLinks();
 
 	//Setters
 	/**
@@ -23,4 +25,6 @@ public interface Element {
 	public void setMetrics(MetricDescription[] metrics);
 	public void addMetric(MetricDescription metric);
 	public void removeMetric(MetricDescription metric);
+	public void addLink(Element element, Link newLink);
+	
 }

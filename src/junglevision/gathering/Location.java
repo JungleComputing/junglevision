@@ -27,6 +27,8 @@ public interface Location extends Element {
 	
 	public ArrayList<junglevision.gathering.Location> getChildren();
 	
+	public String debugPrint();
+	
 	/**
 	 * This function returns a value derived from the values of either all of the Ibises located at its descendants,
 	 * or derived from only its own Ibises 

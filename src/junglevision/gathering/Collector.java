@@ -1,13 +1,13 @@
 package junglevision.gathering;
 
-import java.util.ArrayList;
+import ibis.ipl.IbisIdentifier;
 
-import junglevision.gathering.impl.Location;
+import java.util.ArrayList;
 
 /**
  * Serves as the main interface for the data collecting module.
  */
-public interface Collector {
+public interface Collector extends Runnable {
 	//Getters	
 	/**
 	 * Returns teh root of the top-level locations in the data gathering universe.
@@ -29,6 +29,21 @@ public interface Collector {
 	 * 		The Metrics that could be gathered.
 	 */
 	public ArrayList<junglevision.gathering.MetricDescription> getAvailableMetrics();
+	
+	/**
+	 * Resets the data gathering module.
+	 */
+	public void initUniverse();
+	
+	
+	/**
+	 * Internal method for getting collector ibises by id. 
+	 * @param ibisid
+	 * 		The IbisIdentifier of the wanted ibis.
+	 * @return
+	 * 		The collector ibis.
+	 */
+	public junglevision.gathering.Ibis getIbis(IbisIdentifier ibisid);
 	
 	//Tryout for interface updates.
 	/**

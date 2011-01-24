@@ -1,4 +1,4 @@
-package junglevision;
+package junglevision.visuals;
 
 public class Timer implements Runnable {
 	private Mover m;

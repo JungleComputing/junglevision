@@ -4,12 +4,16 @@ import javax.media.opengl.GL;
 import javax.media.opengl.glu.GLU;
 import javax.media.opengl.glu.GLUquadric;
 
-import junglevision.DisplayListBuilder;
-import junglevision.Junglevision;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import junglevision.visuals.DisplayListBuilder;
 import junglevision.gathering.MetricDescription.MetricOutput;
 import junglevision.gathering.exceptions.OutputUnavailableException;
 
 public class Metric extends VisualAbstract implements Visual {
+	private static final Logger logger = LoggerFactory.getLogger("ibis.deploy.gui.junglevision.visuals.Metric");
+	
 	private static final float WIDTH = 0.25f;
 	private static final float HEIGHT = 1.00f;
 	private GLU glu;
@@ -26,7 +30,7 @@ public class Metric extends VisualAbstract implements Visual {
 	
 	private DisplayListBuilder.DisplayList currentDL;	
 	
-	Metric(Junglevision jv, GLU glu, junglevision.gathering.Metric metric) {
+	Metric(JungleGoggles jv, GLU glu, junglevision.gathering.Metric metric) {		
 		super();
 			
 		this.glu = glu;
@@ -36,8 +40,7 @@ public class Metric extends VisualAbstract implements Visual {
 		try {
 			currentValue = (Float) metric.getCurrentValue(currentOutputMethod);
 		} catch (OutputUnavailableException e) {
-			//This shouldn't happen if the metric is defined properly
-			e.printStackTrace();
+			logger.debug("OutputUnavailableException caught by visual metric for "+metric.getDescription().getName());
 		}		
 		
 		barAndOutlinePointer = jv.getDisplayListPointer(DisplayListBuilder.DisplayList.BAR_AND_OUTLINE);
@@ -74,7 +77,7 @@ public class Metric extends VisualAbstract implements Visual {
 		gl.glPushMatrix();
 		
 		//Translate to the desired coordinates and rotate if desired
-		gl.glTranslatef(location[0], location[1], location[2]);
+		gl.glTranslatef(coordinates[0], coordinates[1], coordinates[2]);
 		gl.glRotatef(rotation[0], 1.0f, 0.0f, 0.0f);
 		gl.glRotatef(rotation[1], 0.0f, 1.0f, 0.0f);
 		gl.glRotatef(rotation[2], 0.0f, 0.0f, 1.0f);		
@@ -97,8 +100,6 @@ public class Metric extends VisualAbstract implements Visual {
 	
 			gl.glColor4f(color[0], color[1], color[2], 1.0f);
 			gl.glCallList(barPointer[whichBar]);
-		} else {
-			
 		}
 		
 		//Restore the old modelview matrix
@@ -110,7 +111,7 @@ public class Metric extends VisualAbstract implements Visual {
 		gl.glPushMatrix();
 		
 		//Translate to the desired coordinates and rotate if desired
-		gl.glTranslatef(location[0], location[1], location[2]);
+		gl.glTranslatef(coordinates[0], coordinates[1], coordinates[2]);
 		gl.glRotatef(rotation[0], 1.0f, 0.0f, 0.0f);
 		gl.glRotatef(rotation[1], 0.0f, 1.0f, 0.0f);
 		gl.glRotatef(rotation[2], 0.0f, 0.0f, 1.0f);

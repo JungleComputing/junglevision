@@ -10,6 +10,7 @@ import ibis.ipl.IbisIdentifier;
 import ibis.ipl.server.ManagementServiceInterface;
 import ibis.ipl.support.management.AttributeDescription;
 import junglevision.gathering.Location;
+import junglevision.gathering.MetricDescription.MetricType;
 import junglevision.gathering.Pool;
 
 /**
@@ -28,7 +29,17 @@ public class Ibis extends Element implements junglevision.gathering.Ibis {
 		this.manInterface = manInterface;
 		this.ibisid = ibisid;
 		this.pool = pool;
-		this.location = location;
+		this.location = location;		
+	}
+	
+	public junglevision.gathering.Metric[] getMetrics() {
+		ArrayList<junglevision.gathering.Metric> result = new ArrayList<junglevision.gathering.Metric>();
+		for (junglevision.gathering.Metric metric : metrics.values()) {
+			if (metric.getDescription().getType() == MetricType.NODE) {
+				result.add(metric);
+			}
+		}		
+		return result.toArray(new junglevision.gathering.Metric[0]);
 	}
 	
 	public Location getLocation() {
@@ -65,7 +76,8 @@ public class Ibis extends Element implements junglevision.gathering.Ibis {
 				metric.getValue().update(partialResults);
 			}
 		} catch (Exception e) {
-			logger.debug("Ibis "+ibisid+" got exception while updating metrics.");
+			logger.error("Ibis "+ibisid+" got exception while updating metrics.");
+			e.printStackTrace();
 		}		
 	}	
 	

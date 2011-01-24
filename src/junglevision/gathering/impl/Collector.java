@@ -10,7 +10,9 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Queue;
+
+import junglevision.gathering.exceptions.SingletonObjectNotInstantiatedException;
+import junglevision.gathering.metrics.*;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,10 +20,12 @@ import org.slf4j.LoggerFactory;
 /**
  * Serves as the main class for the data collecting module.
  */
-public class Collector implements Runnable {
+public class Collector implements junglevision.gathering.Collector, Runnable {
 	private static final Logger logger = LoggerFactory.getLogger("ibis.deploy.gui.junglevision.gathering.impl.Collector");
 	private static final ibis.ipl.Location universe = new ibis.ipl.impl.Location(new String[0]);
 	private static final int workercount = 8;
+	
+	private static Collector ref = null;
 	
 	//Interfaces to the IPL
 	private ManagementServiceInterface manInterface;
@@ -36,44 +40,75 @@ public class Collector implements Runnable {
 	private HashMap<String, junglevision.gathering.Location> locations;
 	private HashMap<String, junglevision.gathering.Pool> pools;
 	private ArrayList<junglevision.gathering.MetricDescription> descriptions;
-	private ArrayList<junglevision.gathering.Ibis> ibises;
+	private HashMap<IbisIdentifier, junglevision.gathering.Ibis> ibises;
 	
 	private junglevision.gathering.Location root;
-	private Queue<junglevision.gathering.Ibis> jobQueue;
+	private LinkedList<junglevision.gathering.Ibis> jobQueue;
 	
-	public Collector(ManagementServiceInterface manInterface, RegistryServiceInterface regInterface) {
+	private Collector(ManagementServiceInterface manInterface, RegistryServiceInterface regInterface) {
 		this.manInterface = manInterface;
 		this.regInterface = regInterface;
 		
-		poolSizes = new HashMap<String, Integer>();
-		
-		refreshrate = 500;
-		
+		//Initialize all of the lists and hashmaps needed
+		poolSizes = new HashMap<String, Integer>();		
 		locations = new HashMap<String, junglevision.gathering.Location>();
 		pools = new HashMap<String, junglevision.gathering.Pool>();
 		descriptions = new ArrayList<junglevision.gathering.MetricDescription>();
-		ibises = new ArrayList<junglevision.gathering.Ibis>();
+		ibises = new HashMap<IbisIdentifier, junglevision.gathering.Ibis>();
+		jobQueue = new LinkedList<junglevision.gathering.Ibis>();
 		
+		//Create a universe (location root)
 		Float[] color = {0f,0f,0f};
 		root = new Location("root", color);
 		
-		jobQueue = new LinkedList<junglevision.gathering.Ibis>();
+		//Set the default refreshrate
+		refreshrate = 500;
 		
+		//Set the default metrics
+		descriptions.add(new CPUUsage());
+		descriptions.add(new HeapMemory());
+		descriptions.add(new NonHeapMemory());
+		//descriptions.add(new ThreadsMetric());
+		descriptions.add(new BytesReceivedPerSecond());
+		
+	}		
+		
+	private void initWorkers() {			
+		//Create and start worker threads for the metric updates
 		for (int i=0; i<workercount; i++) {
-			Thread worker = new Worker(this);
+			Thread worker = new Worker();
 			worker.start();			
 		}
+	}
 		
-		init();
+	public static Collector getCollector(ManagementServiceInterface manInterface, RegistryServiceInterface regInterface) {
+		if (ref == null) {
+			ref = new Collector(manInterface, regInterface);
+			ref.initWorkers();
+			ref.initUniverse();
+		}
+		return ref;		
 	}
 	
-	public void init() {
+	public static Collector getCollector() throws SingletonObjectNotInstantiatedException {
+		if (ref != null) {
+			return ref;
+		} else {
+			throw new SingletonObjectNotInstantiatedException();
+		}
+	}
+	
+	public void initUniverse() {		
+		//Clear the jobqueue
 		jobQueue.clear();
 		
 		initPools();
-		initLocations();		
+		initLocations();
+		initMetrics();
 		
-		jobQueue.addAll(ibises);
+		if (logger.isDebugEnabled()) {
+			logger.debug(root.debugPrint());
+		}
 	}
 	
 	private void initPools() {
@@ -82,7 +117,9 @@ public class Collector implements Runnable {
 		try {
 			newSizes = regInterface.getPoolSizes();
 		} catch (Exception e) {
-			e.printStackTrace();
+			if (logger.isErrorEnabled()) {
+				logger.error("Could not get pool sizes from registry.");
+			}
 		}
 
 		//clear the pools list, if warranted
@@ -119,69 +156,72 @@ public class Collector implements Runnable {
 			IbisIdentifier[] poolIbises;
 			try {
 				poolIbises = regInterface.getMembers(poolName);
+				logger.debug("Pool ibises: " + poolIbises.length);
 				
 				//for all ibises
 				for (IbisIdentifier ibisid : poolIbises) {
-					ibis.ipl.Location currentIPLLocation = ibisid.location();
-					junglevision.gathering.Location currentJVLocation;
-					
-					while ( !currentIPLLocation.equals(universe) ) {
-						String currentName = currentIPLLocation.toString();
-						if (locations.containsKey(currentName)) {
-							currentJVLocation = locations.get(currentName);
-						} else {
-							Float[] color = {0f,0f,0f};
-							currentJVLocation = new Location(currentName, color);
-							locations.put(currentName, currentJVLocation);
-						}
-					}					
+					logger.debug("Ibis: " + ibisid);
 					
 					//Get the lowest location
-					String lowestlevel = ibisid.location().getLevel(0);
+					ibis.ipl.Location ibisLocation = ibisid.location();
+					String ibisName = ibisLocation.getLevel(0);
+					
+					logger.debug("Ibis Location: " + ibisName);
 					
 					junglevision.gathering.Location current;
-					if (locations.containsKey(lowestlevel)) {
-						current = locations.get(lowestlevel);
+					if (locations.containsKey(ibisName)) {
+						current = locations.get(ibisName);
 					} else {
 						Float[] color = {0f,0f,0f};
-						current = new Location(lowestlevel, color);
-						locations.put(lowestlevel, current);
+						current = new Location(ibisName, color);
+						locations.put(ibisName, current);
 					}
 					
 					//And add the ibis to that location
 					Ibis ibis = new Ibis(manInterface, ibisid, entry.getValue(), current);
 					current.addIbis(ibis);
-					ibises.add(ibis);
-					
+					ibises.put(ibisid, ibis);					
+										
 					//for all location levels, get parent
-					ibis.ipl.Location parentIPLLocation = ibisid.location().getParent();										
-					while (parentIPLLocation != universe) {
-						String parentName = ibisid.location().getLevel(0);
-						junglevision.gathering.Location parent;
-					
+					ibis.ipl.Location parentIPLLocation = ibisLocation.getParent();						
+					while (!parentIPLLocation.equals(universe)) {
+						String name = parentIPLLocation.getLevel(0);
+						
+						logger.debug("Ibis Parent Location: " + name);
+						
 						//Make a new location if we have not encountered the parent 
-						if (locations.containsKey(parentName)) {
-							parent = locations.get(parentName);
+						junglevision.gathering.Location parent;
+						if (locations.containsKey(name)) {
+							parent = locations.get(name);
 						} else {
 							Float[] color = {0f,0f,0f};
-							parent = new Location(parentName, color);
-							locations.put(parentName, parent);
+							parent = new Location(name, color);
+							locations.put(name, parent);
 						}
 						
 						//And add the current location as a child of the parent
 						parent.addChild(current);
+						
 						current = parent;
 						
-						parentIPLLocation = ibisid.location().getParent();
+						parentIPLLocation = parentIPLLocation.getParent();
 					}
 					
-					//Finally, add the top-level location to the root location
+					//Finally, add the top-level location to the root location, 
+					//it will only add if it is not already there					
 					root.addChild(current);
 				}
-			} catch (IOException e1) {			
-				logger.debug("Could not get Ibises from pool: " + poolName);
+			} catch (IOException e1) {	
+				if (logger.isErrorEnabled()) {
+					logger.error("Could not get Ibises from pool: " + poolName);
+				}
 			}
 		}
+	}
+	
+	private void initMetrics() {
+		MetricDescription[] metrics = descriptions.toArray(new MetricDescription[0]);
+		root.setMetrics(metrics);
 	}
 		
 	//Getters	
@@ -207,13 +247,19 @@ public class Collector implements Runnable {
 			while (jobQueue.isEmpty()) {
 				try {
 					jobQueue.wait();
-				} catch (InterruptedException e) {					
-					logger.debug("Interrupted Queue.");
+				} catch (InterruptedException e) {	
+					if (logger.isErrorEnabled()) {
+						logger.error("Interrupted Queue.");
+					}
 				}
 			}
-			result = jobQueue.poll();
+			result = jobQueue.removeFirst();
 		}
 		return result;
+	}
+	
+	public junglevision.gathering.Ibis getIbis(IbisIdentifier ibisid) {
+		return ibises.get(ibisid);
 	}
 	
 	//Tryout for interface updates.
@@ -225,17 +271,21 @@ public class Collector implements Runnable {
 		while (true) {
 			synchronized(jobQueue) {
 				if (jobQueue.isEmpty()) {
-					jobQueue.addAll(ibises);
+					jobQueue.addAll(ibises.values());
 					jobQueue.notify();
 				} else {
 					//TODO implement
-					logger.debug("one hangs");
+					if (logger.isDebugEnabled()) {
+						logger.debug("one hangs");
+					}
 				}
 			}
 			try {
 				Thread.sleep(refreshrate);
 			} catch (InterruptedException e) {
-				logger.debug("Interrupted");
+				if (logger.isErrorEnabled()) {
+					logger.error("Interrupted, this should be ignored.");
+				}
 				break;
 			}
 		}

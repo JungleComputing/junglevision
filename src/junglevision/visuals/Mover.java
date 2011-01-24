@@ -1,4 +1,4 @@
-package junglevision;
+package junglevision.visuals;
 
 public class Mover {
 	private Float[] oldLocation, currentLocation, newLocation;
@@ -28,7 +28,7 @@ public class Mover {
 		locationChanged = false;
 	}
 	
-	public Float[] getCurrentLocation() {
+	public Float[] getCurrentCoordinates() {
 		return currentLocation;	
 	}
 	

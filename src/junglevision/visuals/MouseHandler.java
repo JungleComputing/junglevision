@@ -1,4 +1,5 @@
-package junglevision;
+package junglevision.visuals;
+
 import java.awt.PopupMenu;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
@@ -10,7 +11,7 @@ import javax.media.opengl.GLCanvas;
 import javax.swing.SwingUtilities;
 
 public class MouseHandler implements MouseListener, MouseMotionListener, MouseWheelListener{	
-	private Junglevision jv;
+	private JungleGoggles jv;
 		
 	private float viewDist = -6; 
 	private float dragCoefficient = 10.0f;
@@ -34,7 +35,7 @@ public class MouseHandler implements MouseListener, MouseMotionListener, MouseWh
 	private float translationYorigin = 0; 
 	private float translationY = 0;
 	
-	MouseHandler(Junglevision jv) {
+	MouseHandler(JungleGoggles jv) {
 		this.jv = jv;
 		
 		rotation = new Float[3];

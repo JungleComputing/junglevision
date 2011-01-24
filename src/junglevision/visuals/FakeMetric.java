@@ -4,8 +4,7 @@ import javax.media.opengl.GL;
 import javax.media.opengl.glu.GLU;
 import javax.media.opengl.glu.GLUquadric;
 
-import junglevision.DisplayListBuilder;
-import junglevision.Junglevision;
+import junglevision.visuals.DisplayListBuilder;
 
 public class FakeMetric extends VisualAbstract implements Visual {
 	private static final float WIDTH = 0.25f;
@@ -20,7 +19,7 @@ public class FakeMetric extends VisualAbstract implements Visual {
 	
 	private DisplayListBuilder.DisplayList currentDL;
 	
-	FakeMetric(Junglevision jv, GLU glu, Float[] color) {
+	FakeMetric(JungleGoggles jv, GLU glu, Float[] color) {
 		super();
 		
 		this.glu = glu;
@@ -66,7 +65,7 @@ public class FakeMetric extends VisualAbstract implements Visual {
 		gl.glPushMatrix();
 		
 		//Translate to the desired coordinates and rotate if desired
-		gl.glTranslatef(location[0], location[1], location[2]);
+		gl.glTranslatef(coordinates[0], coordinates[1], coordinates[2]);
 		gl.glRotatef(rotation[0], 1.0f, 0.0f, 0.0f);
 		gl.glRotatef(rotation[1], 0.0f, 1.0f, 0.0f);
 		gl.glRotatef(rotation[2], 0.0f, 0.0f, 1.0f);		
@@ -102,7 +101,7 @@ public class FakeMetric extends VisualAbstract implements Visual {
 		gl.glPushMatrix();
 		
 		//Translate to the desired coordinates and rotate if desired
-		gl.glTranslatef(location[0], location[1], location[2]);
+		gl.glTranslatef(coordinates[0], coordinates[1], coordinates[2]);
 		gl.glRotatef(rotation[0], 1.0f, 0.0f, 0.0f);
 		gl.glRotatef(rotation[1], 0.0f, 1.0f, 0.0f);
 		gl.glRotatef(rotation[2], 0.0f, 0.0f, 1.0f);

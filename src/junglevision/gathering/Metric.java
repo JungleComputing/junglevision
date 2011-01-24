@@ -1,6 +1,11 @@
 package junglevision.gathering;
 
+import ibis.ipl.IbisIdentifier;
+
+import java.util.HashMap;
+
 import junglevision.gathering.MetricDescription.MetricOutput;
+import junglevision.gathering.exceptions.BeyondAllowedRangeException;
 import junglevision.gathering.exceptions.OutputUnavailableException;
 
 /**
@@ -51,8 +56,10 @@ public interface Metric {
 	 * 		The output value to be updated
 	 * @param value
 	 * 		the value to be set
+	 * @throws BeyondAllowedRangeException 
+	 * 		if the value parameter does not conform to the outputmethod parameter's bounds
 	 */
-	public void setValue(MetricOutput outputmethod, Number value);
+	public void setValue(MetricOutput outputmethod, Number value) throws BeyondAllowedRangeException;
 	
 	/**
 	 * Callback function for the update method in MetricDescriptions
@@ -60,6 +67,30 @@ public interface Metric {
 	 * 		The max output value to be updated
 	 * @param value
 	 * 		the max value to be set
+	 * @throws BeyondAllowedRangeException 
+	 * 		if the value parameter does not conform to the outputmethod parameter's bounds
 	 */
-	public void setMaxValue(MetricOutput outputmethod, Number value);
+	public void setMaxValue(MetricOutput outputmethod, Number value) throws BeyondAllowedRangeException;
+
+	/**
+	 * Callback function for the update method in MetricDescriptions
+	 * @param outputmethod
+	 * 		The output value to be updated
+	 * @param values
+	 * 		the map of ibisidentifiers and value to be set
+	 * @throws BeyondAllowedRangeException 
+	 * 		if the value parameter does not conform to the outputmethod parameter's bounds
+	 */
+	public void setValue(MetricOutput outputmethod, HashMap<IbisIdentifier, Number> values) throws BeyondAllowedRangeException;
+	
+	/**
+	 * Callback function for the update method in MetricDescriptions
+	 * @param outputmethod
+	 * 		The max output value to be updated
+	 * @param values
+	 * 		the map of ibisidentifiers and max values to be set
+	 * @throws BeyondAllowedRangeException 
+	 * 		if the value parameter does not conform to the outputmethod parameter's bounds
+	 */
+	public void setMaxValue(MetricOutput outputmethod, HashMap<IbisIdentifier, Number> values) throws BeyondAllowedRangeException;
 }

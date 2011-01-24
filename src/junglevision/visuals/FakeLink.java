@@ -2,33 +2,32 @@ package junglevision.visuals;
 
 import javax.media.opengl.glu.GLU;
 
-import junglevision.Junglevision;
-
 public class FakeLink extends VisualAbstract implements Visual {
 	private Visual source, destination;
 	
-	public FakeLink(Junglevision jv, GLU glu, int numberOfMetrics, Visual source, Visual destination) {		
+	public FakeLink(JungleGoggles jv, GLU glu, int numberOfMetrics, Visual source, Visual destination) {		
 		super();		
 		separation = 0.05f;
 		this.source = source;
 		this.destination = destination;
 		
 		for (int i=0; i<numberOfMetrics; i++) {			
-			children.add(new LinkMetric(jv, glu, new junglevision.gathering.metrics.RandomMetric().getMetric()));
+			//children.add(new LinkMetric(jv, glu, new junglevision.gathering.metrics.RandomMetric(null).getMetric()));
+			children.add(new LinkMetric(jv, glu, null));
 		}
 		
 		constructDimensions();
 	}
 		
-	public void setLocation(Float[] newLocation) {	
-		this.location = newLocation.clone();		
+	public void setCoordinates(Float[] newLocation) {	
+		this.coordinates = newLocation.clone();		
 		
 		Float[] newDimensions 	= new Float[3];		
 		Float[] newRotation 	= new Float[3];
 		
 		//Calculate the angles we need to turn towards the destination
-		Float[] origin = source.getLocation();
-		Float[] destination = this.destination.getLocation();
+		Float[] origin = source.getCoordinates();
+		Float[] destination = this.destination.getCoordinates();
 		int xSign = 1, ySign = 1, zSign = 1;
 		
 		float xDist = destination[0] - origin[0];
@@ -64,7 +63,7 @@ public class FakeLink extends VisualAbstract implements Visual {
 		newLocation[0] = origin[0] + (0.5f * (destination[0] - origin[0]));
 		newLocation[1] = origin[1] + (0.5f * (destination[1] - origin[1]));
 		newLocation[2] = origin[2] + (0.5f * (destination[2] - origin[2]));
-		location = newLocation;
+		coordinates = newLocation;
 		
 		//Set the object rotation, x is not used, we need an extra -90 on the z-axis for alignment
 		newRotation[0] = 0.0f;
@@ -82,9 +81,9 @@ public class FakeLink extends VisualAbstract implements Visual {
 		
 		//Center the drawing around the location	
 		Float[] shiftedLocation = new Float[3];
-		shiftedLocation[0] = location[0] - ((xShiftPerChild*rows   )-separation) * 0.5f;
-		shiftedLocation[1] = location[1];
-		shiftedLocation[2] = location[2] - ((zShiftPerChild*columns)-separation) * 0.5f;
+		shiftedLocation[0] = coordinates[0] - ((xShiftPerChild*rows   )-separation) * 0.5f;
+		shiftedLocation[1] = coordinates[1];
+		shiftedLocation[2] = coordinates[2] - ((zShiftPerChild*columns)-separation) * 0.5f;
 		
 		Float[] metricLocation = new Float[3];
 		
@@ -102,7 +101,7 @@ public class FakeLink extends VisualAbstract implements Visual {
 			metricLocation[1] = shiftedLocation[1];
 			metricLocation[2] = shiftedLocation[2] + zShiftPerChild*column;
 			
-			metric.setLocation(metricLocation);
+			metric.setCoordinates(metricLocation);
 			    
 			i++;
 			
