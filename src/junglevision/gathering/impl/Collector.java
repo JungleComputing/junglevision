@@ -7,10 +7,13 @@ import ibis.ipl.server.RegistryServiceInterface;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import junglevision.gathering.Element;
+import junglevision.gathering.exceptions.SelfLinkeageException;
 import junglevision.gathering.exceptions.SingletonObjectNotInstantiatedException;
 import junglevision.gathering.metrics.*;
 
@@ -39,11 +42,11 @@ public class Collector implements junglevision.gathering.Collector, Runnable {
 
 	private HashMap<String, junglevision.gathering.Location> locations;
 	private HashMap<String, junglevision.gathering.Pool> pools;
-	private ArrayList<junglevision.gathering.MetricDescription> descriptions;
+	private HashSet<junglevision.gathering.MetricDescription> descriptions;
 	private HashMap<IbisIdentifier, junglevision.gathering.Ibis> ibises;
 	
 	private junglevision.gathering.Location root;
-	private LinkedList<junglevision.gathering.Ibis> jobQueue;
+	private LinkedList<Element> jobQueue;
 	
 	private Collector(ManagementServiceInterface manInterface, RegistryServiceInterface regInterface) {
 		this.manInterface = manInterface;
@@ -53,9 +56,9 @@ public class Collector implements junglevision.gathering.Collector, Runnable {
 		poolSizes = new HashMap<String, Integer>();		
 		locations = new HashMap<String, junglevision.gathering.Location>();
 		pools = new HashMap<String, junglevision.gathering.Pool>();
-		descriptions = new ArrayList<junglevision.gathering.MetricDescription>();
+		descriptions = new HashSet<junglevision.gathering.MetricDescription>();
 		ibises = new HashMap<IbisIdentifier, junglevision.gathering.Ibis>();
-		jobQueue = new LinkedList<junglevision.gathering.Ibis>();
+		jobQueue = new LinkedList<junglevision.gathering.Element>();
 		
 		//Create a universe (location root)
 		Float[] color = {0f,0f,0f};
@@ -104,10 +107,11 @@ public class Collector implements junglevision.gathering.Collector, Runnable {
 		
 		initPools();
 		initLocations();
-		initMetrics();
+		initLinks();
+		initMetrics();		
 		
 		if (logger.isDebugEnabled()) {
-			logger.debug(root.debugPrint());
+			//logger.debug(root.debugPrint());
 		}
 	}
 	
@@ -156,18 +160,13 @@ public class Collector implements junglevision.gathering.Collector, Runnable {
 			IbisIdentifier[] poolIbises;
 			try {
 				poolIbises = regInterface.getMembers(poolName);
-				logger.debug("Pool ibises: " + poolIbises.length);
 				
 				//for all ibises
-				for (IbisIdentifier ibisid : poolIbises) {
-					logger.debug("Ibis: " + ibisid);
-					
-					//Get the lowest location
-					ibis.ipl.Location ibisLocation = ibisid.location();
+				for (IbisIdentifier ibisid : poolIbises) {									
+					//Get the lowest location, skip the lowest (ibis) location
+					ibis.ipl.Location ibisLocation = ibisid.location().getParent();
 					String ibisName = ibisLocation.getLevel(0);
-					
-					logger.debug("Ibis Location: " + ibisName);
-					
+										
 					junglevision.gathering.Location current;
 					if (locations.containsKey(ibisName)) {
 						current = locations.get(ibisName);
@@ -186,8 +185,6 @@ public class Collector implements junglevision.gathering.Collector, Runnable {
 					ibis.ipl.Location parentIPLLocation = ibisLocation.getParent();						
 					while (!parentIPLLocation.equals(universe)) {
 						String name = parentIPLLocation.getLevel(0);
-						
-						logger.debug("Ibis Parent Location: " + name);
 						
 						//Make a new location if we have not encountered the parent 
 						junglevision.gathering.Location parent;
@@ -220,8 +217,22 @@ public class Collector implements junglevision.gathering.Collector, Runnable {
 	}
 	
 	private void initMetrics() {
-		MetricDescription[] metrics = descriptions.toArray(new MetricDescription[0]);
-		root.setMetrics(metrics);
+		root.setMetrics(descriptions);		
+	}
+	
+	private void initLinks() {
+		//pre-make only the location-location links
+		for (junglevision.gathering.Location source : locations.values()) {
+			for (junglevision.gathering.Location destination : locations.values()) {
+				try {
+					source.getLink(destination);
+				} catch (SelfLinkeageException ignored) {
+					//ignored, because we do not want this link
+				}
+			}
+		}
+		
+		root.makeLinkHierarchy();
 	}
 		
 	//Getters	
@@ -237,12 +248,12 @@ public class Collector implements junglevision.gathering.Collector, Runnable {
 		return result;
 	}
 	
-	public ArrayList<junglevision.gathering.MetricDescription> getAvailableMetrics() {
+	public HashSet<junglevision.gathering.MetricDescription> getAvailableMetrics() {
 		return descriptions;
 	}
 	
-	public junglevision.gathering.Ibis getWork() {
-		junglevision.gathering.Ibis result = null;
+	public junglevision.gathering.Element getWork() {
+		junglevision.gathering.Element result = null;
 		synchronized(jobQueue) {
 			while (jobQueue.isEmpty()) {
 				try {
@@ -272,11 +283,16 @@ public class Collector implements junglevision.gathering.Collector, Runnable {
 			synchronized(jobQueue) {
 				if (jobQueue.isEmpty()) {
 					jobQueue.addAll(ibises.values());
+					
+					//TODO wait for all the ibises to be complete first
+					jobQueue.add(root);
 					jobQueue.notify();
 				} else {
 					//TODO implement
 					if (logger.isDebugEnabled()) {
-						logger.debug("one hangs");
+						logger.debug("Queue not empty when refreshed.");
+						logger.debug("Ibises left in queue: "+jobQueue.size());
+						
 					}
 				}
 			}

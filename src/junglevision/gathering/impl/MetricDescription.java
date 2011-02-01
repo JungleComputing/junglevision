@@ -2,6 +2,8 @@ package junglevision.gathering.impl;
 
 import java.util.ArrayList;
 
+import junglevision.gathering.exceptions.NotALinkMetricException;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,14 +19,17 @@ public abstract class MetricDescription implements junglevision.gathering.Metric
 	
 	protected String name;
 	protected MetricType type;
+	protected LinkDirection direction;
 	protected Float[] color;
 	protected ArrayList<MetricOutput> outputTypes; 
 	protected ArrayList<AttributeDescription> necessaryAttributes;
+	protected ArrayList<junglevision.gathering.MetricDescription> necessaryMetrics;
 		
 	protected MetricDescription() {
 		color = new Float[3];
 		outputTypes = new ArrayList<MetricOutput>();
-		necessaryAttributes = new ArrayList<AttributeDescription>();			
+		necessaryAttributes = new ArrayList<AttributeDescription>();	
+		necessaryMetrics = new ArrayList<junglevision.gathering.MetricDescription>();
 	}
 	
 	//Getters
@@ -34,6 +39,10 @@ public abstract class MetricDescription implements junglevision.gathering.Metric
 	
 	public MetricType getType() {
 		return type;
+	}
+	
+	public LinkDirection getDirection() throws NotALinkMetricException {
+		return direction;
 	}
 	
 	public Float[] getColor() {
@@ -50,5 +59,9 @@ public abstract class MetricDescription implements junglevision.gathering.Metric
 	
 	public junglevision.gathering.Metric getMetric(junglevision.gathering.Element element) {
 		return new Metric(element, this);
+	}
+	
+	public junglevision.gathering.Metric getMetric(junglevision.gathering.Element source, junglevision.gathering.Element destination) {
+		return new Metric(source, destination, this);
 	}
 }

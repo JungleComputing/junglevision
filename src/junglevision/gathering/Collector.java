@@ -3,6 +3,7 @@ package junglevision.gathering;
 import ibis.ipl.IbisIdentifier;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 
 /**
  * Serves as the main interface for the data collecting module.
@@ -28,7 +29,7 @@ public interface Collector extends Runnable {
 	 * @return
 	 * 		The Metrics that could be gathered.
 	 */
-	public ArrayList<junglevision.gathering.MetricDescription> getAvailableMetrics();
+	public HashSet<junglevision.gathering.MetricDescription> getAvailableMetrics();
 	
 	/**
 	 * Resets the data gathering module.

@@ -19,10 +19,10 @@ public class Worker extends Thread {
 	}
 	
 	public void run() {
-		junglevision.gathering.Ibis ibis;
+		junglevision.gathering.Element element;
 		while (true) {
-			ibis = c.getWork();
-			ibis.update();			
+			element = c.getWork();
+			element.update();			
 		}
 	}
 }

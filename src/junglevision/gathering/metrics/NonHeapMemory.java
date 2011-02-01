@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import junglevision.gathering.Metric;
+import junglevision.gathering.Metric.MetricModifier;
 import junglevision.gathering.exceptions.BeyondAllowedRangeException;
 import ibis.ipl.support.management.AttributeDescription;
 
@@ -35,9 +36,9 @@ public class NonHeapMemory extends junglevision.gathering.impl.MetricDescription
 		Long mem_nonheap_used 	= (Long) mem_nonheap_recvd.get("used");
 
 		try {
-			metric.setValue(MetricOutput.PERCENT, ((float) mem_nonheap_used / (float) mem_nonheap_max));
-			metric.setValue(MetricOutput.RPOS, (float) mem_nonheap_used);
-			metric.setMaxValue(MetricOutput.RPOS, (float) mem_nonheap_max);
+			metric.setValue(MetricModifier.NORM, MetricOutput.PERCENT, ((float) mem_nonheap_used / (float) mem_nonheap_max));
+			metric.setValue(MetricModifier.NORM, MetricOutput.RPOS, (float) mem_nonheap_used);
+			metric.setValue(MetricModifier.MAX, MetricOutput.RPOS, (float) mem_nonheap_max);
 		} catch (BeyondAllowedRangeException e) {
 			logger.debug(name +" metric failed trying to set value out of bounds.");
 		}

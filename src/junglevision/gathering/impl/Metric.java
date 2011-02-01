@@ -8,6 +8,7 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import junglevision.gathering.Element;
 import junglevision.gathering.MetricDescription.MetricOutput;
 import junglevision.gathering.exceptions.BeyondAllowedRangeException;
 import junglevision.gathering.exceptions.OutputUnavailableException;
@@ -24,8 +25,11 @@ public class Metric implements junglevision.gathering.Metric {
 	protected junglevision.gathering.Collector c;
 	protected junglevision.gathering.Element element;
 	protected junglevision.gathering.MetricDescription myDescription;
-	protected HashMap<MetricOutput, Number> values, maxValues;
-
+	protected HashMap<MetricOutput, Number> values, maxValues, minValues;
+	protected HashMap<MetricOutput, HashMap<IbisIdentifier, Number>> linkValues, maxLinkValues, minLinkValues;
+	
+	protected HashMap<String, Number> helperVariables;
+	
 	public Metric(junglevision.gathering.Element element, junglevision.gathering.MetricDescription desc) {
 		try {
 			this.c = Collector.getCollector();
@@ -37,136 +41,134 @@ public class Metric implements junglevision.gathering.Metric {
 		this.myDescription = desc;
 
 		values = new HashMap<MetricOutput, Number>();
+		maxValues = new HashMap<MetricOutput, Number>();
+		minValues = new HashMap<MetricOutput, Number>();
 		for (MetricOutput current : desc.getOutputTypes()) {
 			if (current == MetricOutput.PERCENT) {
 				values.put(current, 0.0f);
+				maxValues.put(current, 0.0f);
+				minValues.put(current, 0.0f);
 			} else if (current == MetricOutput.RPOS) {
 				values.put(current, 0.0f);
+				maxValues.put(current, 0.0f);
+				minValues.put(current, 0.0f);
 			} else if (current == MetricOutput.R) {
 				values.put(current, 0.0f);
+				maxValues.put(current, 0.0f);
+				minValues.put(current, 0.0f);
 			} else if (current == MetricOutput.N) {
 				values.put(current, 0);
-			} 
-		}
-
-		maxValues = new HashMap<MetricOutput, Number>();
-		for (MetricOutput current : desc.getOutputTypes()) {
-			if (current == MetricOutput.RPOS) {
-				maxValues.put(current, 0.0f);
-			} else if (current == MetricOutput.R) {
-				maxValues.put(current, 0.0f);
-			} else if (current == MetricOutput.N) {
 				maxValues.put(current, 0);
+				minValues.put(current, 0);
 			} 
 		}
+		
+		linkValues = new HashMap<MetricOutput, HashMap<IbisIdentifier, Number>>();
+		maxLinkValues = new HashMap<MetricOutput, HashMap<IbisIdentifier, Number>>();
+		minLinkValues = new HashMap<MetricOutput, HashMap<IbisIdentifier, Number>>();
+		
+		helperVariables = new HashMap<String, Number>();
+	}
+	
+	public Metric(junglevision.gathering.Element source, junglevision.gathering.Element destination,
+			MetricDescription metricDescription) {
+		// TODO Auto-generated constructor stub
 	}
 
-	public Number getCurrentValue(MetricOutput outputmethod) throws OutputUnavailableException {
+	public Number getHelperVariable(String name) {
+		if (helperVariables.containsKey(name)) {
+			return helperVariables.get(name);		
+		} else {
+			return (Number)0L;
+		}
+	}
+	
+	public void setHelperVariable(String name, Number value) {
+		helperVariables.put(name, value);
+	}	
+
+	public Number getValue(MetricModifier mod, MetricOutput outputmethod) throws OutputUnavailableException {
 		if (values.containsKey(outputmethod)) {
-			return values.get(outputmethod);
+			if (mod == MetricModifier.NORM) {
+				return values.get(outputmethod);
+			} else if (mod == MetricModifier.MAX) {
+				return maxValues.get(outputmethod);
+			} else {
+				return minValues.get(outputmethod);
+			}
+		} else {
+			throw new OutputUnavailableException();
+		}
+	}
+	
+	public HashMap<IbisIdentifier, Number> getLinkValue(MetricModifier mod, MetricOutput outputmethod) throws OutputUnavailableException {
+		if (values.containsKey(outputmethod)) {
+			if (mod == MetricModifier.NORM) {
+				return linkValues.get(outputmethod);
+			} else if (mod == MetricModifier.MAX) {
+				return maxLinkValues.get(outputmethod);
+			} else {
+				return minLinkValues.get(outputmethod);
+			}
 		} else {
 			throw new OutputUnavailableException();
 		}
 	}
 
-	public Number getMaximumValue(MetricOutput outputmethod) throws OutputUnavailableException {
-		if (values.containsKey(outputmethod) && outputmethod != MetricOutput.PERCENT) {
-			return maxValues.get(outputmethod);
-		} else {
-			throw new OutputUnavailableException();
+	public void setValue(MetricModifier mod, MetricOutput outputmethod, Number value) throws BeyondAllowedRangeException {
+		if (outputmethod == MetricOutput.PERCENT) {
+			if (((Float)value) < 0f || ((Float)value) > 1f) {
+				throw new BeyondAllowedRangeException();
+			}
+		} else if (outputmethod == MetricOutput.N) {
+			if (((Long)value) < 0) {
+				throw new BeyondAllowedRangeException();
+			}
+		} else if (outputmethod == MetricOutput.RPOS) {
+			if (((Float)value) < 0f) {
+				throw new BeyondAllowedRangeException();
+			}
+		}
+		if (mod == MetricModifier.NORM) {
+			values.put(outputmethod, value);
+		} else if (mod == MetricModifier.MAX) {
+			maxValues.put(outputmethod, value);
+		} else if (mod == MetricModifier.MAX) {
+			minValues.put(outputmethod, value);
+		}
+	}
+	
+	public void setValue(MetricModifier mod, MetricOutput outputmethod, HashMap<IbisIdentifier, Number> values) throws BeyondAllowedRangeException {
+		for (Map.Entry<IbisIdentifier, Number> entry : values.entrySet()) {						
+			Number value = 0;
+
+			if (outputmethod == MetricOutput.PERCENT) {				
+				value = (Float) entry.getValue();
+				if (((Float)value) < 0f || ((Float)value) > 1f) {
+					throw new BeyondAllowedRangeException();
+				}
+			} else if (outputmethod == MetricOutput.N) {	
+				value = (Long) entry.getValue();
+				if (((Long)value) < 0) {
+					throw new BeyondAllowedRangeException();
+				}	
+			} else if (outputmethod == MetricOutput.RPOS) {	
+				value = (Float) entry.getValue();
+				if (((Float)value) < 0f) {
+					throw new BeyondAllowedRangeException();
+				}	
+			}			
+		}
+		
+		if (mod == MetricModifier.NORM) {
+			linkValues.put(outputmethod, values);
+		} else if (mod == MetricModifier.MAX) {
+			maxLinkValues.put(outputmethod, values);
+		} else if (mod == MetricModifier.MAX) {
+			minLinkValues.put(outputmethod, values);
 		}		
 	}
-
-	public void setValue(MetricOutput outputmethod, Number value) throws BeyondAllowedRangeException {
-		if (outputmethod == MetricOutput.PERCENT) {
-			if (((Float)value) < 0f || ((Float)value) > 1f) {
-				throw new BeyondAllowedRangeException();
-			}
-		} else if (outputmethod == MetricOutput.N) {
-			if (((Integer)value) < 0) {
-				throw new BeyondAllowedRangeException();
-			}
-		} else if (outputmethod == MetricOutput.RPOS) {
-			if (((Float)value) < 0f) {
-				throw new BeyondAllowedRangeException();
-			}
-		}
-		values.put(outputmethod, value);
-	}
-
-	public void setMaxValue(MetricOutput outputmethod, Number value) throws BeyondAllowedRangeException {
-		if (outputmethod == MetricOutput.PERCENT) {
-			if (((Float)value) < 0f || ((Float)value) > 1f) {
-				throw new BeyondAllowedRangeException();
-			}
-		} else if (outputmethod == MetricOutput.N) {
-			if (((Integer)value) < 0) {
-				throw new BeyondAllowedRangeException();
-			}
-		} else if (outputmethod == MetricOutput.RPOS) {
-			if (((Float)value) < 0f) {
-				throw new BeyondAllowedRangeException();
-			}
-		}
-		maxValues.put(outputmethod, value);
-	}
-
-	public void setValue(MetricOutput outputmethod, HashMap<IbisIdentifier, Number> values) throws BeyondAllowedRangeException {
-		for (Map.Entry<IbisIdentifier, Number> entry : values.entrySet()) {
-			junglevision.gathering.Ibis destination = c.getIbis(entry.getKey());
-			junglevision.gathering.Link link = element.getLink(destination);
-						
-			Number value = 0;
-
-			if (outputmethod == MetricOutput.PERCENT) {				
-				value = (Float) entry.getValue();
-				if (((Float)value) < 0f || ((Float)value) > 1f) {
-					throw new BeyondAllowedRangeException();
-				}
-			} else if (outputmethod == MetricOutput.N) {	
-				value = (Integer) entry.getValue();
-				if (((Integer)value) < 0) {
-					throw new BeyondAllowedRangeException();
-				}	
-			} else if (outputmethod == MetricOutput.RPOS) {	
-				value = (Float) entry.getValue();
-				if (((Float)value) < 0f) {
-					throw new BeyondAllowedRangeException();
-				}	
-			}
-
-			link.getMetric(myDescription).setValue(outputmethod, value);
-		}
-	}
-
-	public void setMaxValue(MetricOutput outputmethod, HashMap<IbisIdentifier, Number> values) throws BeyondAllowedRangeException {
-		for (Map.Entry<IbisIdentifier, Number> entry : values.entrySet()) {
-			junglevision.gathering.Ibis destination = c.getIbis(entry.getKey());
-			junglevision.gathering.Link link = element.getLink(destination);
-						
-			Number value = 0;
-
-			if (outputmethod == MetricOutput.PERCENT) {				
-				value = (Float) entry.getValue();
-				if (((Float)value) < 0f || ((Float)value) > 1f) {
-					throw new BeyondAllowedRangeException();
-				}
-			} else if (outputmethod == MetricOutput.N) {	
-				value = (Integer) entry.getValue();
-				if (((Integer)value) < 0) {
-					throw new BeyondAllowedRangeException();
-				}	
-			} else if (outputmethod == MetricOutput.RPOS) {	
-				value = (Float) entry.getValue();
-				if (((Float)value) < 0f) {
-					throw new BeyondAllowedRangeException();
-				}	
-			}
-
-			link.getMetric(myDescription).setMaxValue(outputmethod, value);
-		}
-	}
-
+	
 	public void update(Object[] results) {
 		myDescription.update(results, this);
 	}

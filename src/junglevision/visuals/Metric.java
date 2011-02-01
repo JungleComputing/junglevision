@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import junglevision.visuals.DisplayListBuilder;
+import junglevision.gathering.Metric.MetricModifier;
 import junglevision.gathering.MetricDescription.MetricOutput;
 import junglevision.gathering.exceptions.OutputUnavailableException;
 
@@ -38,7 +39,7 @@ public class Metric extends VisualAbstract implements Visual {
 		this.color = metric.getDescription().getColor();
 		
 		try {
-			currentValue = (Float) metric.getCurrentValue(currentOutputMethod);
+			currentValue = (Float) metric.getValue(MetricModifier.NORM, currentOutputMethod);
 		} catch (OutputUnavailableException e) {
 			logger.debug("OutputUnavailableException caught by visual metric for "+metric.getDescription().getName());
 		}		
@@ -65,7 +66,7 @@ public class Metric extends VisualAbstract implements Visual {
 	
 	public void update() {
 		try {
-			currentValue = (Float) metric.getCurrentValue(currentOutputMethod);
+			currentValue = (Float) metric.getValue(MetricModifier.NORM, currentOutputMethod);
 		} catch (OutputUnavailableException e) {
 			//This shouldn't happen if the metric is defined properly
 			e.printStackTrace();

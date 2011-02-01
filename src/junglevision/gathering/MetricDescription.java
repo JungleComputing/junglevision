@@ -2,6 +2,8 @@ package junglevision.gathering;
 
 import java.util.ArrayList;
 
+import junglevision.gathering.exceptions.NotALinkMetricException;
+
 import ibis.ipl.support.management.AttributeDescription;
 
 /**
@@ -20,7 +22,10 @@ import ibis.ipl.support.management.AttributeDescription;
 
 public interface MetricDescription {
 	public static enum MetricType {
-		NODE, LINK
+		NODE, LINK, DERIVED_NODE, DERIVED_LINK
+	}
+	public static enum LinkDirection {
+		SRC_DST, DST_SRC
 	}
 	public static enum MetricOutput {
 		PERCENT, RPOS, R, N
@@ -30,6 +35,8 @@ public interface MetricDescription {
 	public String getName();
 	
 	public MetricType getType();
+	
+	public LinkDirection getDirection() throws NotALinkMetricException;
 	
 	public Float[] getColor();
 		

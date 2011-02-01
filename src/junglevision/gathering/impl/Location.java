@@ -1,16 +1,19 @@
 package junglevision.gathering.impl;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import junglevision.gathering.Link;
+import junglevision.gathering.Metric.MetricModifier;
 import junglevision.gathering.MetricDescription.MetricOutput;
 import junglevision.gathering.MetricDescription.MetricType;
+import junglevision.gathering.exceptions.BeyondAllowedRangeException;
 import junglevision.gathering.exceptions.OutputUnavailableException;
+import junglevision.gathering.exceptions.SelfLinkeageException;
 
 /**
  * A representation of a location (Node, Site) in the data gathering universe
@@ -24,7 +27,6 @@ public class Location extends Element implements junglevision.gathering.Location
 	
 	private ArrayList<junglevision.gathering.Ibis> ibises;
 	private ArrayList<junglevision.gathering.Location> children;
-	private HashMap<junglevision.gathering.Element, junglevision.gathering.Link> links;
 	
 	public Location(String name, Float[] color) {
 		this.name = name;
@@ -58,7 +60,18 @@ public class Location extends Element implements junglevision.gathering.Location
 	
 	public ArrayList<junglevision.gathering.Ibis> getIbises() {
 		return ibises;
-	}	
+	}
+	
+	public ArrayList<junglevision.gathering.Ibis> getAllIbises() {
+		ArrayList<junglevision.gathering.Ibis> result = new ArrayList<junglevision.gathering.Ibis>();
+		result.addAll(ibises);
+		
+		for (junglevision.gathering.Location child : children) {
+			result.addAll(child.getAllIbises());
+		}
+		
+		return result;
+	}
 	
 	public ArrayList<junglevision.gathering.Location> getChildren() {
 		return children;
@@ -73,7 +86,7 @@ public class Location extends Element implements junglevision.gathering.Location
 				for (junglevision.gathering.Ibis ibis : ibises) {
 					int metricvalue;
 					try {
-						metricvalue = (Integer) ibis.getMetric(metric).getCurrentValue(outputmethod);
+						metricvalue = (Integer) ibis.getMetric(metric).getValue(MetricModifier.NORM, outputmethod);
 						if (metricvalue < result) {
 							result = metricvalue;
 						}
@@ -86,7 +99,7 @@ public class Location extends Element implements junglevision.gathering.Location
 				for (junglevision.gathering.Ibis ibis : ibises) {
 					int metricvalue;
 					try {
-						metricvalue = (Integer) ibis.getMetric(metric).getCurrentValue(outputmethod);
+						metricvalue = (Integer) ibis.getMetric(metric).getValue(MetricModifier.NORM, outputmethod);
 						if (metricvalue > result) {
 							result = metricvalue;
 						}
@@ -99,7 +112,7 @@ public class Location extends Element implements junglevision.gathering.Location
 				for (junglevision.gathering.Ibis ibis : ibises) {
 					int metricvalue;
 					try {
-						metricvalue = (Integer) ibis.getMetric(metric).getCurrentValue(outputmethod);
+						metricvalue = (Integer) ibis.getMetric(metric).getValue(MetricModifier.NORM, outputmethod);
 						result += metricvalue;	
 					} catch (OutputUnavailableException e) {
 						logger.debug("OutputUnavailableException caught. Metric is probably undefined.");
@@ -113,7 +126,7 @@ public class Location extends Element implements junglevision.gathering.Location
 				for (junglevision.gathering.Ibis ibis : ibises) {
 					int metricvalue;
 					try {
-						metricvalue = (Integer) ibis.getMetric(metric).getCurrentValue(outputmethod);
+						metricvalue = (Integer) ibis.getMetric(metric).getValue(MetricModifier.NORM, outputmethod);
 						if (metricvalue < result) {
 							result = metricvalue;
 						}
@@ -133,7 +146,7 @@ public class Location extends Element implements junglevision.gathering.Location
 				for (junglevision.gathering.Ibis ibis : ibises) {
 					int metricvalue;
 					try {
-						metricvalue = (Integer) ibis.getMetric(metric).getCurrentValue(outputmethod);
+						metricvalue = (Integer) ibis.getMetric(metric).getValue(MetricModifier.NORM, outputmethod);
 						if (metricvalue > result) {
 							result = metricvalue;
 						}
@@ -155,7 +168,7 @@ public class Location extends Element implements junglevision.gathering.Location
 				for (junglevision.gathering.Ibis ibis : ibises) {
 					int metricvalue;
 					try {
-						metricvalue = (Integer) ibis.getMetric(metric).getCurrentValue(outputmethod);
+						metricvalue = (Integer) ibis.getMetric(metric).getValue(MetricModifier.NORM, outputmethod);
 						result += metricvalue;	
 					} catch (OutputUnavailableException e) {
 						logger.debug("OutputUnavailableException caught. Metric is probably undefined.");
@@ -180,7 +193,7 @@ public class Location extends Element implements junglevision.gathering.Location
 				for (junglevision.gathering.Ibis ibis : ibises) {
 					float metricvalue;
 					try {
-						metricvalue = (Float) ibis.getMetric(metric).getCurrentValue(outputmethod);
+						metricvalue = (Float) ibis.getMetric(metric).getValue(MetricModifier.NORM, outputmethod);
 						if (metricvalue < result) {
 							result = metricvalue;
 						}
@@ -193,7 +206,7 @@ public class Location extends Element implements junglevision.gathering.Location
 				for (junglevision.gathering.Ibis ibis : ibises) {
 					float metricvalue;
 					try {
-						metricvalue = (Float) ibis.getMetric(metric).getCurrentValue(outputmethod);
+						metricvalue = (Float) ibis.getMetric(metric).getValue(MetricModifier.NORM, outputmethod);
 						if (metricvalue > result) {
 							result = metricvalue;
 						}
@@ -206,7 +219,7 @@ public class Location extends Element implements junglevision.gathering.Location
 				for (junglevision.gathering.Ibis ibis : ibises) {
 					float metricvalue;
 					try {
-						metricvalue = (Float) ibis.getMetric(metric).getCurrentValue(outputmethod);
+						metricvalue = (Float) ibis.getMetric(metric).getValue(MetricModifier.NORM, outputmethod);
 						result += metricvalue;	
 					} catch (OutputUnavailableException e) {
 						logger.debug("OutputUnavailableException caught. Metric is probably undefined.");
@@ -220,7 +233,7 @@ public class Location extends Element implements junglevision.gathering.Location
 				for (junglevision.gathering.Ibis ibis : ibises) {
 					float metricvalue;
 					try {
-						metricvalue = (Float) ibis.getMetric(metric).getCurrentValue(outputmethod);
+						metricvalue = (Float) ibis.getMetric(metric).getValue(MetricModifier.NORM, outputmethod);
 						if (metricvalue < result) {
 							result = metricvalue;
 						}
@@ -240,7 +253,7 @@ public class Location extends Element implements junglevision.gathering.Location
 				for (junglevision.gathering.Ibis ibis : ibises) {
 					float metricvalue;
 					try {
-						metricvalue = (Float) ibis.getMetric(metric).getCurrentValue(outputmethod);
+						metricvalue = (Float) ibis.getMetric(metric).getValue(MetricModifier.NORM, outputmethod);
 						if (metricvalue > result) {
 							result = metricvalue;
 						}
@@ -262,7 +275,7 @@ public class Location extends Element implements junglevision.gathering.Location
 				for (junglevision.gathering.Ibis ibis : ibises) {
 					float metricvalue;
 					try {
-						metricvalue = (Float) ibis.getMetric(metric).getCurrentValue(outputmethod);
+						metricvalue = (Float) ibis.getMetric(metric).getValue(MetricModifier.NORM, outputmethod);
 						result += metricvalue;	
 					} catch (OutputUnavailableException e) {
 						logger.debug("OutputUnavailableException caught. Metric is probably undefined.");
@@ -289,7 +302,7 @@ public class Location extends Element implements junglevision.gathering.Location
 			for (Entry<junglevision.gathering.Element, Link> entry : links.entrySet()) {
 				int linkvalue;
 				try {
-					linkvalue = (Integer) entry.getValue().getMetric(metric).getCurrentValue(outputmethod);
+					linkvalue = (Integer) entry.getValue().getMetric(metric).getValue(MetricModifier.NORM, outputmethod);
 					if (linkvalue >= minimumValue && linkvalue <= maximumValue ) {
 						result.add(entry.getValue());
 					}
@@ -301,7 +314,7 @@ public class Location extends Element implements junglevision.gathering.Location
 			for (Entry<junglevision.gathering.Element, Link> entry : links.entrySet()) {
 				float linkvalue;
 				try {
-					linkvalue = (Float) entry.getValue().getMetric(metric).getCurrentValue(outputmethod);
+					linkvalue = (Float) entry.getValue().getMetric(metric).getValue(MetricModifier.NORM, outputmethod);
 					if (linkvalue >= minimumValue && linkvalue <= maximumValue ) {
 						result.add(entry.getValue());
 					}
@@ -311,10 +324,6 @@ public class Location extends Element implements junglevision.gathering.Location
 			}	
 		}	
 		return result;
-	}
-	
-	public Link getLink(junglevision.gathering.Element destination) {		
-		return links.get(destination);
 	}
 	
 	public int getNumberOfDescendants() {
@@ -328,7 +337,17 @@ public class Location extends Element implements junglevision.gathering.Location
 	} 
 	
 	public String debugPrint() {
-		String result = name + " has "+ibises.size()+" ibises. \n" ;
+		String result = "";
+		result += name + " has "+children.size()+" children. \n" ;
+		result += name + " has "+links.size()+" links. \n" ;
+		result += name + " has "+ibises.size()+" ibises. \n" ;
+		
+		for (junglevision.gathering.Link link : links.values()) {
+			result += name + " "+link.debugPrint();
+		}
+		
+		result += "\n";
+		
 		for (junglevision.gathering.Location child : children) {
 			result += child.debugPrint();
 		}
@@ -353,21 +372,134 @@ public class Location extends Element implements junglevision.gathering.Location
 	public void removeChild(junglevision.gathering.Location location) {
 		children.remove(location);
 	}
-	
-	public void addLink(junglevision.gathering.Element destination, junglevision.gathering.Link link) {
-		links.put(destination, link);
-	}
-	
-	public void removeLink(junglevision.gathering.Element destination) {
-		links.remove(destination);
-	}
-	
-	public void setMetrics(junglevision.gathering.MetricDescription[] newMetrics) {
+		
+	public void setMetrics(Set<junglevision.gathering.MetricDescription> newMetrics) {
 		for (junglevision.gathering.Ibis ibis : ibises) {
 			ibis.setMetrics(newMetrics);
 		}
 		for (junglevision.gathering.Location child : children) {
 			child.setMetrics(newMetrics);
 		}
+		for (junglevision.gathering.Link link : links.values()) {
+			link.setMetrics(newMetrics);
+		}
 	}
+	
+	public void makeLinkHierarchy() {
+		for (junglevision.gathering.Link link : links.values()) {
+			junglevision.gathering.Location source = (junglevision.gathering.Location) link.getSource();
+			junglevision.gathering.Location destination = (junglevision.gathering.Location) link.getDestination();
+			
+			for (junglevision.gathering.Location sourceChild : source.getChildren()) {
+				for (junglevision.gathering.Location destinationChild : destination.getChildren()) {
+					junglevision.gathering.Link childLink;					
+					try {
+						childLink = sourceChild.getLink(destinationChild);
+						link.addChild(childLink);
+					} catch (SelfLinkeageException ignored) {
+						//ignored, because we do not want this link
+					}				
+				}
+			}
+		}
+		for (junglevision.gathering.Location child : children) {
+			child.makeLinkHierarchy();
+		}			
+	}
+	
+	public void update() {
+		//make sure the children are updated first
+		for (junglevision.gathering.Location child : children) {
+			child.update();
+		}
+		
+		for (Entry<junglevision.gathering.MetricDescription, junglevision.gathering.Metric> data : metrics.entrySet()) {
+			junglevision.gathering.MetricDescription desc = data.getKey();
+			junglevision.gathering.Metric metric = data.getValue();
+		
+			try {				
+				ArrayList<MetricOutput> types = desc.getOutputTypes();
+				
+				for (MetricOutput outputtype : types) {
+					if (outputtype == MetricOutput.PERCENT || outputtype == MetricOutput.R || outputtype == MetricOutput.RPOS) {
+						float total = 0f, max = -10000000f, min = 10000000f;
+						
+						//First, we gather our own metrics
+						for (junglevision.gathering.Ibis ibis : ibises) {
+							float ibisValue = (Float) ibis.getMetric(desc).getValue(MetricModifier.NORM, outputtype);
+							
+							total += ibisValue ;
+							
+							if (ibisValue > max) max = ibisValue;
+							if (ibisValue < min) min = ibisValue;
+						}						
+						
+						if (outputtype == MetricOutput.PERCENT) {
+							//Then we add the metric values of our child locations, 
+							//multiplied by their weight.
+							int childIbises = 0;
+							for (junglevision.gathering.Location child : children) {
+								float childValue = (Float)child.getMetric(desc).getValue(MetricModifier.NORM, outputtype);
+								
+								childIbises += child.getNumberOfDescendants();
+								
+								total += childValue * child.getNumberOfDescendants();
+								
+								if (childValue > max) max = childValue;								
+								if (childValue < min) min = childValue;
+							}
+							metric.setValue(MetricModifier.NORM, outputtype, total/(ibises.size()+childIbises));
+							metric.setValue(MetricModifier.MAX, outputtype, max);
+							metric.setValue(MetricModifier.MIN, outputtype, min);
+						} else {							
+							//Then we add the metric values of our child locations					
+							for (junglevision.gathering.Location child : children) {
+								float childValue = (Float)child.getMetric(desc).getValue(MetricModifier.NORM, outputtype);
+								
+								total += childValue;
+								
+								if (childValue > max) max = childValue;								
+								if (childValue < min) min = childValue;
+							}
+							metric.setValue(MetricModifier.NORM, outputtype, total);
+							metric.setValue(MetricModifier.MAX, outputtype, max);
+							metric.setValue(MetricModifier.MIN, outputtype, min);
+						}						
+					} else { //We are MetricOutput.N
+						int total  = 0, max = 0, min = 1000000;
+						
+						//First, we gather our own metrics
+						for (junglevision.gathering.Ibis ibis : ibises) {							
+							int ibisValue = (Integer) ibis.getMetric(desc).getValue(MetricModifier.NORM, outputtype);
+							
+							total += ibisValue ;
+							
+							if (ibisValue > max) max = ibisValue;
+							if (ibisValue < min) min = ibisValue;
+						}
+						
+						//Then we add the metric values of our child locations					
+						for (junglevision.gathering.Location child : children) {
+							int childValue = (Integer) child.getMetric(desc).getValue(MetricModifier.NORM, outputtype);
+							
+							total += childValue;
+							
+							if (childValue > max) max = childValue;								
+							if (childValue < min) min = childValue;
+						}
+						metric.setValue(MetricModifier.NORM, outputtype, total);
+						metric.setValue(MetricModifier.MAX, outputtype, max);
+						metric.setValue(MetricModifier.MIN, outputtype, min);
+					}
+				}				
+			} catch (OutputUnavailableException impossible) {
+				//Impossible since we tested if it was available first.
+				logger.error("The impossible OutputUnavailableException just happened anyway.");
+			} catch (BeyondAllowedRangeException e) {
+				//Impossible unless one of the children has a value that is already bad
+				logger.error("The impossible BeyondAllowedRangeException just happened anyway.");
+			}
+		}
+	}
+		
 }

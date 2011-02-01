@@ -1,5 +1,9 @@
 package junglevision.gathering;
 
+import java.util.Set;
+
+import junglevision.gathering.exceptions.SelfLinkeageException;
+
 /**
  * General interface for any element within the data gathering universe
  */
@@ -11,8 +15,17 @@ public interface Element {
 	 */
 	public Metric[] getMetrics();
 	public Metric getMetric(MetricDescription desc);
-	public Metric getMetric(String metricName);
-	public Link getLink(Element destination);
+
+	/**
+	 * Returns the link corresponding to the destination, or null if no link exists
+	 * @param destination
+	 * 		The destination element.
+	 * @return
+	 * 		The link to the destination, or null if none existed.
+	 * @throws SelfLinkeageException 
+	 */
+	public Link getLink(Element destination) throws SelfLinkeageException; 
+	
 	public Link[] getLinks();
 
 	//Setters
@@ -22,9 +35,13 @@ public interface Element {
 	 * @param metrics
 	 * 		The metrics that need to be gathered from now on.
 	 */
-	public void setMetrics(MetricDescription[] metrics);
+	public void setMetrics(Set<MetricDescription> metrics);
 	public void addMetric(MetricDescription metric);
 	public void removeMetric(MetricDescription metric);
+	public void update();
+		
+	//internal methods
 	public void addLink(Element element, Link newLink);
+	public void removeLink(Element destination);
 	
 }

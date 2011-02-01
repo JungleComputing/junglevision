@@ -53,7 +53,7 @@ public class Ibis extends Element implements junglevision.gathering.Ibis {
 	public void update() {
 		//Make an array of all the AttributeDescriptions needed to update this Ibis' metrics.
 		ArrayList<AttributeDescription> requestList = new ArrayList<AttributeDescription>();
-		for (Entry<String, junglevision.gathering.Metric> metric : metrics.entrySet()) {
+		for (Entry<junglevision.gathering.MetricDescription, junglevision.gathering.Metric> metric : metrics.entrySet()) {
 			requestList.addAll(metric.getValue().getDescription().getNecessaryAttributes());
 		}
 		
@@ -65,7 +65,7 @@ public class Ibis extends Element implements junglevision.gathering.Ibis {
 			
 			//Split the result objects into partial arrays depending on the amount needed per metric
 			int j=0;			
-			for (Entry<String, junglevision.gathering.Metric> metric : metrics.entrySet()) {
+			for (Entry<junglevision.gathering.MetricDescription, junglevision.gathering.Metric> metric : metrics.entrySet()) {
 				Object[] partialResults = new Object[metric.getValue().getDescription().getNecessaryAttributes().size()];				
 				for (int i=0; i < partialResults.length ; i++) {
 					partialResults[i] = results[j];	

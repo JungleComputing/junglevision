@@ -17,33 +17,42 @@ public class FakeRegistryService implements ibis.ipl.server.RegistryServiceInter
 	private ArrayList<IbisIdentifier> ibises;
 	
 	public FakeRegistryService() {
+		final int POOLS = 1;
+		final int COUNTRIES = 10;
+		final int UNIVERSITIES = 10;
+		final int IBISES = 10;
+		
 		pools = new HashMap<String, IbisIdentifier[]>();
 		ibises = new ArrayList<IbisIdentifier>();
 				
-		int poolnumber = 5; //1 +(int)(Math.random()*3);		
-		for (int k=0; k<poolnumber; k++) {
-			String poolName = "pool"+k;
+		int poolnumber = POOLS; //1 +(int)(Math.random()*3);		
+		for (int p=0; p<poolnumber; p++) {
+			String poolName = "pool"+p;
 			ArrayList<IbisIdentifier> poolIbises = new ArrayList<IbisIdentifier>();
 			
-			int sitenumber = 10; //1+(int)(Math.random()*9);			
-			for (int j=0; j<sitenumber; j++) {
-				String siteName = "site"+j;
-				
-				int ibisnumber = 10;//1+(int)(Math.random()*25);
-				for (int i=0; i<ibisnumber; i++) {
-					IbisIdentifier fakeibis = new FakeIbisIdentifier(i+"_"+poolName+"@"+siteName);
-					poolIbises.add(fakeibis);
-					ibises.add(fakeibis);
-				}				
+			int countries = COUNTRIES;			
+			for (int c=0; c<countries; c++) {
+				String countryName = "country"+c;
+				int universities = UNIVERSITIES; //1+(int)(Math.random()*9);			
+				for (int u=0; u<universities; u++) {
+					String siteName = countryName+"site"+u;
+					
+					int ibisnumber = IBISES;//1+(int)(Math.random()*25);
+					for (int i=0; i<ibisnumber; i++) {
+						IbisIdentifier fakeibis = new FakeIbisIdentifier(i+"_"+poolName+"@"+siteName+"@"+countryName);
+						poolIbises.add(fakeibis);
+						ibises.add(fakeibis);
+					}				
+				}
 			}
-			IbisIdentifier[] ibises = poolIbises.toArray(new IbisIdentifier[0]);
-			pools.put(poolName, ibises);
+			
+			pools.put(poolName, poolIbises.toArray(new IbisIdentifier[0]));
 		}
 		
 		if (logger.isDebugEnabled()) {
-			logger.debug("FakeRegistry has created: ");
-			logger.debug(ibises.size()+" ibises.");
-			logger.debug("divided among "+pools.size()+" pools.");
+			logger.debug("FakeRegistry has created "+ibises.size()+" ibises.");			
+			logger.debug("in "+COUNTRIES+" countries and "+UNIVERSITIES+" universities");
+			logger.debug("and divided among "+pools.size()+" pools.");
 		}
 	}
 

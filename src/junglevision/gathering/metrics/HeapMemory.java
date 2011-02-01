@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import junglevision.gathering.Metric;
+import junglevision.gathering.Metric.MetricModifier;
 import junglevision.gathering.exceptions.BeyondAllowedRangeException;
 import ibis.ipl.support.management.AttributeDescription;
 
@@ -35,9 +36,9 @@ public class HeapMemory extends junglevision.gathering.impl.MetricDescription im
 		Long mem_heap_used 	= (Long) mem_heap_recvd.get("used");
 				
 		try {			 
-			metric.setValue(MetricOutput.PERCENT, (float) mem_heap_used / (float) mem_heap_max);
-			metric.setValue(MetricOutput.RPOS, (float) mem_heap_used);
-			metric.setMaxValue(MetricOutput.RPOS, (float) mem_heap_max);
+			metric.setValue(MetricModifier.NORM, MetricOutput.PERCENT, (float) mem_heap_used / (float) mem_heap_max);
+			metric.setValue(MetricModifier.NORM, MetricOutput.RPOS, (float) mem_heap_used);
+			metric.setValue(MetricModifier.MAX, MetricOutput.RPOS, (float) mem_heap_max);
 		} catch (BeyondAllowedRangeException e) {
 			logger.debug(name +" metric failed trying to set value out of bounds.");
 		}	

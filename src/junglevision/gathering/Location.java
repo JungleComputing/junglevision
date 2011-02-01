@@ -23,7 +23,9 @@ public interface Location extends Element {
 	
 	public Float[] getColor();
 	
-	public ArrayList<junglevision.gathering.Ibis> getIbises();	
+	public ArrayList<junglevision.gathering.Ibis> getIbises();
+	
+	public ArrayList<junglevision.gathering.Ibis> getAllIbises();
 	
 	public ArrayList<junglevision.gathering.Location> getChildren();
 	
@@ -57,15 +59,6 @@ public interface Location extends Element {
 	 * 		The links that correspond to the minimum and maximum values given.
 	 */
 	public ArrayList<Link> getLinks(MetricDescription metric, MetricOutput outputmethod, float minimumValue, float maximumValue);
-	
-	/**
-	 * Returns the link corresponding to the destination, or null if no link exists
-	 * @param destination
-	 * 		The destination element.
-	 * @return
-	 * 		The link to the destination, or null if none existed.
-	 */
-	public Link getLink(Element destination); 
 		
 	/**
 	 * Returns the amount of ibises that are descendants of this location
@@ -74,13 +67,11 @@ public interface Location extends Element {
 	 */
 	public int getNumberOfDescendants();
 	
-	
 	public void addIbis(junglevision.gathering.Ibis ibis);	
 	public void removeIbis(junglevision.gathering.Ibis ibis);
 	
 	public void addChild(junglevision.gathering.Location location);	
 	public void removeChild(junglevision.gathering.Location location);
 	
-	public void addLink(junglevision.gathering.Element destination, junglevision.gathering.Link link);	
-	public void removeLink(junglevision.gathering.Element destination);
+	public void makeLinkHierarchy();
 }

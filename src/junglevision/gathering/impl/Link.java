@@ -1,12 +1,18 @@
 package junglevision.gathering.impl;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map.Entry;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import junglevision.gathering.Element;
+import junglevision.gathering.Metric.MetricModifier;
+import junglevision.gathering.MetricDescription.MetricOutput;
 import junglevision.gathering.MetricDescription.MetricType;
+import junglevision.gathering.exceptions.BeyondAllowedRangeException;
+import junglevision.gathering.exceptions.OutputUnavailableException;
 
 /**
  * An interface for a link between two elements that exist within the managed universe.
@@ -18,6 +24,9 @@ public class Link extends junglevision.gathering.impl.Element implements junglev
 	private ArrayList<junglevision.gathering.Link> children;
 	private Element origin;
 	private Element destination;
+	
+	HashMap<junglevision.gathering.MetricDescription, junglevision.gathering.Metric> srcToDstMetrics;
+	HashMap<junglevision.gathering.MetricDescription, junglevision.gathering.Metric> dstToSrcMetrics;
 	
 	public Link(Element origin, Element destination) {
 		this.origin = origin;
@@ -35,17 +44,147 @@ public class Link extends junglevision.gathering.impl.Element implements junglev
 		}		
 		return result.toArray(new junglevision.gathering.Metric[0]);
 	}
+	
+	public Element getSource() {		
+		return origin;
+	}
+
+	public Element getDestination() {
+		return destination;
+	}
+	
+	public int getNumberOfDescendants() {
+		int result = 1;
 		
-	public ArrayList<junglevision.gathering.Link> getChildren() {
-		return children;
+		for (junglevision.gathering.Link child : children) {
+			result += child.getNumberOfDescendants();
+		}
+		
+		return result;
+	} 
+	
+	public void addChild(junglevision.gathering.Link newChild) {
+		if (!children.contains(newChild)) {
+			children.add(newChild);
+		}
 	}
 	
-	public void addChild(junglevision.gathering.Link link) {
-		children.add(link);
+	public String debugPrint() {
+		String result = "";
+		
+		result += "link: "+((junglevision.gathering.Location)origin).getName()+"->"+((junglevision.gathering.Location)destination).getName()+ "\n";
+		
+		for (junglevision.gathering.Link child : children) {
+			result += "  " + child.debugPrint();
+		}		
+		
+		return result;
 	}
 	
-	public void removeChild(junglevision.gathering.Link link) {
-		children.remove(link);
+	public void update() { 
+		//First update all of our children
+		for (junglevision.gathering.Link child : children) {
+			child.update();
+		}
+		
+		for (Entry<junglevision.gathering.MetricDescription, junglevision.gathering.Metric> data : metrics.entrySet()) {
+			junglevision.gathering.MetricDescription desc = data.getKey();
+			
+			if (desc.getType() != MetricType.LINK) {
+				break;
+			}
+			
+			junglevision.gathering.Metric metric = data.getValue();			
+			ArrayList<MetricOutput> types = desc.getOutputTypes();
+			
+			for (MetricOutput outputtype : types) {
+				try {
+					if (outputtype == MetricOutput.PERCENT || outputtype == MetricOutput.R || outputtype == MetricOutput.RPOS) {
+						float total = 0f, max = -10000000f, min = 10000000f;
+						int childLinks = 0;
+						
+						//First, we gather our own metrics
+						long originSent = origin.getMetric("");
+						
+						
+						
+						
+						
+						
+						
+						
+						
+						float originValue 		= (Float) origin.getMetric(desc).getValue(MetricModifier.NORM, outputtype);
+						float destinationValue 	= (Float) destination.getMetric(desc).getValue(MetricModifier.NORM, outputtype);
+						
+						total += originValue+destinationValue ;
+						
+						if (originValue > max) max = originValue;
+						if (originValue < min) min = originValue;
+						
+						if (destinationValue > max) max = destinationValue;
+						if (destinationValue < min) min = destinationValue;
+						
+						origin.getMetric(desc).getValue(MetricModifier.NORM, outputtype);
+						//TODO
+						
+						if (outputtype == MetricOutput.PERCENT) {
+							//Gather the metrics of our children, and multiply by their weight
+							for (junglevision.gathering.Link child : children) {							
+								float childValue = (Float)child.getMetric(desc).getValue(MetricModifier.NORM, outputtype);							
+								
+								childLinks += child.getNumberOfDescendants();
+								
+								total += childValue * child.getNumberOfDescendants();
+								
+								if (childValue > max) max = childValue;								
+								if (childValue < min) min = childValue;
+							}
+							metric.setValue(MetricModifier.NORM, outputtype, total/childLinks);
+							metric.setValue(MetricModifier.MAX, outputtype, max);
+							metric.setValue(MetricModifier.MIN, outputtype, min);
+						} else {							
+							//Then we add the metric values of our child locations					
+							for (junglevision.gathering.Link child : children) {
+								float childValue = (Float)child.getMetric(desc).getValue(MetricModifier.NORM, outputtype);
+								
+								total += childValue;
+								
+								if (childValue > max) max = childValue;								
+								if (childValue < min) min = childValue;
+							}
+							metric.setValue(MetricModifier.NORM, outputtype, total);
+							metric.setValue(MetricModifier.MAX, outputtype, max);
+							metric.setValue(MetricModifier.MIN, outputtype, min);
+						}						
+					} else { //We are MetricOutput.N
+						int total  = 0, max = 0, min = 1000000;
+						
+						//First, we gather our own metrics
+						//TODO
+						
+						//Then we add the metric values of our child locations					
+						for (junglevision.gathering.Link child : children) {
+							int childValue = (Integer) child.getMetric(desc).getValue(MetricModifier.NORM, outputtype);
+							
+							total += childValue;
+							
+							if (childValue > max) max = childValue;								
+							if (childValue < min) min = childValue;
+						}
+						metric.setValue(MetricModifier.NORM, outputtype, total);
+						metric.setValue(MetricModifier.MAX, outputtype, max);
+						metric.setValue(MetricModifier.MIN, outputtype, min);
+					}				
+				} catch (OutputUnavailableException impossible) {
+					//Impossible since we tested if it was available first.
+					logger.error("The impossible OutputUnavailableException just happened anyway.");
+				} catch (BeyondAllowedRangeException e) {
+					//Impossible unless one of the children has a value that is already bad
+					logger.error("The impossible BeyondAllowedRangeException just happened anyway.");
+				}
+			}
+		}
 	}
 	
 	@Override public boolean equals(Object thatObject) {
@@ -65,5 +204,5 @@ public class Link extends junglevision.gathering.impl.Element implements junglev
 	@Override public int hashCode() {
 		int hashCode = origin.hashCode()+destination.hashCode();
 		return hashCode;
-    }
+    }	
 }
