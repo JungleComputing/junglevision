@@ -14,22 +14,22 @@ import junglevision.gathering.exceptions.BeyondAllowedRangeException;
 import junglevision.gathering.exceptions.OutputUnavailableException;
 import junglevision.gathering.exceptions.SourceNotProvidedException;
 
-public class BytesSentPerSecond extends junglevision.gathering.impl.MetricDescription implements junglevision.gathering.MetricDescription {
-	private static final Logger logger = LoggerFactory.getLogger("ibis.deploy.gui.junglevision.gathering.derivedmetrics.BytesSentPerSecond");
+public class BytesReceivedPerSecond extends junglevision.gathering.impl.MetricDescription implements junglevision.gathering.MetricDescription {
+	private static final Logger logger = LoggerFactory.getLogger("ibis.deploy.gui.junglevision.gathering.derivedmetrics.BytesReceivedPerSecond");
 	
 	HashMap<String, MetricDescription> derivedFrom;
 	
-	public BytesSentPerSecond(MetricDescription sentBytes) {
+	public BytesReceivedPerSecond(MetricDescription receivedBytes) {
 		super();
 		
-		name = "Bytes_Sent_Per_Second";		
+		name = "Bytes_Received_Per_Second";		
 		type = MetricType.DERIVED_NODE;
 		
 		color[0] = 0.0f;
 		color[1] = 0.5f;
 		color[2] = 0.5f;
 				
-		derivedFrom.put("sent_bytes", sentBytes);
+		derivedFrom.put("received_bytes", receivedBytes);
 		
 		outputTypes.add(MetricOutput.RPOS);
 	}
@@ -48,7 +48,7 @@ public class BytesSentPerSecond extends junglevision.gathering.impl.MetricDescri
 		
 		try {
 			for (Element source : sources) {
-				Metric sourceMetric = source.getMetric(derivedFrom.get("sent_bytes"));			
+				Metric sourceMetric = source.getMetric(derivedFrom.get("received_bytes"));			
 				total += (Long)sourceMetric.getValue(MetricModifier.NORM, MetricOutput.N);			
 			}
 		} catch (OutputUnavailableException e) {

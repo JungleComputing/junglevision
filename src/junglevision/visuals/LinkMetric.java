@@ -4,6 +4,7 @@ import javax.media.opengl.GL;
 import javax.media.opengl.glu.GLU;
 import javax.media.opengl.glu.GLUquadric;
 
+import junglevision.gathering.Metric.MetricModifier;
 import junglevision.gathering.MetricDescription.MetricOutput;
 import junglevision.gathering.exceptions.OutputUnavailableException;
 
@@ -34,7 +35,7 @@ public class LinkMetric extends VisualAbstract implements Visual {
 		this.color = metric.getDescription().getColor();
 		
 		try {
-			currentValue = (Float) metric.getCurrentValue(currentOutputMethod);
+			currentValue = (Float) metric.getValue(MetricModifier.NORM, currentOutputMethod);
 		} catch (OutputUnavailableException e) {
 			//This shouldn't happen if the metric is defined properly
 			e.printStackTrace();
@@ -81,7 +82,7 @@ public class LinkMetric extends VisualAbstract implements Visual {
 	
 	public void update() {				
 		try {
-			currentValue = (Float) metric.getCurrentValue(currentOutputMethod);
+			currentValue = (Float) metric.getValue(MetricModifier.NORM, currentOutputMethod);
 		} catch (OutputUnavailableException e) {
 			//This shouldn't happen if the metric is defined properly
 			e.printStackTrace();

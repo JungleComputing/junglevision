@@ -2,7 +2,9 @@ package junglevision.gathering;
 
 import java.util.ArrayList;
 
+import junglevision.gathering.exceptions.IncorrectParametersException;
 import junglevision.gathering.exceptions.NotALinkMetricException;
+import junglevision.gathering.exceptions.SourceNotProvidedException;
 
 import ibis.ipl.support.management.AttributeDescription;
 
@@ -24,9 +26,6 @@ public interface MetricDescription {
 	public static enum MetricType {
 		NODE, LINK, DERIVED_NODE, DERIVED_LINK
 	}
-	public static enum LinkDirection {
-		SRC_DST, DST_SRC
-	}
 	public static enum MetricOutput {
 		PERCENT, RPOS, R, N
 	}
@@ -35,8 +34,6 @@ public interface MetricDescription {
 	public String getName();
 	
 	public MetricType getType();
-	
-	public LinkDirection getDirection() throws NotALinkMetricException;
 	
 	public Float[] getColor();
 		
@@ -57,11 +54,13 @@ public interface MetricDescription {
 	/**
 	 * Function that specifies what to do with the resulting values from the attribute update
 	 * @param results
-	 * 		the results array returned by the update cycle and passed on by the Metric class
+	 * 		the results array returned by the update cycle and passed on by the Metric class 		
 	 * @param metric
-	 * 		the metric that asks for the update to be done (this metric will be updated by callback)
+	 * 		the metric that asks for the update to be done (this metric will be updated by callback)	
+	 * @throws IncorrectParametersException 
+	 * 		if the given Object[] does not contain the right type(s)
 	 */
-	public void update(Object[] results, Metric metric);	
+	public void update(Object[] results, Metric metric) throws IncorrectParametersException;	
 	
 	/**
 	 * Returns a new metric based on this description

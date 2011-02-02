@@ -8,7 +8,7 @@ public class Ibis extends VisualAbstract implements Visual  {
 		super();		
 		separation = 0.05f;
 		
-		jv.registerVisual(this);
+		jv.registerVisual(dataIbis, this);
 		
 		junglevision.gathering.Metric dataMetrics[] = dataIbis.getMetrics();
 		

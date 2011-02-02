@@ -44,7 +44,7 @@ public interface Metric {
 	 * @throws OutputUnavailableException
 	 * 		if the selected outputmethod is considered nonsensical or otherwise unavailable
 	 */
-	public HashMap<IbisIdentifier,Number> getLinkValue(MetricModifier mod, MetricOutput outputmethod) throws OutputUnavailableException;
+	public HashMap<Element,Number> getLinkValue(MetricModifier mod, MetricOutput outputmethod) throws OutputUnavailableException;
 			
 	/**
 	 * Callback function for the update method in MetricDescriptions

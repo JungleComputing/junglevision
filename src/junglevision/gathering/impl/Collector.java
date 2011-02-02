@@ -73,6 +73,7 @@ public class Collector implements junglevision.gathering.Collector, Runnable {
 		descriptions.add(new NonHeapMemory());
 		//descriptions.add(new ThreadsMetric());
 		descriptions.add(new BytesReceivedPerSecond());
+		descriptions.add(new BytesSentPerSecond());
 		
 	}		
 		

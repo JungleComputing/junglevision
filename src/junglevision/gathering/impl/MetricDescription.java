@@ -19,7 +19,6 @@ public abstract class MetricDescription implements junglevision.gathering.Metric
 	
 	protected String name;
 	protected MetricType type;
-	protected LinkDirection direction;
 	protected Float[] color;
 	protected ArrayList<MetricOutput> outputTypes; 
 	protected ArrayList<AttributeDescription> necessaryAttributes;
@@ -40,11 +39,7 @@ public abstract class MetricDescription implements junglevision.gathering.Metric
 	public MetricType getType() {
 		return type;
 	}
-	
-	public LinkDirection getDirection() throws NotALinkMetricException {
-		return direction;
-	}
-	
+		
 	public Float[] getColor() {
 		return color;
 	}
@@ -59,9 +54,5 @@ public abstract class MetricDescription implements junglevision.gathering.Metric
 	
 	public junglevision.gathering.Metric getMetric(junglevision.gathering.Element element) {
 		return new Metric(element, this);
-	}
-	
-	public junglevision.gathering.Metric getMetric(junglevision.gathering.Element source, junglevision.gathering.Element destination) {
-		return new Metric(source, destination, this);
 	}
 }

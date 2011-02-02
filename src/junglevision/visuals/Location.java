@@ -10,7 +10,7 @@ public class Location extends VisualAbstract implements Visual {
 		separation = 1.0f;
 		cShape = CollectionShape.SPHERE;
 		
-		jv.registerVisual(this);
+		jv.registerVisual(dataLocation, this);
 		
 		ArrayList<junglevision.gathering.Location> dataChildren = dataLocation.getChildren();
 		
@@ -23,7 +23,7 @@ public class Location extends VisualAbstract implements Visual {
 		for (junglevision.gathering.Ibis dataIbis : dataIbises) {
 			children.add(new Ibis(jv, glu, dataIbis));
 		}
-				
+						
 		constructDimensions();
 	}
 }

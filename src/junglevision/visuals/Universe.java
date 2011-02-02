@@ -11,7 +11,7 @@ public class Universe extends VisualAbstract implements Visual {
 		separation = 3.0f;
 		cShape = CollectionShape.CUBE;
 		
-		jv.registerVisual(this);
+		jv.registerVisual(root, this);
 		
 		ArrayList<junglevision.gathering.Location> dataChildren = root.getChildren();
 		

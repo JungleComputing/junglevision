@@ -466,11 +466,11 @@ public class Location extends Element implements junglevision.gathering.Location
 							metric.setValue(MetricModifier.MIN, outputtype, min);
 						}						
 					} else { //We are MetricOutput.N
-						int total  = 0, max = 0, min = 1000000;
+						long total  = 0, max = 0, min = 1000000;
 						
 						//First, we gather our own metrics
 						for (junglevision.gathering.Ibis ibis : ibises) {							
-							int ibisValue = (Integer) ibis.getMetric(desc).getValue(MetricModifier.NORM, outputtype);
+							long ibisValue = (Long) ibis.getMetric(desc).getValue(MetricModifier.NORM, outputtype);
 							
 							total += ibisValue ;
 							
@@ -480,7 +480,7 @@ public class Location extends Element implements junglevision.gathering.Location
 						
 						//Then we add the metric values of our child locations					
 						for (junglevision.gathering.Location child : children) {
-							int childValue = (Integer) child.getMetric(desc).getValue(MetricModifier.NORM, outputtype);
+							long childValue = (Long) child.getMetric(desc).getValue(MetricModifier.NORM, outputtype);
 							
 							total += childValue;
 							

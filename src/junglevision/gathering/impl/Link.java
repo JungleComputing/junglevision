@@ -1,7 +1,6 @@
 package junglevision.gathering.impl;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Map.Entry;
 
 import org.slf4j.Logger;
@@ -24,10 +23,7 @@ public class Link extends junglevision.gathering.impl.Element implements junglev
 	private ArrayList<junglevision.gathering.Link> children;
 	private Element origin;
 	private Element destination;
-	
-	HashMap<junglevision.gathering.MetricDescription, junglevision.gathering.Metric> srcToDstMetrics;
-	HashMap<junglevision.gathering.MetricDescription, junglevision.gathering.Metric> dstToSrcMetrics;
-	
+		
 	public Link(Element origin, Element destination) {
 		this.origin = origin;
 		this.destination = destination;
@@ -104,30 +100,21 @@ public class Link extends junglevision.gathering.impl.Element implements junglev
 						int childLinks = 0;
 						
 						//First, we gather our own metrics
-						long originSent = origin.getMetric("");
+						junglevision.gathering.Metric srcMetric = origin.getMetric(desc);
+						junglevision.gathering.Metric dstMetric = destination.getMetric(desc);
 						
+						float srcValue = (Float)srcMetric.getLinkValue(MetricModifier.NORM, outputtype).get(destination);
+						float dstValue = (Float)dstMetric.getLinkValue(MetricModifier.NORM, outputtype).get(origin);
 						
+						//TODO find a new function for this
+						total += srcValue+dstValue;
 						
+						if (srcValue > max) max = srcValue;
+						if (srcValue < min) min = srcValue;
 						
-						
-						
-						
-						
-						
-						float originValue 		= (Float) origin.getMetric(desc).getValue(MetricModifier.NORM, outputtype);
-						float destinationValue 	= (Float) destination.getMetric(desc).getValue(MetricModifier.NORM, outputtype);
-						
-						total += originValue+destinationValue ;
-						
-						if (originValue > max) max = originValue;
-						if (originValue < min) min = originValue;
-						
-						if (destinationValue > max) max = destinationValue;
-						if (destinationValue < min) min = destinationValue;
-						
-						origin.getMetric(desc).getValue(MetricModifier.NORM, outputtype);
-						//TODO
-						
+						if (dstValue > max) max = dstValue;
+						if (dstValue < min) min = dstValue;
+												
 						if (outputtype == MetricOutput.PERCENT) {
 							//Gather the metrics of our children, and multiply by their weight
 							for (junglevision.gathering.Link child : children) {							
@@ -158,10 +145,23 @@ public class Link extends junglevision.gathering.impl.Element implements junglev
 							metric.setValue(MetricModifier.MIN, outputtype, min);
 						}						
 					} else { //We are MetricOutput.N
-						int total  = 0, max = 0, min = 1000000;
+						long total  = 0, max = 0, min = 1000000;
 						
 						//First, we gather our own metrics
-						//TODO
+						junglevision.gathering.Metric srcMetric = origin.getMetric(desc);
+						junglevision.gathering.Metric dstMetric = destination.getMetric(desc);
+						
+						long srcValue = (Long)srcMetric.getLinkValue(MetricModifier.NORM, outputtype).get(destination);
+						long dstValue = (Long)dstMetric.getLinkValue(MetricModifier.NORM, outputtype).get(origin);
+						
+						//TODO find a new function for this
+						total += srcValue+dstValue;
+						
+						if (srcValue > max) max = srcValue;
+						if (srcValue < min) min = srcValue;
+						
+						if (dstValue > max) max = dstValue;
+						if (dstValue < min) min = dstValue;
 						
 						//Then we add the metric values of our child locations					
 						for (junglevision.gathering.Link child : children) {

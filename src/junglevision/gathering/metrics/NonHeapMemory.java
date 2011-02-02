@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 import junglevision.gathering.Metric;
 import junglevision.gathering.Metric.MetricModifier;
 import junglevision.gathering.exceptions.BeyondAllowedRangeException;
+import junglevision.gathering.exceptions.IncorrectParametersException;
 import ibis.ipl.support.management.AttributeDescription;
 
 public class NonHeapMemory extends junglevision.gathering.impl.MetricDescription implements junglevision.gathering.MetricDescription {
@@ -29,18 +30,23 @@ public class NonHeapMemory extends junglevision.gathering.impl.MetricDescription
 		outputTypes.add(MetricOutput.RPOS);
 	}
 
-	public void update(Object[] results, Metric metric) {
-		CompositeData mem_nonheap_recvd	= (CompositeData) results[0];
-
-		Long mem_nonheap_max 	= (Long) mem_nonheap_recvd.get("max");
-		Long mem_nonheap_used 	= (Long) mem_nonheap_recvd.get("used");
-
-		try {
-			metric.setValue(MetricModifier.NORM, MetricOutput.PERCENT, ((float) mem_nonheap_used / (float) mem_nonheap_max));
-			metric.setValue(MetricModifier.NORM, MetricOutput.RPOS, (float) mem_nonheap_used);
-			metric.setValue(MetricModifier.MAX, MetricOutput.RPOS, (float) mem_nonheap_max);
-		} catch (BeyondAllowedRangeException e) {
-			logger.debug(name +" metric failed trying to set value out of bounds.");
+	public void update(Object[] results, Metric metric) throws IncorrectParametersException {
+		if (results[0] instanceof CompositeData) {
+			CompositeData received	= (CompositeData) results[0];
+			
+			long mem_max  = (Long) received.get("max");
+			long mem_used = (Long) received.get("used");
+					
+			try {			 
+				metric.setValue(MetricModifier.NORM, MetricOutput.PERCENT, (float) mem_used / (float) mem_max);
+				metric.setValue(MetricModifier.NORM, MetricOutput.RPOS, (float) mem_used);
+				metric.setValue(MetricModifier.MAX, MetricOutput.RPOS, (float) mem_max);
+			} catch (BeyondAllowedRangeException e) {
+				logger.debug(name +" metric failed trying to set value out of bounds.");
+			}
+		} else {
+			logger.error("Parameter is not of the required type.");
+			throw new IncorrectParametersException();
 		}
 	}
 }

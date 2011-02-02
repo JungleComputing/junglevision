@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 import junglevision.gathering.Metric;
 import junglevision.gathering.Metric.MetricModifier;
 import junglevision.gathering.exceptions.BeyondAllowedRangeException;
+import junglevision.gathering.exceptions.IncorrectParametersException;
 import ibis.ipl.support.management.AttributeDescription;
 
 public class ThreadsCount extends junglevision.gathering.impl.MetricDescription implements junglevision.gathering.MetricDescription {
@@ -26,13 +27,18 @@ public class ThreadsCount extends junglevision.gathering.impl.MetricDescription 
 		outputTypes.add(MetricOutput.N);
 	}
 
-	public void update(Object[] results, Metric metric) {		
-		int num_threads		= (Integer) results[0];		
-
-		try {
-			metric.setValue(MetricModifier.NORM, MetricOutput.N, num_threads);
-		} catch (BeyondAllowedRangeException e) {
-			logger.debug(name +" metric failed trying to set value out of bounds.");
+	public void update(Object[] results, Metric metric) throws IncorrectParametersException {		
+		if (results[0] instanceof Integer) {
+			int num_threads		= (Integer) results[0];		
+	
+			try {
+				metric.setValue(MetricModifier.NORM, MetricOutput.N, num_threads);
+			} catch (BeyondAllowedRangeException e) {
+				logger.debug(name +" metric failed trying to set value out of bounds.");
+			}
+		} else {
+			logger.error("Parameter is not of the required type.");
+			throw new IncorrectParametersException();
 		}
 	}
 }

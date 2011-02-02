@@ -8,9 +8,9 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import junglevision.gathering.Element;
 import junglevision.gathering.MetricDescription.MetricOutput;
 import junglevision.gathering.exceptions.BeyondAllowedRangeException;
+import junglevision.gathering.exceptions.IncorrectParametersException;
 import junglevision.gathering.exceptions.OutputUnavailableException;
 import junglevision.gathering.exceptions.SingletonObjectNotInstantiatedException;
 
@@ -26,7 +26,7 @@ public class Metric implements junglevision.gathering.Metric {
 	protected junglevision.gathering.Element element;
 	protected junglevision.gathering.MetricDescription myDescription;
 	protected HashMap<MetricOutput, Number> values, maxValues, minValues;
-	protected HashMap<MetricOutput, HashMap<IbisIdentifier, Number>> linkValues, maxLinkValues, minLinkValues;
+	protected HashMap<MetricOutput, HashMap<junglevision.gathering.Element, Number>> linkValues, maxLinkValues, minLinkValues;
 	
 	protected HashMap<String, Number> helperVariables;
 	
@@ -63,16 +63,11 @@ public class Metric implements junglevision.gathering.Metric {
 			} 
 		}
 		
-		linkValues = new HashMap<MetricOutput, HashMap<IbisIdentifier, Number>>();
-		maxLinkValues = new HashMap<MetricOutput, HashMap<IbisIdentifier, Number>>();
-		minLinkValues = new HashMap<MetricOutput, HashMap<IbisIdentifier, Number>>();
+		linkValues = new HashMap<MetricOutput, HashMap<junglevision.gathering.Element, Number>>();
+		maxLinkValues = new HashMap<MetricOutput, HashMap<junglevision.gathering.Element, Number>>();
+		minLinkValues = new HashMap<MetricOutput, HashMap<junglevision.gathering.Element, Number>>();
 		
 		helperVariables = new HashMap<String, Number>();
-	}
-	
-	public Metric(junglevision.gathering.Element source, junglevision.gathering.Element destination,
-			MetricDescription metricDescription) {
-		// TODO Auto-generated constructor stub
 	}
 
 	public Number getHelperVariable(String name) {
@@ -101,7 +96,7 @@ public class Metric implements junglevision.gathering.Metric {
 		}
 	}
 	
-	public HashMap<IbisIdentifier, Number> getLinkValue(MetricModifier mod, MetricOutput outputmethod) throws OutputUnavailableException {
+	public HashMap<junglevision.gathering.Element, Number> getLinkValue(MetricModifier mod, MetricOutput outputmethod) throws OutputUnavailableException {
 		if (values.containsKey(outputmethod)) {
 			if (mod == MetricModifier.NORM) {
 				return linkValues.get(outputmethod);
@@ -139,7 +134,10 @@ public class Metric implements junglevision.gathering.Metric {
 	}
 	
 	public void setValue(MetricModifier mod, MetricOutput outputmethod, HashMap<IbisIdentifier, Number> values) throws BeyondAllowedRangeException {
-		for (Map.Entry<IbisIdentifier, Number> entry : values.entrySet()) {						
+		HashMap<junglevision.gathering.Element, Number> result = new HashMap<junglevision.gathering.Element, Number>();
+		
+		for (Map.Entry<IbisIdentifier, Number> entry : values.entrySet()) {
+			junglevision.gathering.Element ibis = c.getIbis(entry.getKey());
 			Number value = 0;
 
 			if (outputmethod == MetricOutput.PERCENT) {				
@@ -157,20 +155,27 @@ public class Metric implements junglevision.gathering.Metric {
 				if (((Float)value) < 0f) {
 					throw new BeyondAllowedRangeException();
 				}	
-			}			
+			}
+			
+			result.put(ibis, value);
 		}
 		
 		if (mod == MetricModifier.NORM) {
-			linkValues.put(outputmethod, values);
+			linkValues.put(outputmethod, result);
 		} else if (mod == MetricModifier.MAX) {
-			maxLinkValues.put(outputmethod, values);
+			maxLinkValues.put(outputmethod, result);
 		} else if (mod == MetricModifier.MAX) {
-			minLinkValues.put(outputmethod, values);
+			minLinkValues.put(outputmethod, result);
 		}		
 	}
 	
 	public void update(Object[] results) {
-		myDescription.update(results, this);
+		try {
+			myDescription.update(results, this);
+		} catch (IncorrectParametersException shouldnteverhappen) {
+			//This is so bad, we're going to throw exceptions until someone fixes it.
+			shouldnteverhappen.printStackTrace();
+		}
 	}
 
 	public junglevision.gathering.MetricDescription getDescription() {
