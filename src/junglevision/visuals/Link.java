@@ -11,7 +11,7 @@ public class Link extends VisualAbstract implements Visual {
 		this.source = source;
 		this.destination = destination;
 		
-		jv.registerVisual(dataLink, this);
+		//jv.registerVisual(dataLink, this);
 				
 		for (junglevision.gathering.Metric dataMetric : dataLink.getMetrics()) {			
 			children.add(new LinkMetric(jv, glu, dataMetric));

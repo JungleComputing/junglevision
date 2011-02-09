@@ -1,5 +1,7 @@
 package junglevision.visuals;
 
+import java.awt.Menu;
+
 import javax.media.opengl.GL;
 
 public interface Visual {
@@ -22,4 +24,6 @@ public interface Visual {
 	public void update();
 	
 	public void drawThis(GL gl, int renderMode);
+	
+	public Menu getMenu();
 }

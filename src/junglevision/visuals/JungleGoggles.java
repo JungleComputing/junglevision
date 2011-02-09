@@ -3,9 +3,7 @@ package junglevision.visuals;
 import java.awt.*;
 import java.awt.event.*;
 import java.nio.IntBuffer;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Map;
 import java.util.Map.Entry;
 
 import javax.media.opengl.*;
@@ -13,7 +11,6 @@ import javax.media.opengl.glu.GLU;
 
 import junglevision.gathering.Collector;
 import junglevision.gathering.Element;
-import junglevision.visuals.FakeLink;
 import junglevision.visuals.Universe;
 import junglevision.visuals.Visual;
 
@@ -21,11 +18,7 @@ import com.sun.opengl.util.BufferUtil;
 import com.sun.opengl.util.FPSAnimator;
 import com.sun.opengl.util.GLUT;
 
-public class JungleGoggles implements GLEventListener {
-	private final static int MAX_NUMBER_OF_CHILDREN = 5;
-	private final static int MAX_NUMBER_OF_LINKS = 10;
-	private final static int MAX_METRICS_PER_LINK = 9;
-	
+public class JungleGoggles implements GLEventListener {	
 	GL gl;
     GLU glu = new GLU();
     GLUT glut = new GLUT();
@@ -257,7 +250,7 @@ public class JungleGoggles implements GLEventListener {
 		universe.init(gl);
 		
 		//TODO reinstate 
-		//createLinks();
+		createLinks();
 		for (Visual link : linkRegistry.values()) {
 			link.init(gl);
 			link.setCoordinates(m.getCurrentCoordinates().clone());			
@@ -275,8 +268,11 @@ public class JungleGoggles implements GLEventListener {
 			Visual visual = entry.getValue();
 			
 			junglevision.gathering.Link[] links = data.getLinks();
-			
-			
+			for (junglevision.gathering.Link link : links) {
+				Visual v_source = visualRegistry.get(link.getSource());
+				Visual v_dest = visualRegistry.get(link.getDestination());
+				linkRegistry.put(link, new Link(this, glu, v_source, v_dest, link));
+			}			
 		}
 		
 		
