@@ -16,7 +16,7 @@ public class Universe extends VisualAbstract implements Visual {
 		ArrayList<junglevision.gathering.Location> dataChildren = root.getChildren();
 		
 		for (junglevision.gathering.Location datachild : dataChildren) {
-			children.add(new Location(jv,glu,datachild));
+			locations.add(new Location(jv,glu,datachild));
 		}
 		
 		constructDimensions();

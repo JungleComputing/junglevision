@@ -14,7 +14,7 @@ public class Link extends VisualAbstract implements Visual {
 		//jv.registerVisual(dataLink, this);
 				
 		for (junglevision.gathering.Metric dataMetric : dataLink.getMetrics()) {			
-			children.add(new LinkMetric(jv, glu, dataMetric));
+			locations.add(new LinkMetric(jv, glu, dataMetric));
 		}
 		
 		constructDimensions();
@@ -74,7 +74,7 @@ public class Link extends VisualAbstract implements Visual {
 		
 		
 		//get the breakoff point for rows and columns
-		int number_of_children = children.size();
+		int number_of_children = locations.size();
 		int rows 		= (int)Math.ceil(Math.sqrt(number_of_children));
 		int columns 	= (int)Math.floor(Math.sqrt(number_of_children));
 		float xShiftPerChild = maxChildDimensions[0] + separation;
@@ -89,7 +89,7 @@ public class Link extends VisualAbstract implements Visual {
 		Float[] metricLocation = new Float[3];
 		
 		int row = 0, column = 0, i = 0;
-		for (Visual metric : children) {
+		for (Visual metric : locations) {
 			row = i % rows;
 			
 			//Move to next row (if applicable)

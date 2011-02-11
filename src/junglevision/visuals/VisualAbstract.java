@@ -8,20 +8,23 @@ import javax.media.opengl.GL;
 public abstract class VisualAbstract implements Visual {
 	private final static float CUBE_RADIUS_MULTIPLIER = 0.075f;
 	
-	protected List<Visual> children;
+	protected List<Visual> locations;
 	protected List<Visual> ibises;
+	protected List<Visual> metrics;
 	protected List<Visual> links;
 	protected Float[] coordinates;
 	protected Float[] rotation;
 	protected Float[] dimensions, maxChildDimensions;
 	protected float maxAllChildDimensions;
 	protected CollectionShape cShape;
+	protected FoldState foldState;
 	protected MetricShape mShape;
 	protected float separation;
 	
 	public VisualAbstract() {
-		children = new ArrayList<Visual>();
+		locations = new ArrayList<Visual>();
 		ibises = new ArrayList<Visual>();
+		metrics = new ArrayList<Visual>();
 		links = new ArrayList<Visual>();
 		coordinates   = new Float[3];
 		rotation   = new Float[3];
@@ -37,12 +40,13 @@ public abstract class VisualAbstract implements Visual {
 		maxChildDimensions = new Float[3];
 		maxAllChildDimensions = 0.0f;
 		cShape = CollectionShape.CITYSCAPE;
+		foldState = FoldState.UNFOLDED;
 		mShape = MetricShape.BAR;
 		separation = 0.0f;
 	}
 	
 	public void init(GL gl) {
-		for (Visual child : children) {
+		for (Visual child : locations) {
 			child.init(gl);
 		}
 		for (Visual ibis : ibises) {
@@ -55,12 +59,12 @@ public abstract class VisualAbstract implements Visual {
 		this.coordinates[1] = newCoordinates[1];
 		this.coordinates[2] = newCoordinates[2];
 		
-		if (children.size() > 0) {
+		if (locations.size() > 0) {
 			maxAllChildDimensions = Math.max(Math.max(maxChildDimensions[0], maxChildDimensions[1]), maxChildDimensions[2]);
 			
 			if (cShape == CollectionShape.CITYSCAPE) {		
 				//get the breakoff point for rows and columns
-				int number_of_children = children.size();
+				int number_of_children = locations.size();
 				int rows 		= (int)Math.ceil(Math.sqrt(number_of_children));
 				int columns 	= (int)Math.floor(Math.sqrt(number_of_children));
 				float xShiftPerChild = maxChildDimensions[0] + separation;
@@ -75,7 +79,7 @@ public abstract class VisualAbstract implements Visual {
 				Float[] metricLocation = new Float[3];
 				
 				int row = 0, column = 0, i = 0;
-				for (Visual metric : children) {
+				for (Visual metric : locations) {
 					row = i % rows;
 					
 					//Move to next row (if applicable)
@@ -95,13 +99,13 @@ public abstract class VisualAbstract implements Visual {
 			} else if (cShape == CollectionShape.SPHERE) {							
 				double dlong = Math.PI*(3-Math.sqrt(5));
 				double olong = 0.0;
-				double dz    = 2.0/children.size();
+				double dz    = 2.0/locations.size();
 				double z     = 1 - (dz/2);
-				Float[][] pt = new Float[children.size()][3]; 
+				Float[][] pt = new Float[locations.size()][3]; 
 				double r = 0;
-				float radius = CUBE_RADIUS_MULTIPLIER * (maxAllChildDimensions+separation) * children.size();
+				float radius = CUBE_RADIUS_MULTIPLIER * (maxAllChildDimensions+separation) * locations.size();
 				
-				for (int k=0;k<children.size();k++) {
+				for (int k=0;k<locations.size();k++) {
 					r = Math.sqrt(1-(z*z));
 					pt[k][0] = coordinates[0] + radius*((float) (Math.cos(olong)*r));
 					pt[k][1] = coordinates[1] + radius*((float) (Math.sin(olong)*r));
@@ -111,14 +115,14 @@ public abstract class VisualAbstract implements Visual {
 				}	
 				
 				int k=0;				
-				for (Visual node : children) {						
+				for (Visual node : locations) {						
 					//set the location						
 					node.setCoordinates(pt[k]);							
 					k++;
 				}			
 			} else if (cShape == CollectionShape.CUBE) {		
 				//get the breakoff point for rows and columns
-				int ibisCount = children.size();
+				int ibisCount = locations.size();
 				int rows 		= (int)Math.ceil(Math.pow(ibisCount,  (1.0/3.0)));
 				int columns 	= (int)Math.ceil(Math.pow(ibisCount, (1.0/3.0)));
 				int layers		= (int)Math.floor(Math.pow(ibisCount, (1.0/3.0)));
@@ -136,7 +140,7 @@ public abstract class VisualAbstract implements Visual {
 				Float[] metricLocation = new Float[3];
 				
 				int row = 0, column = 0, layer = 0;
-				for (Visual node : children) {								
+				for (Visual node : locations) {								
 					if (row == rows) {
 						row = 0;
 						column++;
@@ -179,14 +183,15 @@ public abstract class VisualAbstract implements Visual {
 		constructDimensions();
 	}
 	
+	public void setFoldState(FoldState newFoldState) {
+		foldState = newFoldState;		
+	}
+	
 	public void setMetricShape(MetricShape newShape) {
 		mShape = newShape;
-		for (Visual child : children) {
-			child.setMetricShape(newShape);
-		}
-		for (Visual ibis : ibises) {
-			ibis.setMetricShape(newShape);
-		}
+		for (Visual metric : metrics) {
+			metric.setMetricShape(newShape);
+		}		
 	}
 	
 	public Float[] getCoordinates() {
@@ -212,7 +217,7 @@ public abstract class VisualAbstract implements Visual {
 	}
 	
 	public void update() {
-		for (Visual child : children) {
+		for (Visual child : locations) {
 			child.update();
 		}
 		for (Visual ibis : ibises) {
@@ -224,15 +229,21 @@ public abstract class VisualAbstract implements Visual {
 	}
 	
 	public void drawThis(GL gl, int renderMode) {
-		for (Visual ibis : children) {
-			ibis.drawThis(gl, renderMode);
-		}
-		for (Visual ibis : ibises) {
-			ibis.drawThis(gl, renderMode);
+		if (foldState == FoldState.UNFOLDED) {
+			for (Visual ibis : locations) {
+				ibis.drawThis(gl, renderMode);
+			}
+		
+			for (Visual ibis : ibises) {
+				ibis.drawThis(gl, renderMode);
+			}
+			
+			for (Visual link : links) {
+				link.drawThis(gl, renderMode);
+			}
+		} else {
+			
 		}		
-		for (Visual link : links) {
-			link.drawThis(gl, renderMode);
-		}
 	}
 	
 	protected void constructDimensions() {
@@ -241,7 +252,7 @@ public abstract class VisualAbstract implements Visual {
 		maxChildDimensions[1] = 0.0f;
 		maxChildDimensions[2] = 0.0f;
 		
-		for (Visual child : children) {
+		for (Visual child : locations) {
 			childDimensions = child.getDimensions();			
 			if (childDimensions[0] > maxChildDimensions[0]) {
 				maxChildDimensions[0] = childDimensions[0];
@@ -257,17 +268,17 @@ public abstract class VisualAbstract implements Visual {
 		maxAllChildDimensions = Math.max(Math.max(maxChildDimensions[0], maxChildDimensions[1]), maxChildDimensions[2]);
 		
 		if (cShape == CollectionShape.CITYSCAPE) {
-			dimensions[0] = (maxChildDimensions[0]+separation) * (int) Math.ceil(Math.sqrt(children.size()))-separation; 
+			dimensions[0] = (maxChildDimensions[0]+separation) * (int) Math.ceil(Math.sqrt(locations.size()))-separation; 
 			dimensions[1] = (maxChildDimensions[1]+separation);
-			dimensions[2] = (maxChildDimensions[2]+separation) * (int) Math.floor(Math.sqrt(children.size()))-separation;
+			dimensions[2] = (maxChildDimensions[2]+separation) * (int) Math.floor(Math.sqrt(locations.size()))-separation;
 		} else if (cShape == CollectionShape.SPHERE) {
-			dimensions[0] = (maxAllChildDimensions+separation)*CUBE_RADIUS_MULTIPLIER * children.size()*2f;
-			dimensions[1] = (maxAllChildDimensions+separation)*CUBE_RADIUS_MULTIPLIER * children.size()*2f;
-			dimensions[2] = (maxAllChildDimensions+separation)*CUBE_RADIUS_MULTIPLIER * children.size()*2f;
+			dimensions[0] = (maxAllChildDimensions+separation)*CUBE_RADIUS_MULTIPLIER * locations.size()*2f;
+			dimensions[1] = (maxAllChildDimensions+separation)*CUBE_RADIUS_MULTIPLIER * locations.size()*2f;
+			dimensions[2] = (maxAllChildDimensions+separation)*CUBE_RADIUS_MULTIPLIER * locations.size()*2f;
 		} else if (cShape == CollectionShape.CUBE) {
-			dimensions[0] = (maxChildDimensions[0]+separation) * (int) Math.ceil(Math.pow(children.size(),(1.0/3.0)))-separation; 
-			dimensions[1] = (maxChildDimensions[1]+separation) * (int) Math.floor(Math.pow(children.size(),(1.0/3.0)))-separation;
-			dimensions[2] = (maxChildDimensions[2]+separation) * (int) Math.ceil(Math.pow(children.size(),(1.0/3.0)))-separation;
+			dimensions[0] = (maxChildDimensions[0]+separation) * (int) Math.ceil(Math.pow(locations.size(),(1.0/3.0)))-separation; 
+			dimensions[1] = (maxChildDimensions[1]+separation) * (int) Math.floor(Math.pow(locations.size(),(1.0/3.0)))-separation;
+			dimensions[2] = (maxChildDimensions[2]+separation) * (int) Math.ceil(Math.pow(locations.size(),(1.0/3.0)))-separation;
 		}
 	}
 }

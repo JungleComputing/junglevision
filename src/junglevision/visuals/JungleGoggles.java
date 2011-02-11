@@ -15,10 +15,14 @@ import junglevision.visuals.Universe;
 import junglevision.visuals.Visual;
 
 import com.sun.opengl.util.BufferUtil;
-import com.sun.opengl.util.FPSAnimator;
-import com.sun.opengl.util.GLUT;
+//import com.sun.opengl.util.FPSAnimator;
+//import com.sun.opengl.util.GLUT;
+import com.jogamp.opengl.util.FPSAnimator; 
+import com.jogamp.opengl.util.gl2.GLUT; 
 
 public class JungleGoggles implements GLEventListener {	
+	private final boolean STEREO = true;
+	
 	GL gl;
     GLU glu = new GLU();
     GLUT glut = new GLUT();
@@ -59,18 +63,23 @@ public class JungleGoggles implements GLEventListener {
 	 * */    
     
     /**
-     * Constructor for Junglevision, this sets up the
+     * Constructor for Junglegoggles, this sets up the
      * window (Frame), creates a GLCanvas and starts the Animator
      */
     public JungleGoggles(Collector collector) {
     	//Standard capabilities
-		GLCapabilities glCapabilities = new GLCapabilities();		
-		glCapabilities.setDoubleBuffered(true);
+		GLCapabilities glCapabilities = new GLCapabilities();
+		//glCapabilities.setDoubleBuffered(true);
 		glCapabilities.setHardwareAccelerated(true);
 		
 		//Anti-Aliasing
 		glCapabilities.setSampleBuffers(true);
 		glCapabilities.setNumSamples(4);
+		
+		//3d ?
+		if (STEREO) {
+			glCapabilities.setStereo(true);
+		}
     	
     	canvas = new GLCanvas(glCapabilities);    	
 		canvas.addGLEventListener(this);
@@ -108,6 +117,14 @@ public class JungleGoggles implements GLEventListener {
 			viewRotation[i] = 0.0f;
 			viewTranslation[i] = 0.0f;
 		}
+				
+		//Additional initializations
+		pickRequest = false;
+		updateRequest = true;
+		recenterRequest = false;
+		pickPoint = new Point();		
+		new javax.swing.Timer(1000, fpsRecorder).start();				
+		this.m = new Mover();
 		
 		//Data collector
 		this.collector = collector;		
@@ -115,16 +132,7 @@ public class JungleGoggles implements GLEventListener {
 		//Universe initializers
 		visualRegistry = new HashMap<Element, Visual>();
 		linkRegistry = new HashMap<Element, Visual>();
-		
-		//Additional initializations
-		pickRequest = false;
-		updateRequest = true;
-		recenterRequest = false;
-		pickPoint = new Point();
 		namesToVisuals = new HashMap<Integer, Visual>();
-		new javax.swing.Timer(1000, fpsRecorder).start();
-				
-		this.m = new Mover();
 		
 		//Visual updater definition
 		UpdateTimer updater = new UpdateTimer(this);
@@ -132,10 +140,11 @@ public class JungleGoggles implements GLEventListener {
 		
 		FPSAnimator animator = new FPSAnimator(canvas,60);
 		animator.start();
+		canvas.requestFocusInWindow(); 
     }
     
     /**
-     * Init() will be called when Junglevision starts
+     * Init() will be called when Junglegoggles starts
      */
 	public void init(GLAutoDrawable drawable) {
 		gl = drawable.getGL();
@@ -173,7 +182,10 @@ public class JungleGoggles implements GLEventListener {
 		gl.setSwapInterval(1);
 		
 		//Set black as background color
-	    gl.glClearColor(0.0f, 0.0f, 0.0f, 0.0f);	 
+	    gl.glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+	    
+	    //3d ?
+	    
 	    
 	    //Initialize display lists
 	    listBuilder = new DisplayListBuilder(gl);
@@ -312,7 +324,7 @@ public class JungleGoggles implements GLEventListener {
 		
 		//Start the rendering process so that it runs in parallel with the 
 		//computations we need to do for the NEXT frame
-		gl.glFlush();
+		gl.glFinish();
 		
 		
 		//While we are rendering, update visuals for the next display cycle:

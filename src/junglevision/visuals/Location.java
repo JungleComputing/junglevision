@@ -11,18 +11,21 @@ public class Location extends VisualAbstract implements Visual {
 		cShape = CollectionShape.SPHERE;
 		
 		jv.registerVisual(dataLocation, this);
-		
-		ArrayList<junglevision.gathering.Location> dataChildren = dataLocation.getChildren();
-		
+				
+		ArrayList<junglevision.gathering.Location> dataChildren = dataLocation.getChildren();		
 		for (junglevision.gathering.Location datachild : dataChildren) {
-			children.add(new Location(jv, glu, datachild));
+			locations.add(new Location(jv, glu, datachild));
 		}
 		
-		ArrayList<junglevision.gathering.Ibis> dataIbises = dataLocation.getIbises();
-		
+		ArrayList<junglevision.gathering.Ibis> dataIbises = dataLocation.getIbises();		
 		for (junglevision.gathering.Ibis dataIbis : dataIbises) {
-			children.add(new Ibis(jv, glu, dataIbis));
+			ibises.add(new Ibis(jv, glu, dataIbis));
 		}
+		
+		junglevision.gathering.Metric dataMetrics[] = dataLocation.getMetrics();		
+		for (junglevision.gathering.Metric dataMetric : dataMetrics) {			
+			metrics.add(new Metric(jv, glu, dataMetric));
+		}	
 						
 		constructDimensions();
 	}

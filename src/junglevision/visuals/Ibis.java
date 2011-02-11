@@ -13,7 +13,7 @@ public class Ibis extends VisualAbstract implements Visual  {
 		junglevision.gathering.Metric dataMetrics[] = dataIbis.getMetrics();
 		
 		for (junglevision.gathering.Metric dataMetric : dataMetrics) {			
-			children.add(new Metric(jv, glu, dataMetric));
+			metrics.add(new Metric(jv, glu, dataMetric));
 		}
 		
 		constructDimensions();

@@ -13,7 +13,7 @@ public class FakeLink extends VisualAbstract implements Visual {
 		
 		for (int i=0; i<numberOfMetrics; i++) {			
 			//children.add(new LinkMetric(jv, glu, new junglevision.gathering.metrics.RandomMetric(null).getMetric()));
-			children.add(new LinkMetric(jv, glu, null));
+			locations.add(new LinkMetric(jv, glu, null));
 		}
 		
 		constructDimensions();
@@ -73,7 +73,7 @@ public class FakeLink extends VisualAbstract implements Visual {
 		
 		
 		//get the breakoff point for rows and columns
-		int number_of_children = children.size();
+		int number_of_children = locations.size();
 		int rows 		= (int)Math.ceil(Math.sqrt(number_of_children));
 		int columns 	= (int)Math.floor(Math.sqrt(number_of_children));
 		float xShiftPerChild = maxChildDimensions[0] + separation;
@@ -88,7 +88,7 @@ public class FakeLink extends VisualAbstract implements Visual {
 		Float[] metricLocation = new Float[3];
 		
 		int row = 0, column = 0, i = 0;
-		for (Visual metric : children) {
+		for (Visual metric : locations) {
 			row = i % rows;
 			
 			//Move to next row (if applicable)

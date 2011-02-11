@@ -7,6 +7,7 @@ import javax.media.opengl.GL;
 public interface Visual {
 	enum CollectionShape { CITYSCAPE, CUBE, SPHERE } 
 	enum MetricShape { BAR, TUBE, SPHERE }
+	enum FoldState { COLLAPSED, UNFOLDED }
 	
 	public void init(GL gl);
 	
@@ -15,6 +16,7 @@ public interface Visual {
 	public void setDimensions(Float[] newDimensions);
 	
 	public void setCollectionShape(CollectionShape newShape);
+	public void setFoldState(FoldState myState);
 	public void setMetricShape(MetricShape newShape);
 	
 	public Float[] getCoordinates();	
@@ -25,5 +27,5 @@ public interface Visual {
 	
 	public void drawThis(GL gl, int renderMode);
 	
-	public Menu getMenu();
+
 }
