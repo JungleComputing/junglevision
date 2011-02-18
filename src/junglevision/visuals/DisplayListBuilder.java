@@ -1,5 +1,5 @@
 package junglevision.visuals;
-import javax.media.opengl.GL;
+import javax.media.opengl.GL2;
 
 
 public class DisplayListBuilder {
@@ -11,7 +11,7 @@ public class DisplayListBuilder {
 	private int[] barAndOutlinePointer;
 	private int[] barPointer;
 	
-	public DisplayListBuilder(GL gl) {
+	public DisplayListBuilder(GL2 gl) {
 		barAndOutlinePointer = new int[ACCURACY*2];
 		buildBarsAndOutlines(gl, ACCURACY);
 		barPointer = new int[ACCURACY];
@@ -28,7 +28,7 @@ public class DisplayListBuilder {
 		return pointer;
 	}
 	
-	private void buildBarsAndOutlines(GL gl, int amount) {
+	private void buildBarsAndOutlines(GL2 gl, int amount) {
 		final float WIDTH = 0.25f;
 		final float HEIGHT = 1.0f;
 		gl.glLineWidth(LINE_WIDTH);
@@ -51,8 +51,8 @@ public class DisplayListBuilder {
 			Yf = ((HEIGHT/amount)*(i/2))-(0.5f*HEIGHT);
 			
 			//The solid area
-			gl.glNewList(barAndOutlinePointer[i], GL.GL_COMPILE);
-				gl.glBegin(GL.GL_QUADS);					
+			gl.glNewList(barAndOutlinePointer[i], GL2.GL_COMPILE);
+				gl.glBegin(GL2.GL_QUADS);					
 					//TOP
 					gl.glVertex3f( Xn, Yf, Zn);
 					gl.glVertex3f( Xn, Yf, Zp);
@@ -90,7 +90,7 @@ public class DisplayListBuilder {
 					gl.glVertex3f( Xp, Yf, Zn);
 				gl.glEnd();
 				
-				gl.glBegin(GL.GL_LINE_LOOP);
+				gl.glBegin(GL2.GL_LINE_LOOP);
 					gl.glColor3f(0.8f,0.8f,0.8f);
 					//TOP
 					gl.glVertex3f( Xn, Yf, Zn);
@@ -99,7 +99,7 @@ public class DisplayListBuilder {
 					gl.glVertex3f( Xp, Yf, Zn);
 				gl.glEnd();
 				
-				gl.glBegin(GL.GL_LINE_LOOP);
+				gl.glBegin(GL2.GL_LINE_LOOP);
 					gl.glColor3f(0.8f,0.8f,0.8f);
 					//BOTTOM
 					gl.glVertex3f( Xn, Yn, Zn);
@@ -108,7 +108,7 @@ public class DisplayListBuilder {
 					gl.glVertex3f( Xn, Yn, Zp);
 				gl.glEnd();
 				
-				gl.glBegin(GL.GL_LINE_LOOP);
+				gl.glBegin(GL2.GL_LINE_LOOP);
 					gl.glColor3f(0.8f,0.8f,0.8f);
 					//FRONT
 					gl.glVertex3f( Xn, Yf, Zp);
@@ -117,7 +117,7 @@ public class DisplayListBuilder {
 					gl.glVertex3f( Xp, Yf, Zp);
 				gl.glEnd();
 				
-				gl.glBegin(GL.GL_LINE_LOOP);
+				gl.glBegin(GL2.GL_LINE_LOOP);
 					gl.glColor3f(0.8f,0.8f,0.8f);
 					//BACK
 					gl.glVertex3f( Xp, Yf, Zn);
@@ -126,7 +126,7 @@ public class DisplayListBuilder {
 					gl.glVertex3f( Xn, Yf, Zn);
 				gl.glEnd();
 				
-				gl.glBegin(GL.GL_LINE_LOOP);
+				gl.glBegin(GL2.GL_LINE_LOOP);
 					gl.glColor3f(0.8f,0.8f,0.8f);
 					//LEFT
 					gl.glVertex3f( Xn, Yf, Zn);
@@ -135,7 +135,7 @@ public class DisplayListBuilder {
 					gl.glVertex3f( Xn, Yf, Zp);
 				gl.glEnd();
 				
-				gl.glBegin(GL.GL_LINE_LOOP);
+				gl.glBegin(GL2.GL_LINE_LOOP);
 					gl.glColor3f(0.8f,0.8f,0.8f);
 					//RIGHT
 					gl.glVertex3f( Xp, Yf, Zp);
@@ -146,8 +146,8 @@ public class DisplayListBuilder {
 			gl.glEndList();	
 			
 			//The transparent area
-			gl.glNewList(barAndOutlinePointer[i+1], GL.GL_COMPILE);
-				gl.glBegin(GL.GL_QUADS);					
+			gl.glNewList(barAndOutlinePointer[i+1], GL2.GL_COMPILE);
+				gl.glBegin(GL2.GL_QUADS);					
 					//TOP
 					gl.glVertex3f( Xn, Yp, Zn);
 					gl.glVertex3f( Xn, Yp, Zp);
@@ -185,7 +185,7 @@ public class DisplayListBuilder {
 					gl.glVertex3f( Xp, Yp, Zn);
 				gl.glEnd();
 				
-				gl.glBegin(GL.GL_LINE_LOOP);
+				gl.glBegin(GL2.GL_LINE_LOOP);
 					gl.glColor3f(0.8f,0.8f,0.8f);
 					//TOP
 					gl.glVertex3f( Xn, Yp, Zn);
@@ -194,7 +194,7 @@ public class DisplayListBuilder {
 					gl.glVertex3f( Xp, Yp, Zn);
 				gl.glEnd();
 				
-				//gl.glBegin(GL.GL_LINE_LOOP);
+				//gl.glBegin(GL2.GL_LINE_LOOP);
 					//gl.glColor3f(0.8f,0.8f,0.8f);
 					//BOTTOM LEFT OUT
 					//gl.glVertex3f( Xn, Yn, Zn);
@@ -203,7 +203,7 @@ public class DisplayListBuilder {
 					//gl.glVertex3f( Xn, Yn, Zp);
 				//gl.glEnd();
 				
-				gl.glBegin(GL.GL_LINE_LOOP);
+				gl.glBegin(GL2.GL_LINE_LOOP);
 					gl.glColor3f(0.8f,0.8f,0.8f);
 					//FRONT
 					gl.glVertex3f( Xn, Yp, Zp);
@@ -212,7 +212,7 @@ public class DisplayListBuilder {
 					gl.glVertex3f( Xp, Yp, Zp);
 				gl.glEnd();
 				
-				gl.glBegin(GL.GL_LINE_LOOP);
+				gl.glBegin(GL2.GL_LINE_LOOP);
 					gl.glColor3f(0.8f,0.8f,0.8f);
 					//BACK
 					gl.glVertex3f( Xp, Yp, Zn);
@@ -221,7 +221,7 @@ public class DisplayListBuilder {
 					gl.glVertex3f( Xn, Yp, Zn);
 				gl.glEnd();
 				
-				gl.glBegin(GL.GL_LINE_LOOP);
+				gl.glBegin(GL2.GL_LINE_LOOP);
 					gl.glColor3f(0.8f,0.8f,0.8f);
 					//LEFT
 					gl.glVertex3f( Xn, Yp, Zn);
@@ -230,7 +230,7 @@ public class DisplayListBuilder {
 					gl.glVertex3f( Xn, Yp, Zp);
 				gl.glEnd();
 				
-				gl.glBegin(GL.GL_LINE_LOOP);
+				gl.glBegin(GL2.GL_LINE_LOOP);
 					gl.glColor3f(0.8f,0.8f,0.8f);
 					//RIGHT
 					gl.glVertex3f( Xp, Yp, Zp);
@@ -242,7 +242,7 @@ public class DisplayListBuilder {
 		}
 	}
 	
-	private void buildBars(GL gl, int amount) {
+	private void buildBars(GL2 gl, int amount) {
 		final float WIDTH = 0.25f;
 		final float HEIGHT = 1.0f;
 		gl.glLineWidth(LINE_WIDTH);
@@ -264,8 +264,8 @@ public class DisplayListBuilder {
 			Yf = ((HEIGHT/amount)*(i))-(0.5f*HEIGHT);
 			
 			//The solid area
-			gl.glNewList(barPointer[i], GL.GL_COMPILE);
-				gl.glBegin(GL.GL_QUADS);					
+			gl.glNewList(barPointer[i], GL2.GL_COMPILE);
+				gl.glBegin(GL2.GL_QUADS);					
 					//TOP
 					gl.glVertex3f( Xn, Yf, Zn);
 					gl.glVertex3f( Xn, Yf, Zp);
@@ -303,7 +303,7 @@ public class DisplayListBuilder {
 					gl.glVertex3f( Xp, Yf, Zn);
 				gl.glEnd();
 				
-				gl.glBegin(GL.GL_LINE_LOOP);
+				gl.glBegin(GL2.GL_LINE_LOOP);
 					gl.glColor3f(0.8f,0.8f,0.8f);
 					//TOP
 					gl.glVertex3f( Xn, Yf, Zn);
@@ -312,7 +312,7 @@ public class DisplayListBuilder {
 					gl.glVertex3f( Xp, Yf, Zn);
 				gl.glEnd();
 				
-				gl.glBegin(GL.GL_LINE_LOOP);
+				gl.glBegin(GL2.GL_LINE_LOOP);
 					gl.glColor3f(0.8f,0.8f,0.8f);
 					//BOTTOM
 					gl.glVertex3f( Xn, Yn, Zn);
@@ -321,7 +321,7 @@ public class DisplayListBuilder {
 					gl.glVertex3f( Xn, Yn, Zp);
 				gl.glEnd();
 				
-				gl.glBegin(GL.GL_LINE_LOOP);
+				gl.glBegin(GL2.GL_LINE_LOOP);
 					gl.glColor3f(0.8f,0.8f,0.8f);
 					//FRONT
 					gl.glVertex3f( Xn, Yf, Zp);
@@ -330,7 +330,7 @@ public class DisplayListBuilder {
 					gl.glVertex3f( Xp, Yf, Zp);
 				gl.glEnd();
 				
-				gl.glBegin(GL.GL_LINE_LOOP);
+				gl.glBegin(GL2.GL_LINE_LOOP);
 					gl.glColor3f(0.8f,0.8f,0.8f);
 					//BACK
 					gl.glVertex3f( Xp, Yf, Zn);
@@ -339,7 +339,7 @@ public class DisplayListBuilder {
 					gl.glVertex3f( Xn, Yf, Zn);
 				gl.glEnd();
 				
-				gl.glBegin(GL.GL_LINE_LOOP);
+				gl.glBegin(GL2.GL_LINE_LOOP);
 					gl.glColor3f(0.8f,0.8f,0.8f);
 					//LEFT
 					gl.glVertex3f( Xn, Yf, Zn);
@@ -348,7 +348,7 @@ public class DisplayListBuilder {
 					gl.glVertex3f( Xn, Yf, Zp);
 				gl.glEnd();
 				
-				gl.glBegin(GL.GL_LINE_LOOP);
+				gl.glBegin(GL2.GL_LINE_LOOP);
 					gl.glColor3f(0.8f,0.8f,0.8f);
 					//RIGHT
 					gl.glVertex3f( Xp, Yf, Zp);

@@ -2,10 +2,11 @@ package junglevision.visuals;
 
 import java.util.ArrayList;
 
-import javax.media.opengl.glu.GLU;
+import javax.media.opengl.glu.gl2.GLUgl2;
+
 
 public class Location extends VisualAbstract implements Visual {		
-	public Location(JungleGoggles jv, GLU glu, junglevision.gathering.Location dataLocation) {
+	public Location(JungleGoggles jv, GLUgl2 glu, junglevision.gathering.Location dataLocation) {
 		super();
 		separation = 1.0f;
 		cShape = CollectionShape.SPHERE;

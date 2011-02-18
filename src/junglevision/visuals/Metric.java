@@ -1,8 +1,8 @@
 package junglevision.visuals;
 
-import javax.media.opengl.GL;
-import javax.media.opengl.glu.GLU;
+import javax.media.opengl.GL2;
 import javax.media.opengl.glu.GLUquadric;
+import javax.media.opengl.glu.gl2.GLUgl2;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,7 +17,7 @@ public class Metric extends VisualAbstract implements Visual {
 	
 	private static final float WIDTH = 0.25f;
 	private static final float HEIGHT = 1.00f;
-	private GLU glu;
+	private GLUgl2 glu;
 	
 	private Float[] color;
 	
@@ -31,7 +31,7 @@ public class Metric extends VisualAbstract implements Visual {
 	
 	private DisplayListBuilder.DisplayList currentDL;	
 	
-	Metric(JungleGoggles jv, GLU glu, junglevision.gathering.Metric metric) {		
+	Metric(JungleGoggles jv, GLUgl2 glu, junglevision.gathering.Metric metric) {		
 		super();
 			
 		this.glu = glu;
@@ -55,8 +55,8 @@ public class Metric extends VisualAbstract implements Visual {
 		glName = jv.registerGLName(this);
 	}
 	
-	public void drawThis(GL gl, int renderMode) {
-		if (renderMode == GL.GL_SELECT) { gl.glLoadName(glName); }
+	public void drawThis(GL2 gl, int renderMode) {
+		if (renderMode == GL2.GL_SELECT) { gl.glLoadName(glName); }
 		if (mShape == MetricShape.BAR) {
 			drawBar(gl, currentValue, dimensions[1]);
 		} else if (mShape == MetricShape.TUBE) {
@@ -73,7 +73,7 @@ public class Metric extends VisualAbstract implements Visual {
 		}
 	}
 
-	protected void drawBar(GL gl, float length, float maxLength) {
+	protected void drawBar(GL2 gl, float length, float maxLength) {
 		//Save the current modelview matrix
 		gl.glPushMatrix();
 		
@@ -107,7 +107,7 @@ public class Metric extends VisualAbstract implements Visual {
 		gl.glPopMatrix();
 	}
 	
-	protected void drawTube(GL gl, float length, float maxLength) {
+	protected void drawTube(GL2 gl, float length, float maxLength) {
 		//Save the current modelview matrix
 		gl.glPushMatrix();
 		

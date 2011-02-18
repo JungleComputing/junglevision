@@ -3,7 +3,7 @@ package junglevision.visuals;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.media.opengl.GL;
+import javax.media.opengl.GL2;
 
 public abstract class VisualAbstract implements Visual {
 	private final static float CUBE_RADIUS_MULTIPLIER = 0.075f;
@@ -12,9 +12,11 @@ public abstract class VisualAbstract implements Visual {
 	protected List<Visual> ibises;
 	protected List<Visual> metrics;
 	protected List<Visual> links;
+	
 	protected Float[] coordinates;
 	protected Float[] rotation;
 	protected Float[] dimensions, maxChildDimensions;
+	
 	protected float maxAllChildDimensions;
 	protected CollectionShape cShape;
 	protected FoldState foldState;
@@ -26,8 +28,13 @@ public abstract class VisualAbstract implements Visual {
 		ibises = new ArrayList<Visual>();
 		metrics = new ArrayList<Visual>();
 		links = new ArrayList<Visual>();
+		
 		coordinates   = new Float[3];
-		rotation   = new Float[3];
+		coordinates[0] = 0.0f;
+		coordinates[1] = 0.0f;
+		coordinates[2] = 0.0f;
+		
+		rotation   = new Float[3];		
 		rotation[0] = 0.0f;
 		rotation[1] = 0.0f;
 		rotation[2] = 0.0f;
@@ -39,25 +46,33 @@ public abstract class VisualAbstract implements Visual {
 		
 		maxChildDimensions = new Float[3];
 		maxAllChildDimensions = 0.0f;
-		cShape = CollectionShape.CITYSCAPE;
+		cShape = CollectionShape.CUBE;
 		foldState = FoldState.UNFOLDED;
 		mShape = MetricShape.BAR;
 		separation = 0.0f;
 	}
 	
-	public void init(GL gl) {
+	public void init(GL2 gl) {
 		for (Visual child : locations) {
 			child.init(gl);
 		}
 		for (Visual ibis : ibises) {
 			ibis.init(gl);
+		}	
+		for (Visual metric : metrics) {
+			metric.init(gl);
 		}
+		for (Visual link : links) {
+			link.init(gl);
+		}		
 	}
 	
 	public void setCoordinates(Float[] newCoordinates) {		 
 		this.coordinates[0] = newCoordinates[0];		
 		this.coordinates[1] = newCoordinates[1];
 		this.coordinates[2] = newCoordinates[2];
+		
+		
 		
 		if (locations.size() > 0) {
 			maxAllChildDimensions = Math.max(Math.max(maxChildDimensions[0], maxChildDimensions[1]), maxChildDimensions[2]);
@@ -161,9 +176,16 @@ public abstract class VisualAbstract implements Visual {
 				}
 			}
 		}
+		
+		for (Visual metric : metrics) {
+			metric.setCoordinates(newCoordinates);
+		}
+		
 		for (Visual link : links) {
 			link.setCoordinates(newCoordinates);
 		}
+		
+		
 	}
 	
 	public void setRotation(Float[] newRotation) {
@@ -223,24 +245,28 @@ public abstract class VisualAbstract implements Visual {
 		for (Visual ibis : ibises) {
 			ibis.update();
 		}
+		for (Visual metric : metrics) {
+			metric.update();
+		}
 		for (Visual link : links) {
 			link.update();
 		}
 	}
 	
-	public void drawThis(GL gl, int renderMode) {
+	public void drawThis(GL2 gl, int renderMode) {
 		if (foldState == FoldState.UNFOLDED) {
 			for (Visual ibis : locations) {
 				ibis.drawThis(gl, renderMode);
-			}
-		
+			}		
 			for (Visual ibis : ibises) {
 				ibis.drawThis(gl, renderMode);
 			}
-			
+			for (Visual metric : metrics) {
+				metric.drawThis(gl, renderMode);
+			}
 			for (Visual link : links) {
 				link.drawThis(gl, renderMode);
-			}
+			}			
 		} else {
 			
 		}		

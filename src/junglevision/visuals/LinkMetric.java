@@ -1,8 +1,8 @@
 package junglevision.visuals;
 
-import javax.media.opengl.GL;
-import javax.media.opengl.glu.GLU;
+import javax.media.opengl.GL2;
 import javax.media.opengl.glu.GLUquadric;
+import javax.media.opengl.glu.gl2.GLUgl2;
 
 import junglevision.gathering.Metric.MetricModifier;
 import junglevision.gathering.MetricDescription.MetricOutput;
@@ -14,7 +14,7 @@ public class LinkMetric extends VisualAbstract implements Visual {
 	private static final float ALPHA = 0.4f;
 	private static final int ACCURACY = 20;
 	
-	private GLU glu;
+	private GLUgl2 glu;
 	
 	private junglevision.gathering.Metric metric;
 	private Float[] color;
@@ -27,7 +27,7 @@ public class LinkMetric extends VisualAbstract implements Visual {
 	private boolean[] onDemandListsBuilt;
 	int whichList;
 	
-	LinkMetric(JungleGoggles jv, GLU glu, junglevision.gathering.Metric metric) {
+	LinkMetric(JungleGoggles jv, GLUgl2 glu, junglevision.gathering.Metric metric) {
 		super();
 		
 		this.glu = glu;
@@ -52,7 +52,7 @@ public class LinkMetric extends VisualAbstract implements Visual {
 		glName = jv.registerGLName(this);
 	}
 	
-	public void init(GL gl) {
+	public void init(GL2 gl) {
 		gl.glDeleteLists(onDemandList[0], ACCURACY+1);
 		onDemandList[0] = gl.glGenLists(ACCURACY+1);
 		
@@ -71,8 +71,8 @@ public class LinkMetric extends VisualAbstract implements Visual {
 		super.setCoordinates(newLocation);
 	}
 	
-	public void drawThis(GL gl, int renderMode) {
-		if (renderMode == GL.GL_SELECT) { gl.glLoadName(glName); }
+	public void drawThis(GL2 gl, int renderMode) {
+		if (renderMode == GL2.GL_SELECT) { gl.glLoadName(glName); }
 		if (mShape == MetricShape.BAR) {
 			drawBar(gl, currentValue, dimensions[1]);
 		} else if (mShape == MetricShape.TUBE) {
@@ -89,7 +89,7 @@ public class LinkMetric extends VisualAbstract implements Visual {
 		}	
 	}
 
-	protected void drawBar(GL gl, float length, float maxLength) {
+	protected void drawBar(GL2 gl, float length, float maxLength) {
 		//Save the current modelview matrix
 		gl.glPushMatrix();
 		
@@ -117,10 +117,10 @@ public class LinkMetric extends VisualAbstract implements Visual {
 						
 			Yf = (length*maxLength)-(0.5f*maxLength);
 			
-			gl.glNewList(onDemandList[whichList], GL.GL_COMPILE_AND_EXECUTE);
+			gl.glNewList(onDemandList[whichList], GL2.GL_COMPILE_AND_EXECUTE);
 				
 				//The solid area
-				gl.glBegin(GL.GL_QUADS);	
+				gl.glBegin(GL2.GL_QUADS);	
 					gl.glColor3f(color[0],color[1],color[2]);
 					//TOP
 					gl.glVertex3f( Xn, Yf, Zn);
@@ -159,7 +159,7 @@ public class LinkMetric extends VisualAbstract implements Visual {
 					gl.glVertex3f( Xp, Yf, Zn);
 				gl.glEnd();
 				
-				gl.glBegin(GL.GL_LINE_LOOP);
+				gl.glBegin(GL2.GL_LINE_LOOP);
 					gl.glColor3f(0.8f,0.8f,0.8f);
 					//TOP
 					gl.glVertex3f( Xn, Yf, Zn);
@@ -168,7 +168,7 @@ public class LinkMetric extends VisualAbstract implements Visual {
 					gl.glVertex3f( Xp, Yf, Zn);
 				gl.glEnd();
 				
-				gl.glBegin(GL.GL_LINE_LOOP);
+				gl.glBegin(GL2.GL_LINE_LOOP);
 					gl.glColor3f(0.8f,0.8f,0.8f);
 					//BOTTOM
 					gl.glVertex3f( Xn, Yn, Zn);
@@ -177,7 +177,7 @@ public class LinkMetric extends VisualAbstract implements Visual {
 					gl.glVertex3f( Xn, Yn, Zp);
 				gl.glEnd();
 				
-				gl.glBegin(GL.GL_LINE_LOOP);
+				gl.glBegin(GL2.GL_LINE_LOOP);
 					gl.glColor3f(0.8f,0.8f,0.8f);
 					//FRONT
 					gl.glVertex3f( Xn, Yf, Zp);
@@ -186,7 +186,7 @@ public class LinkMetric extends VisualAbstract implements Visual {
 					gl.glVertex3f( Xp, Yf, Zp);
 				gl.glEnd();
 				
-				gl.glBegin(GL.GL_LINE_LOOP);
+				gl.glBegin(GL2.GL_LINE_LOOP);
 					gl.glColor3f(0.8f,0.8f,0.8f);
 					//BACK
 					gl.glVertex3f( Xp, Yf, Zn);
@@ -195,7 +195,7 @@ public class LinkMetric extends VisualAbstract implements Visual {
 					gl.glVertex3f( Xn, Yf, Zn);
 				gl.glEnd();
 				
-				gl.glBegin(GL.GL_LINE_LOOP);
+				gl.glBegin(GL2.GL_LINE_LOOP);
 					gl.glColor3f(0.8f,0.8f,0.8f);
 					//LEFT
 					gl.glVertex3f( Xn, Yf, Zn);
@@ -204,7 +204,7 @@ public class LinkMetric extends VisualAbstract implements Visual {
 					gl.glVertex3f( Xn, Yf, Zp);
 				gl.glEnd();
 				
-				gl.glBegin(GL.GL_LINE_LOOP);
+				gl.glBegin(GL2.GL_LINE_LOOP);
 					gl.glColor3f(0.8f,0.8f,0.8f);
 					//RIGHT
 					gl.glVertex3f( Xp, Yf, Zp);
@@ -214,7 +214,7 @@ public class LinkMetric extends VisualAbstract implements Visual {
 				gl.glEnd();
 				
 				//The transparent area			
-				gl.glBegin(GL.GL_QUADS);
+				gl.glBegin(GL2.GL_QUADS);
 				gl.glColor4f(color[0],color[1],color[2], alpha);
 					//TOP
 					gl.glVertex3f( Xn, Yp, Zn);
@@ -253,7 +253,7 @@ public class LinkMetric extends VisualAbstract implements Visual {
 					gl.glVertex3f( Xp, Yp, Zn);
 				gl.glEnd();
 				
-				gl.glBegin(GL.GL_LINE_LOOP);
+				gl.glBegin(GL2.GL_LINE_LOOP);
 					gl.glColor3f(0.8f,0.8f,0.8f);
 					//TOP
 					gl.glVertex3f( Xn, Yp, Zn);
@@ -262,7 +262,7 @@ public class LinkMetric extends VisualAbstract implements Visual {
 					gl.glVertex3f( Xp, Yp, Zn);
 				gl.glEnd();
 				
-				//gl.glBegin(GL.GL_LINE_LOOP);
+				//gl.glBegin(GL2.GL_LINE_LOOP);
 					//gl.glColor3f(0.8f,0.8f,0.8f);
 					//BOTTOM LEFT OUT
 					//gl.glVertex3f( Xn, Yn, Zn);
@@ -271,7 +271,7 @@ public class LinkMetric extends VisualAbstract implements Visual {
 					//gl.glVertex3f( Xn, Yn, Zp);
 				//gl.glEnd();
 				
-				gl.glBegin(GL.GL_LINE_LOOP);
+				gl.glBegin(GL2.GL_LINE_LOOP);
 					gl.glColor3f(0.8f,0.8f,0.8f);
 					//FRONT
 					gl.glVertex3f( Xn, Yp, Zp);
@@ -280,7 +280,7 @@ public class LinkMetric extends VisualAbstract implements Visual {
 					gl.glVertex3f( Xp, Yp, Zp);
 				gl.glEnd();
 				
-				gl.glBegin(GL.GL_LINE_LOOP);
+				gl.glBegin(GL2.GL_LINE_LOOP);
 					gl.glColor3f(0.8f,0.8f,0.8f);
 					//BACK
 					gl.glVertex3f( Xp, Yp, Zn);
@@ -289,7 +289,7 @@ public class LinkMetric extends VisualAbstract implements Visual {
 					gl.glVertex3f( Xn, Yp, Zn);
 				gl.glEnd();
 				
-				gl.glBegin(GL.GL_LINE_LOOP);
+				gl.glBegin(GL2.GL_LINE_LOOP);
 					gl.glColor3f(0.8f,0.8f,0.8f);
 					//LEFT
 					gl.glVertex3f( Xn, Yp, Zn);
@@ -298,7 +298,7 @@ public class LinkMetric extends VisualAbstract implements Visual {
 					gl.glVertex3f( Xn, Yp, Zp);
 				gl.glEnd();
 				
-				gl.glBegin(GL.GL_LINE_LOOP);
+				gl.glBegin(GL2.GL_LINE_LOOP);
 					gl.glColor3f(0.8f,0.8f,0.8f);
 					//RIGHT
 					gl.glVertex3f( Xp, Yp, Zp);
@@ -314,7 +314,7 @@ public class LinkMetric extends VisualAbstract implements Visual {
 		gl.glPopMatrix();
 	}
 	
-	protected void drawTube(GL gl, float length, float maxLength) {
+	protected void drawTube(GL2 gl, float length, float maxLength) {
 		//Save the current modelview matrix
 		gl.glPushMatrix();
 		
@@ -343,7 +343,7 @@ public class LinkMetric extends VisualAbstract implements Visual {
 			
 			//On-demand generated list			
 			onDemandListsBuilt[whichList] = true;
-			gl.glNewList(onDemandList[whichList], GL.GL_COMPILE_AND_EXECUTE);				
+			gl.glNewList(onDemandList[whichList], GL2.GL_COMPILE_AND_EXECUTE);				
 				//Make a new quadratic object
 				GLUquadric qobj = glu.gluNewQuadric();
 						

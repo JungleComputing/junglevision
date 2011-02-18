@@ -2,13 +2,13 @@ package junglevision.visuals;
 
 import java.util.ArrayList;
 
-import javax.media.opengl.glu.GLU;
+import javax.media.opengl.glu.gl2.GLUgl2;
 
 
 public class Universe extends VisualAbstract implements Visual {	
-	public Universe(JungleGoggles jv, GLU glu, junglevision.gathering.Location root) {
+	public Universe(JungleGoggles jv, GLUgl2 glu, junglevision.gathering.Location root) {
 		super();
-		separation = 3.0f;
+		separation = 16.0f;
 		cShape = CollectionShape.CUBE;
 		
 		jv.registerVisual(root, this);

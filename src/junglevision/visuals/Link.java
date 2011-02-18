@@ -1,11 +1,11 @@
 package junglevision.visuals;
 
-import javax.media.opengl.glu.GLU;
+import javax.media.opengl.glu.gl2.GLUgl2;
 
 public class Link extends VisualAbstract implements Visual {
 	private Visual source, destination;
 	
-	public Link(JungleGoggles jv, GLU glu, Visual source, Visual destination, junglevision.gathering.Link dataLink) {		
+	public Link(JungleGoggles jv, GLUgl2 glu, Visual source, Visual destination, junglevision.gathering.Link dataLink) {		
 		super();		
 		separation = 0.05f;
 		this.source = source;

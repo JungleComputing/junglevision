@@ -6,27 +6,31 @@ import java.nio.IntBuffer;
 import java.util.HashMap;
 import java.util.Map.Entry;
 
-import javax.media.opengl.*;
-import javax.media.opengl.glu.GLU;
+import javax.media.opengl.GL2;
+import javax.media.opengl.GLAutoDrawable;
+import javax.media.opengl.GLCapabilities;
+import javax.media.opengl.GLEventListener;
+import javax.media.opengl.GLProfile;
+import javax.media.opengl.awt.GLJPanel;
+import javax.media.opengl.glu.gl2.GLUgl2;
+import javax.swing.JFrame;
 
 import junglevision.gathering.Collector;
 import junglevision.gathering.Element;
 import junglevision.visuals.Universe;
 import junglevision.visuals.Visual;
 
-import com.sun.opengl.util.BufferUtil;
-//import com.sun.opengl.util.FPSAnimator;
-//import com.sun.opengl.util.GLUT;
+import com.jogamp.common.nio.Buffers;
 import com.jogamp.opengl.util.FPSAnimator; 
 import com.jogamp.opengl.util.gl2.GLUT; 
 
 public class JungleGoggles implements GLEventListener {	
-	private final boolean STEREO = true;
+	private final boolean STEREO = false;
 	
-	GL gl;
-    GLU glu = new GLU();
+	GL2 gl;
+	GLUgl2 glu = new GLUgl2();
     GLUT glut = new GLUT();
-    GLCanvas canvas;
+    GLJPanel gljpanel;
     MouseHandler mouseHandler;
     KeyHandler keyHandler;
     
@@ -67,8 +71,10 @@ public class JungleGoggles implements GLEventListener {
      * window (Frame), creates a GLCanvas and starts the Animator
      */
     public JungleGoggles(Collector collector) {
-    	//Standard capabilities
-		GLCapabilities glCapabilities = new GLCapabilities();
+    	//Standard GL2 capabilities
+    	GLProfile glp = GLProfile.get(GLProfile.GL2); 
+		GLCapabilities glCapabilities = new GLCapabilities(glp);
+		
 		//glCapabilities.setDoubleBuffered(true);
 		glCapabilities.setHardwareAccelerated(true);
 		
@@ -81,27 +87,34 @@ public class JungleGoggles implements GLEventListener {
 			glCapabilities.setStereo(true);
 		}
     	
-    	canvas = new GLCanvas(glCapabilities);    	
-		canvas.addGLEventListener(this);
+    	gljpanel = new GLJPanel(glCapabilities);    	
+		gljpanel.addGLEventListener(this);
 		
 		//Add Mouse event listener
 		mouseHandler = new MouseHandler(this);
-		canvas.addMouseListener(mouseHandler);
-		canvas.addMouseMotionListener(mouseHandler);
-		canvas.addMouseWheelListener(mouseHandler);
+		gljpanel.addMouseListener(mouseHandler);
+		gljpanel.addMouseMotionListener(mouseHandler);
+		gljpanel.addMouseWheelListener(mouseHandler);
 		
 		//Add key event listener
 		keyHandler = new KeyHandler(this);
-		canvas.addKeyListener(keyHandler);
+		gljpanel.addKeyListener(keyHandler);
+		
+		//Set up animator
+		final FPSAnimator animator = new FPSAnimator(gljpanel,60);
 		
 		//Set up the window
-		Frame frame = new Frame("JungleGoggles");
-		frame.add(canvas);
-		frame.setSize(1800, 1100);
-		frame.addWindowListener(new WindowAdapter() {
-			public void windowClosing(WindowEvent e) { System.exit(0); }
-			});
-		frame.setVisible(true);
+		final JFrame jframe = new JFrame("JungleGoggles");
+		jframe.addWindowListener(new WindowAdapter() {
+			public void windowClosing(WindowEvent e) {
+				animator.stop();
+				jframe.dispose();
+				System.exit(0);
+			}
+		});
+		jframe.getContentPane().add( gljpanel, BorderLayout.CENTER );
+		jframe.setSize(1800, 1100);
+		jframe.setVisible(true);
 		
 		//Initial perspective
 		fovy = 45.0f; 
@@ -138,45 +151,45 @@ public class JungleGoggles implements GLEventListener {
 		UpdateTimer updater = new UpdateTimer(this);
 		new Thread(updater).start();		
 		
-		FPSAnimator animator = new FPSAnimator(canvas,60);
+		//Start drawing
 		animator.start();
-		canvas.requestFocusInWindow(); 
+		gljpanel.requestFocusInWindow(); 
     }
     
     /**
      * Init() will be called when Junglegoggles starts
      */
 	public void init(GLAutoDrawable drawable) {
-		gl = drawable.getGL();
+		gl = drawable.getGL().getGL2();
 		
 		//Shader Model
-		gl.glShadeModel(GL.GL_SMOOTH);
+		gl.glShadeModel(GL2.GL_SMOOTH);
 		
 		//Anti-Aliasing
-		gl.glEnable(GL.GL_LINE_SMOOTH);
-		gl.glHint(GL.GL_LINE_SMOOTH_HINT, GL.GL_NICEST);
-		gl.glEnable(GL.GL_POLYGON_SMOOTH); 
-		gl.glHint(GL.GL_POLYGON_SMOOTH_HINT, GL.GL_NICEST);
+		gl.glEnable(GL2.GL_LINE_SMOOTH);
+		gl.glHint(GL2.GL_LINE_SMOOTH_HINT, GL2.GL_NICEST);
+		gl.glEnable(GL2.GL_POLYGON_SMOOTH); 
+		gl.glHint(GL2.GL_POLYGON_SMOOTH_HINT, GL2.GL_NICEST);
 	    	    
 	    //Depth testing
-	    gl.glEnable(GL.GL_DEPTH_TEST);
-		gl.glDepthFunc(GL.GL_LEQUAL);
+	    gl.glEnable(GL2.GL_DEPTH_TEST);
+		gl.glDepthFunc(GL2.GL_LEQUAL);
 		gl.glClearDepth(1.0f);
 		
 		//Culling
-		gl.glEnable(GL.GL_CULL_FACE);
+		gl.glEnable(GL2.GL_CULL_FACE);
 		
 		//Enable Blending (needed for both Transparency and Anti-Aliasing
-		gl.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA);				
-		gl.glEnable(GL.GL_BLEND);
+		gl.glBlendFunc(GL2.GL_SRC_ALPHA, GL2.GL_ONE_MINUS_SRC_ALPHA);				
+		gl.glEnable(GL2.GL_BLEND);
 		
 		//Lighting test
-		//gl.glEnable(GL.GL_LIGHT0);
-	    //gl.glEnable(GL.GL_LIGHTING);
-		gl.glEnable(GL.GL_COLOR_MATERIAL);
+		//gl.glEnable(GL2.GL_LIGHT0);
+	    //gl.glEnable(GL2.GL_LIGHTING);
+		gl.glEnable(GL2.GL_COLOR_MATERIAL);
 				
 		//General hint for optimum color quality
-		gl.glHint(GL.GL_PERSPECTIVE_CORRECTION_HINT, GL.GL_NICEST);
+		gl.glHint(GL2.GL_PERSPECTIVE_CORRECTION_HINT, GL2.GL_NICEST);
 		
 		//Enable Vertical Sync
 		gl.setSwapInterval(1);
@@ -194,7 +207,7 @@ public class JungleGoggles implements GLEventListener {
 	    initializeUniverse();	    
 	    
 	    //and set the matrix mode to the modelview matrix in the end
-	    gl.glMatrixMode(GL.GL_MODELVIEW);
+	    gl.glMatrixMode(GL2.GL_MODELVIEW);
 	    gl.glLoadIdentity();
 	}
 	
@@ -202,13 +215,13 @@ public class JungleGoggles implements GLEventListener {
 	 * Function that is called when the canvas is resized. 
 	 */
 	public void reshape(GLAutoDrawable drawable, int x, int y, int w, int h) {
-		GL gl = drawable.getGL();
+		GL2 gl = drawable.getGL().getGL2();
 		
 		//Set the new viewport
 		gl.glViewport(0, 0, w, h);
 
 		//Change to the projection mode
-		gl.glMatrixMode(GL.GL_PROJECTION);
+		gl.glMatrixMode(GL2.GL_PROJECTION);
 		gl.glLoadIdentity();
 
 		//Calculate and set the new perspective
@@ -220,16 +233,16 @@ public class JungleGoggles implements GLEventListener {
 		glu.gluPerspective(fovy, aspect, zNear, zFar);
 		
 		//Return to normal mode
-		gl.glMatrixMode(GL.GL_MODELVIEW);
+		gl.glMatrixMode(GL2.GL_MODELVIEW);
 		gl.glLoadIdentity();
 	}	
 	
 	
 	/**
-	 * Mandatory function to complete the implementation of GLEventListener, but unneeded and therefore left blank.
+	 * Mandatory functions to complete the implementation of GLEventListener, but unneeded and therefore left blank.
 	 */
-	public void displayChanged(GLAutoDrawable drawable, boolean modeChanged, boolean deviceChanged) {}
-	
+	public void displayChanged(GLAutoDrawable drawable, boolean modeChanged, boolean deviceChanged) {}	
+	public void dispose(GLAutoDrawable arg0) {}
 	
 	/**
 	 * Functions that register visual elements and GLNames during initialization, to enable picking later.
@@ -311,13 +324,13 @@ public class JungleGoggles implements GLEventListener {
 	 * the display.
 	 */
 	public void display(GLAutoDrawable drawable) {
-	    GL gl = drawable.getGL();
+	    GL2 gl = drawable.getGL().getGL2();
 
-	    //Added GL.GL_DEPTH_BUFFER_BIT
-	    gl.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT);
+	    //Added GL2.GL_DEPTH_BUFFER_BIT
+	    gl.glClear(GL2.GL_COLOR_BUFFER_BIT | GL2.GL_DEPTH_BUFFER_BIT);
 	    		
 		//Draw the current state of the universe
-		drawUniverse(gl, GL.GL_RENDER);
+		drawUniverse(gl, GL2.GL_RENDER);
 		
 		//Draw the Heads Up Display
 		drawHud(gl);
@@ -369,7 +382,7 @@ public class JungleGoggles implements GLEventListener {
 		}
 	}
 	
-	private void drawUniverse(GL gl, int renderMode) {
+	private void drawUniverse(GL2 gl, int renderMode) {
 		//Reset the modelview matrix
 	    gl.glLoadIdentity();
 	    
@@ -387,7 +400,7 @@ public class JungleGoggles implements GLEventListener {
 		}
 	}
 	
-	private void drawHud(GL gl) {
+	private void drawHud(GL2 gl) {
 		//Increase the counter
 		framesPassed++;
 		
@@ -434,8 +447,8 @@ public class JungleGoggles implements GLEventListener {
 		return new PopupMenu();
 	}
 	
-	public GLCanvas getCanvas() {
-		return canvas;
+	public GLJPanel getPanel() {
+		return gljpanel;
 	}
 		
 	/**
@@ -452,26 +465,26 @@ public class JungleGoggles implements GLEventListener {
 	/**
 	 * Functions to enable picking
 	 */
-	private int pick(GL gl, Point pickPoint) {
+	private int pick(GL2 gl, Point pickPoint) {
 		final int BUFSIZE = 512;
 		
 		int[] selectBuf = new int[BUFSIZE];
-	    IntBuffer selectBuffer = BufferUtil.newIntBuffer(BUFSIZE);
+	    IntBuffer selectBuffer = Buffers.newDirectIntBuffer(BUFSIZE);
 	    int hits;
 	    
 	    //Save the current viewport
 	    int viewport[] = new int[4];	    
-	    gl.glGetIntegerv(GL.GL_VIEWPORT, viewport, 0);
+	    gl.glGetIntegerv(GL2.GL_VIEWPORT, viewport, 0);
 
 	    //Switch to selection mode
 	    gl.glSelectBuffer(BUFSIZE, selectBuffer);
-	    gl.glRenderMode(GL.GL_SELECT);
+	    gl.glRenderMode(GL2.GL_SELECT);
 
 	    gl.glInitNames();
 	    gl.glPushName(-1);
 
 	    //Switch to Projection mode and save the current projection matrix
-	    gl.glMatrixMode(GL.GL_PROJECTION);
+	    gl.glMatrixMode(GL2.GL_PROJECTION);
 	    gl.glPushMatrix();
 	    gl.glLoadIdentity();
 	    
@@ -484,19 +497,19 @@ public class JungleGoggles implements GLEventListener {
 	    glu.gluPerspective(fovy, aspect, zNear, zFar);	    
 	    
 	    //Draw the models in selection mode
-	    gl.glMatrixMode(GL.GL_MODELVIEW);	    
-	    drawUniverse(gl, GL.GL_SELECT);
+	    gl.glMatrixMode(GL2.GL_MODELVIEW);	    
+	    drawUniverse(gl, GL2.GL_SELECT);
 	    
 	    //Restore the original projection matrix
-	    gl.glMatrixMode(GL.GL_PROJECTION);
+	    gl.glMatrixMode(GL2.GL_PROJECTION);
 	    gl.glPopMatrix();
 	    
 	    //Switch back to modelview and make sure there are no stragglers
-	    gl.glMatrixMode(GL.GL_MODELVIEW);
+	    gl.glMatrixMode(GL2.GL_MODELVIEW);
 	    gl.glFlush();
 	    
 	    //Process the hits
-	    hits = gl.glRenderMode(GL.GL_RENDER);
+	    hits = gl.glRenderMode(GL2.GL_RENDER);
 	    selectBuffer.get(selectBuf);
 	    int selection = processHits(hits, selectBuf);	    
 	    
@@ -525,5 +538,7 @@ public class JungleGoggles implements GLEventListener {
 		}
 	    
 	    return selection;
-	}	
+	}
+
+		
 }

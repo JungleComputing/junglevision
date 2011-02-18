@@ -7,7 +7,8 @@ import java.awt.event.MouseMotionListener;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
 
-import javax.media.opengl.GLCanvas;
+
+import javax.media.opengl.awt.GLJPanel;
 import javax.swing.SwingUtilities;
 
 public class MouseHandler implements MouseListener, MouseMotionListener, MouseWheelListener{	
@@ -52,7 +53,7 @@ public class MouseHandler implements MouseListener, MouseMotionListener, MouseWh
 			//Nothing yet
 		} else if (SwingUtilities.isRightMouseButton(e)) {
 			PopupMenu popup = jv.menuRequest();
-			GLCanvas canvas = jv.getCanvas();
+			GLJPanel canvas = jv.getPanel();
 			canvas.add(popup);
 			popup.show(canvas, e.getX(), e.getY());
 		}		
