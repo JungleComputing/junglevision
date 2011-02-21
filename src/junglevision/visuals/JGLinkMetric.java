@@ -4,11 +4,12 @@ import javax.media.opengl.GL2;
 import javax.media.opengl.glu.GLUquadric;
 import javax.media.opengl.glu.gl2.GLUgl2;
 
+import junglevision.gathering.Metric;
 import junglevision.gathering.Metric.MetricModifier;
 import junglevision.gathering.MetricDescription.MetricOutput;
 import junglevision.gathering.exceptions.OutputUnavailableException;
 
-public class LinkMetric extends VisualAbstract implements Visual {
+public class JGLinkMetric extends JGVisualAbstract implements JGVisual {
 	private static final float WIDTH = 0.1f;
 	private static final float HEIGHT = 1.00f;
 	private static final float ALPHA = 0.4f;
@@ -16,7 +17,7 @@ public class LinkMetric extends VisualAbstract implements Visual {
 	
 	private GLUgl2 glu;
 	
-	private junglevision.gathering.Metric metric;
+	private Metric metric;
 	private Float[] color;
 	private float currentValue;
 	private MetricOutput currentOutputMethod = MetricOutput.PERCENT;
@@ -27,7 +28,7 @@ public class LinkMetric extends VisualAbstract implements Visual {
 	private boolean[] onDemandListsBuilt;
 	int whichList;
 	
-	LinkMetric(JungleGoggles jv, GLUgl2 glu, junglevision.gathering.Metric metric) {
+	JGLinkMetric(JungleGoggles jv, GLUgl2 glu, Metric metric) {
 		super();
 		
 		this.glu = glu;

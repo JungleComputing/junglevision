@@ -7,12 +7,13 @@ import javax.media.opengl.glu.gl2.GLUgl2;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import junglevision.visuals.DisplayListBuilder;
+import junglevision.gathering.Metric;
 import junglevision.gathering.Metric.MetricModifier;
 import junglevision.gathering.MetricDescription.MetricOutput;
 import junglevision.gathering.exceptions.OutputUnavailableException;
+import junglevision.visuals.DisplayListBuilder;
 
-public class Metric extends VisualAbstract implements Visual {
+public class JGMetric extends JGVisualAbstract implements JGVisual {
 	private static final Logger logger = LoggerFactory.getLogger("ibis.deploy.gui.junglevision.visuals.Metric");
 	
 	private static final float WIDTH = 0.25f;
@@ -21,7 +22,7 @@ public class Metric extends VisualAbstract implements Visual {
 	
 	private Float[] color;
 	
-	private junglevision.gathering.Metric metric;
+	private Metric metric;
 	private float currentValue;
 	private MetricOutput currentOutputMethod = MetricOutput.PERCENT;
 	
@@ -31,7 +32,7 @@ public class Metric extends VisualAbstract implements Visual {
 	
 	private DisplayListBuilder.DisplayList currentDL;	
 	
-	Metric(JungleGoggles jv, GLUgl2 glu, junglevision.gathering.Metric metric) {		
+	JGMetric(JungleGoggles jv, GLUgl2 glu, Metric metric) {		
 		super();
 			
 		this.glu = glu;

@@ -17,8 +17,9 @@ import javax.swing.JFrame;
 
 import junglevision.gathering.Collector;
 import junglevision.gathering.Element;
-import junglevision.visuals.Universe;
-import junglevision.visuals.Visual;
+import junglevision.gathering.Link;
+import junglevision.visuals.JGUniverse;
+import junglevision.visuals.JGVisual;
 
 import com.jogamp.common.nio.Buffers;
 import com.jogamp.opengl.util.FPSAnimator; 
@@ -45,13 +46,13 @@ public class JungleGoggles implements GLEventListener {
     private boolean pickRequest, updateRequest, recenterRequest, resetRequest;
     private Point pickPoint;
     private int selectedItem;
-    private HashMap<Integer, Visual> namesToVisuals;
+    private HashMap<Integer, JGVisual> namesToVisuals;
     
     //Universe
     DisplayListBuilder listBuilder;
-    private Universe universe;
-    private HashMap<Element, Visual> visualRegistry;
-    private HashMap<Element, Visual> linkRegistry;
+    private JGUniverse universe;
+    private HashMap<Element, JGVisual> visualRegistry;
+    private HashMap<Element, JGVisual> linkRegistry;
         
     //Viewer Location
     Mover m;
@@ -143,9 +144,9 @@ public class JungleGoggles implements GLEventListener {
 		this.collector = collector;		
 		
 		//Universe initializers
-		visualRegistry = new HashMap<Element, Visual>();
-		linkRegistry = new HashMap<Element, Visual>();
-		namesToVisuals = new HashMap<Integer, Visual>();
+		visualRegistry = new HashMap<Element, JGVisual>();
+		linkRegistry = new HashMap<Element, JGVisual>();
+		namesToVisuals = new HashMap<Integer, JGVisual>();
 		
 		//Visual updater definition
 		UpdateTimer updater = new UpdateTimer(this);
@@ -247,11 +248,11 @@ public class JungleGoggles implements GLEventListener {
 	/**
 	 * Functions that register visual elements and GLNames during initialization, to enable picking later.
 	 */
-	public void registerVisual(Element element, Visual newVisual) {
+	public void registerVisual(Element element, JGVisual newVisual) {
 		visualRegistry.put(element, newVisual);
 	}
 	
-	public int registerGLName(Visual metric) {
+	public int registerGLName(JGVisual metric) {
 		int key = namesToVisuals.size();
 		namesToVisuals.put(key, metric);
 		return key;		
@@ -270,13 +271,13 @@ public class JungleGoggles implements GLEventListener {
 	public void initializeUniverse() {
 		visualRegistry.clear();
 		
-		universe = new Universe(this, glu, collector.getRoot());
+		universe = new JGUniverse(this, glu, collector.getRoot());
 		universe.setCoordinates(m.getCurrentCoordinates().clone());
 		universe.init(gl);
 		
 		//TODO reinstate 
 		createLinks();
-		for (Visual link : linkRegistry.values()) {
+		for (JGVisual link : linkRegistry.values()) {
 			link.init(gl);
 			link.setCoordinates(m.getCurrentCoordinates().clone());			
 		}		
@@ -288,19 +289,17 @@ public class JungleGoggles implements GLEventListener {
 	private void createLinks() {
 		linkRegistry.clear();
 		
-		for (Entry<Element, Visual> entry : visualRegistry.entrySet()) {
+		for (Entry<Element, JGVisual> entry : visualRegistry.entrySet()) {
 			Element data = entry.getKey();
-			Visual visual = entry.getValue();
+			JGVisual visual = entry.getValue();
 			
-			junglevision.gathering.Link[] links = data.getLinks();
-			for (junglevision.gathering.Link link : links) {
-				Visual v_source = visualRegistry.get(link.getSource());
-				Visual v_dest = visualRegistry.get(link.getDestination());
-				linkRegistry.put(link, new Link(this, glu, v_source, v_dest, link));
+			Link[] links = data.getLinks();
+			for (Link link : links) {
+				JGVisual v_source = visualRegistry.get(link.getSource());
+				JGVisual v_dest = visualRegistry.get(link.getDestination());
+				linkRegistry.put(link, new JGLink(this, glu, v_source, v_dest, link));
 			}			
-		}
-		
-		
+		}		
 	}	
 	
 	/**
@@ -367,7 +366,7 @@ public class JungleGoggles implements GLEventListener {
 		//Then, change the rotation according to input given.
 		if (m.locationChanged()) {
 			universe.setCoordinates(m.getCurrentCoordinates().clone());
-			for (Visual link : linkRegistry.values()) {
+			for (JGVisual link : linkRegistry.values()) {
 				link.setCoordinates(m.getCurrentCoordinates().clone());
 			}
 		}
@@ -375,7 +374,7 @@ public class JungleGoggles implements GLEventListener {
 		//Lastly, update the current values for all of the visual elements if it is time to do so.
 		if (updateRequest) {
 			universe.update();	
-			for (Visual link : linkRegistry.values()) {
+			for (JGVisual link : linkRegistry.values()) {
 				link.update();
 			}
 			updateRequest = false;
@@ -395,7 +394,7 @@ public class JungleGoggles implements GLEventListener {
 		universe.drawThis(gl, renderMode);
 		
 		//Draw all the links
-		for (Visual link : linkRegistry.values()) {
+		for (JGVisual link : linkRegistry.values()) {
 			link.drawThis(gl, renderMode);
 		}
 	}

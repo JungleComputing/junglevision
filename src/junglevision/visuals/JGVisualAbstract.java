@@ -5,13 +5,13 @@ import java.util.List;
 
 import javax.media.opengl.GL2;
 
-public abstract class VisualAbstract implements Visual {
+public abstract class JGVisualAbstract implements JGVisual {
 	private final static float CUBE_RADIUS_MULTIPLIER = 0.075f;
 	
-	protected List<Visual> locations;
-	protected List<Visual> ibises;
-	protected List<Visual> metrics;
-	protected List<Visual> links;
+	protected List<JGVisual> locations;
+	protected List<JGVisual> ibises;
+	protected List<JGVisual> metrics;
+	protected List<JGVisual> links;
 	
 	protected Float[] coordinates;
 	protected Float[] rotation;
@@ -23,11 +23,11 @@ public abstract class VisualAbstract implements Visual {
 	protected MetricShape mShape;
 	protected float separation;
 	
-	public VisualAbstract() {
-		locations = new ArrayList<Visual>();
-		ibises = new ArrayList<Visual>();
-		metrics = new ArrayList<Visual>();
-		links = new ArrayList<Visual>();
+	public JGVisualAbstract() {
+		locations = new ArrayList<JGVisual>();
+		ibises = new ArrayList<JGVisual>();
+		metrics = new ArrayList<JGVisual>();
+		links = new ArrayList<JGVisual>();
 		
 		coordinates   = new Float[3];
 		coordinates[0] = 0.0f;
@@ -53,16 +53,16 @@ public abstract class VisualAbstract implements Visual {
 	}
 	
 	public void init(GL2 gl) {
-		for (Visual child : locations) {
+		for (JGVisual child : locations) {
 			child.init(gl);
 		}
-		for (Visual ibis : ibises) {
+		for (JGVisual ibis : ibises) {
 			ibis.init(gl);
 		}	
-		for (Visual metric : metrics) {
+		for (JGVisual metric : metrics) {
 			metric.init(gl);
 		}
-		for (Visual link : links) {
+		for (JGVisual link : links) {
 			link.init(gl);
 		}		
 	}
@@ -94,7 +94,7 @@ public abstract class VisualAbstract implements Visual {
 				Float[] metricLocation = new Float[3];
 				
 				int row = 0, column = 0, i = 0;
-				for (Visual metric : locations) {
+				for (JGVisual metric : locations) {
 					row = i % rows;
 					
 					//Move to next row (if applicable)
@@ -130,7 +130,7 @@ public abstract class VisualAbstract implements Visual {
 				}	
 				
 				int k=0;				
-				for (Visual node : locations) {						
+				for (JGVisual node : locations) {						
 					//set the location						
 					node.setCoordinates(pt[k]);							
 					k++;
@@ -155,7 +155,7 @@ public abstract class VisualAbstract implements Visual {
 				Float[] metricLocation = new Float[3];
 				
 				int row = 0, column = 0, layer = 0;
-				for (Visual node : locations) {								
+				for (JGVisual node : locations) {								
 					if (row == rows) {
 						row = 0;
 						column++;
@@ -177,11 +177,11 @@ public abstract class VisualAbstract implements Visual {
 			}
 		}
 		
-		for (Visual metric : metrics) {
+		for (JGVisual metric : metrics) {
 			metric.setCoordinates(newCoordinates);
 		}
 		
-		for (Visual link : links) {
+		for (JGVisual link : links) {
 			link.setCoordinates(newCoordinates);
 		}
 		
@@ -211,7 +211,7 @@ public abstract class VisualAbstract implements Visual {
 	
 	public void setMetricShape(MetricShape newShape) {
 		mShape = newShape;
-		for (Visual metric : metrics) {
+		for (JGVisual metric : metrics) {
 			metric.setMetricShape(newShape);
 		}		
 	}
@@ -239,32 +239,32 @@ public abstract class VisualAbstract implements Visual {
 	}
 	
 	public void update() {
-		for (Visual child : locations) {
+		for (JGVisual child : locations) {
 			child.update();
 		}
-		for (Visual ibis : ibises) {
+		for (JGVisual ibis : ibises) {
 			ibis.update();
 		}
-		for (Visual metric : metrics) {
+		for (JGVisual metric : metrics) {
 			metric.update();
 		}
-		for (Visual link : links) {
+		for (JGVisual link : links) {
 			link.update();
 		}
 	}
 	
 	public void drawThis(GL2 gl, int renderMode) {
 		if (foldState == FoldState.UNFOLDED) {
-			for (Visual ibis : locations) {
+			for (JGVisual ibis : locations) {
 				ibis.drawThis(gl, renderMode);
 			}		
-			for (Visual ibis : ibises) {
+			for (JGVisual ibis : ibises) {
 				ibis.drawThis(gl, renderMode);
 			}
-			for (Visual metric : metrics) {
+			for (JGVisual metric : metrics) {
 				metric.drawThis(gl, renderMode);
 			}
-			for (Visual link : links) {
+			for (JGVisual link : links) {
 				link.drawThis(gl, renderMode);
 			}			
 		} else {
@@ -278,7 +278,7 @@ public abstract class VisualAbstract implements Visual {
 		maxChildDimensions[1] = 0.0f;
 		maxChildDimensions[2] = 0.0f;
 		
-		for (Visual child : locations) {
+		for (JGVisual child : locations) {
 			childDimensions = child.getDimensions();			
 			if (childDimensions[0] > maxChildDimensions[0]) {
 				maxChildDimensions[0] = childDimensions[0];

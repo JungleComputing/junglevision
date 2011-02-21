@@ -2,10 +2,13 @@ package junglevision.visuals;
 
 import javax.media.opengl.glu.gl2.GLUgl2;
 
-public class Link extends VisualAbstract implements Visual {
-	private Visual source, destination;
+import junglevision.gathering.Link;
+import junglevision.gathering.Metric;
+
+public class JGLink extends JGVisualAbstract implements JGVisual {
+	private JGVisual source, destination;
 	
-	public Link(JungleGoggles jv, GLUgl2 glu, Visual source, Visual destination, junglevision.gathering.Link dataLink) {		
+	public JGLink(JungleGoggles jv, GLUgl2 glu, JGVisual source, JGVisual destination, Link dataLink) {		
 		super();		
 		separation = 0.05f;
 		this.source = source;
@@ -13,8 +16,8 @@ public class Link extends VisualAbstract implements Visual {
 		
 		//jv.registerVisual(dataLink, this);
 				
-		for (junglevision.gathering.Metric dataMetric : dataLink.getMetrics()) {			
-			locations.add(new LinkMetric(jv, glu, dataMetric));
+		for (Metric dataMetric : dataLink.getMetrics()) {			
+			locations.add(new JGLinkMetric(jv, glu, dataMetric));
 		}
 		
 		constructDimensions();
@@ -89,7 +92,7 @@ public class Link extends VisualAbstract implements Visual {
 		Float[] metricLocation = new Float[3];
 		
 		int row = 0, column = 0, i = 0;
-		for (Visual metric : locations) {
+		for (JGVisual metric : locations) {
 			row = i % rows;
 			
 			//Move to next row (if applicable)
@@ -121,7 +124,7 @@ public class Link extends VisualAbstract implements Visual {
 		if (other == null) return false;
 	    if (other == this) return true;
 	    if (this.getClass() != other.getClass())return false;
-	    Link otherLink = (Link) other;
+	    JGLink otherLink = (JGLink) other;
 
 		if ((source == otherLink.source && destination == otherLink.destination) ||
 			(source == otherLink.destination && destination == otherLink.source)) {

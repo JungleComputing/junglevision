@@ -2,7 +2,7 @@ package junglevision.visuals;
 
 import javax.media.opengl.GL2;
 
-public interface Visual {
+public interface JGVisual {
 	enum CollectionShape { CITYSCAPE, CUBE, SPHERE } 
 	enum MetricShape { BAR, TUBE, SPHERE }
 	enum FoldState { COLLAPSED, UNFOLDED }

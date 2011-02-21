@@ -5,14 +5,14 @@ import javax.swing.JMenu;
 import javax.swing.JPopupMenu;
 import javax.swing.JRadioButtonMenuItem;
 
-import junglevision.visuals.Visual;
+import junglevision.visuals.JGVisual;
 
 public class ContextSensitiveMenu {	
 	private JPopupMenu myMenu;
 	private final ButtonGroup shapeGroup = new ButtonGroup();
 	private final ButtonGroup collapseGroup = new ButtonGroup();
 	
-	public ContextSensitiveMenu(Visual caller) {		
+	public ContextSensitiveMenu(JGVisual caller) {		
 		myMenu = new JPopupMenu();
 			String[] collectionItems = {"Sphere","Cube","Cityscape"};
 			GoggleAction al1 = new SetCollectionFormAction(caller, "");
@@ -37,7 +37,7 @@ public class ContextSensitiveMenu {
 		return result;
 	}
 	
-	public JPopupMenu getMenu(Visual caller) {		
+	public JPopupMenu getMenu(JGVisual caller) {		
 		return myMenu;
 	}
 }
