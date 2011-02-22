@@ -3,8 +3,6 @@ package junglevision;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import ibis.ipl.server.ManagementServiceInterface;
-import ibis.ipl.server.RegistryServiceInterface;
 import junglevision.gathering.Collector;
 import junglevision.test.FakeManagementService;
 import junglevision.test.FakeRegistryService;
@@ -23,11 +21,10 @@ public class Junglevision {
     public static void main(String[] args) {
     	//Ibis/JMX variables
     	FakeRegistryService regInterface = new FakeRegistryService();    	
-    	ManagementServiceInterface manInterface = new FakeManagementService(regInterface);
-    	RegistryServiceInterface myReg = regInterface;
+    	FakeManagementService manInterface = new FakeManagementService(regInterface);
     	
     	//Data interface
-        Collector collector = junglevision.gathering.impl.Collector.getCollector(manInterface, myReg);
+        Collector collector = junglevision.gathering.impl.Collector.getCollector(manInterface, regInterface);
 		new Thread(collector).start();
 		
     	new JungleGoggles(collector);		

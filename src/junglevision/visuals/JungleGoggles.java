@@ -342,7 +342,7 @@ public class JungleGoggles implements GLEventListener {
 		//While we are rendering, update visuals for the next display cycle:
 		
 		//First, reset the universe if requested to do so
-		if (resetRequest) {
+		if (resetRequest || collector.change()) {
 			initializeUniverse();
 			resetRequest = false;
 		}

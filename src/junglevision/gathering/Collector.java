@@ -1,7 +1,5 @@
 package junglevision.gathering;
 
-import ibis.ipl.IbisIdentifier;
-
 import java.util.ArrayList;
 import java.util.HashSet;
 
@@ -32,19 +30,15 @@ public interface Collector extends Runnable {
 	public HashSet<junglevision.gathering.MetricDescription> getAvailableMetrics();
 	
 	/**
-	 * Resets the data gathering module.
+	 * Returns whether there was any change in the universe.
+	 */
+	public boolean change();
+	
+	/**
+	 * Resets the data gathering module, is automatically done if the universe changes.
 	 */
 	public void initUniverse();
 	
-	
-	/**
-	 * Internal method for getting collector ibises by id. 
-	 * @param ibisid
-	 * 		The IbisIdentifier of the wanted ibis.
-	 * @return
-	 * 		The collector ibis.
-	 */
-	public junglevision.gathering.Ibis getIbis(IbisIdentifier ibisid);
 	
 	//Tryout for interface updates.
 	/**

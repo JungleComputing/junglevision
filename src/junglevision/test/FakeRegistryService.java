@@ -94,8 +94,8 @@ public class FakeRegistryService implements ibis.ipl.server.RegistryServiceInter
 	 * */
 	public void doUpdate() {
 		synchronized(ibises) {
-			double CHANCE_OF_IBIS_FAILURE  	= 0.001;
-			double CHANCE_OF_IBIS_JOIN  	= 0.001;
+			double CHANCE_OF_IBIS_FAILURE  	= 0.01;
+			double CHANCE_OF_IBIS_JOIN  	= 0.01;
 			double CHANCE_OF_IBIS_RECOVERY = 0.01;
 			int MAX_FAILRATE = 10;
 					

@@ -22,7 +22,7 @@ import junglevision.gathering.exceptions.SingletonObjectNotInstantiatedException
 public class Metric implements junglevision.gathering.Metric {	
 	private static final Logger logger = LoggerFactory.getLogger("ibis.deploy.gui.junglevision.gathering.impl.Metric");
 
-	protected junglevision.gathering.Collector c;
+	protected junglevision.gathering.impl.Collector c;
 	protected junglevision.gathering.Element element;
 	protected junglevision.gathering.MetricDescription myDescription;
 	protected HashMap<MetricOutput, Number> values, maxValues, minValues;

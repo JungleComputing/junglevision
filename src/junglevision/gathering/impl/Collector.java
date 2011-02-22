@@ -178,6 +178,8 @@ public class Collector implements junglevision.gathering.Collector, Runnable {
 	private void initLocations() {
 		ibises.clear();
 		locations.clear();
+		Float[] color = {0f,0f,0f};
+		root = new Location("root", color);
 		
 		//For all pools
 		for (Entry<String, junglevision.gathering.Pool> entry : pools.entrySet()) {
@@ -197,8 +199,7 @@ public class Collector implements junglevision.gathering.Collector, Runnable {
 					junglevision.gathering.Location current;
 					if (locations.containsKey(ibisName)) {
 						current = locations.get(ibisName);
-					} else {
-						Float[] color = {0f,0f,0f};
+					} else {						
 						current = new Location(ibisName, color);
 						locations.put(ibisName, current);
 					}
@@ -217,8 +218,7 @@ public class Collector implements junglevision.gathering.Collector, Runnable {
 						junglevision.gathering.Location parent;
 						if (locations.containsKey(name)) {
 							parent = locations.get(name);
-						} else {
-							Float[] color = {0f,0f,0f};
+						} else {							
 							parent = new Location(name, color);
 							locations.put(name, parent);
 						}
