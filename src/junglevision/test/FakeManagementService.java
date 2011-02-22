@@ -12,123 +12,158 @@ import javax.management.openmbean.CompositeDataSupport;
 import javax.management.openmbean.OpenType;
 import javax.management.openmbean.SimpleType;
 
+import junglevision.test.FakeRegistryService.State;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class FakeManagementService implements ManagementServiceInterface {
+public class FakeManagementService implements ManagementServiceInterface, FakeService {
 	private static final Logger logger = LoggerFactory.getLogger("ibis.deploy.gui.junglevision.test.FakeManagementService");
 	
-	private IbisIdentifier[] fakeIbises;
+	FakeRegistryService reg;
+	HashMap<IbisIdentifier, State> ibises;
 		
-	public FakeManagementService(IbisIdentifier[] fakeIbises) {
-		this.fakeIbises = fakeIbises;
+	public FakeManagementService(FakeRegistryService reg) {
+		this.reg = reg;
+		
+		ibises = new HashMap<IbisIdentifier, State>();
+		
+		//Start an update timer for the list mutations
+		UpdateTimer timer = new UpdateTimer(this);
+		new Thread(timer).start();
 	}
 	
-	public Object[] getAttributes(IbisIdentifier arg0, AttributeDescription... arg1) throws Exception {
-		Object[] result = new Object[arg1.length];
-		for (int i=0; i<arg1.length; i++) {
-			
-			if (		arg1[i].getBeanName().compareTo("java.lang:type=OperatingSystem") == 0 &&
-						arg1[i].getAttribute().compareTo("ProcessCpuTime") == 0) {
-				result[i] = (long) (Math.random()*5000);
-			} else if (	arg1[i].getBeanName().compareTo("java.lang:type=Runtime") == 0 &&
-						arg1[i].getAttribute().compareTo("Uptime") == 0) {
-				result[i] = (long) (Math.random()*5000);
-			} else if (	arg1[i].getBeanName().compareTo("java.lang:type=OperatingSystem") == 0 &&
-						arg1[i].getAttribute().compareTo("AvailableProcessors") == 0) {
-				result[i] = (int) 4;
-			} else if (	arg1[i].getBeanName().compareTo("java.lang:type=Memory") == 0 &&
-						arg1[i].getAttribute().compareTo("HeapMemoryUsage") == 0) {
-				
-				String[] itemNames = new String[2];
-				itemNames[0] = "used";
-				itemNames[1] = "max";
-				
-				String[] itemDescriptions = new String[2];
-				itemDescriptions[0] = "used";
-				itemDescriptions[1] = "maximum";
-				
-				@SuppressWarnings("rawtypes")
-				OpenType itemTypes[] = new OpenType[] {
-						SimpleType.LONG, 
-						SimpleType.LONG};
-				
-				CompositeType type = new CompositeType("dummy", "test", itemNames, itemDescriptions, itemTypes);
-				
-				HashMap<String, Long> values = new HashMap<String, Long>();
-				values.put("used", 	(long) (Math.random()*5000));
-				values.put("max", 	(long) (Math.random()*5000));
-				
-				CompositeData data = new CompositeDataSupport(type, values);
-				
-				result[i] = data;				
-			} else if (	arg1[i].getBeanName().compareTo("java.lang:type=Memory") == 0 &&
-						arg1[i].getAttribute().compareTo("NonHeapMemoryUsage") == 0) {
-				
-				String[] itemNames = new String[2];
-				itemNames[0] = "used";
-				itemNames[1] = "max";
-				
-				String[] itemDescriptions = new String[2];
-				itemDescriptions[0] = "used";
-				itemDescriptions[1] = "maximum";
-				
-				@SuppressWarnings("rawtypes")
-				OpenType itemTypes[] = new OpenType[] {
-						SimpleType.LONG, 
-						SimpleType.LONG};
-				
-				CompositeType type = new CompositeType("dummy", "test", itemNames, itemDescriptions, itemTypes);
-				
-				HashMap<String, Long> values = new HashMap<String, Long>();
-				values.put("used", 	(long)(Math.random()*5000));
-				values.put("max", 	(long)(Math.random()*5000));
-				
-				CompositeData data = new CompositeDataSupport(type, values);
-				
-				result[i] = data;
-			} else if (	arg1[i].getBeanName().compareTo("java.lang:type=Threading") == 0 &&
-						arg1[i].getAttribute().compareTo("ThreadCount") == 0) {
-				
-				result[i] = (int) (Math.random()*100);
-			} else if (	arg1[i].getBeanName().compareTo("ibis") == 0 &&
-						arg1[i].getAttribute().compareTo("receivedBytesPerIbis") == 0) {
-				
-				Map<IbisIdentifier, Long> resultMap = new HashMap<IbisIdentifier, Long>();
-				int destinations = (int) (Math.random()*fakeIbises.length);
-				int j = 0;
-				while (j<destinations) {
-					int randomIbis = (int) (Math.random()*fakeIbises.length);
-					while (resultMap.containsKey(fakeIbises[randomIbis])) {
-						randomIbis = (int) (Math.random()*fakeIbises.length);
-					}
-					resultMap.put(fakeIbises[randomIbis], (long) (Math.random()*5000));
-					j++;
-				}
-				result[i] = resultMap;
-			} else if (	arg1[i].getBeanName().compareTo("ibis") == 0 &&
-						arg1[i].getAttribute().compareTo("sentBytesPerIbis") == 0) {
-				
-				Map<IbisIdentifier, Long> resultMap = new HashMap<IbisIdentifier, Long>();
-				int destinations = (int) (Math.random()*fakeIbises.length);
-				int j = 0;
-				while (j<destinations) {
-					int randomIbis = (int) (Math.random()*fakeIbises.length);
-					while (resultMap.containsKey(fakeIbises[randomIbis])) {
-						randomIbis = (int) (Math.random()*fakeIbises.length);
-					}
-					resultMap.put(fakeIbises[randomIbis], (long) (Math.random()*5000));
-					j++;
-				}
-				result[i] = resultMap;
+	public Object[] getAttributes(IbisIdentifier id, AttributeDescription... desc) throws Exception {
+		synchronized(ibises) {
+			//if failing, go into an infinite loop, to simulate this ibis' failing connective state
+			while(ibises.containsKey(id) && ibises.get(id) == State.FAILING) {
+				//logger.debug("requested a failing ibis");
+				//Thread.sleep(500);
 			}
-			
-			if (logger.isDebugEnabled()) {
-				logger.debug(arg1[i].getAttribute() +" result: "+ result[i]);
+			//This ibis may have been remove while we were waiting, or have not existed at all because it was recently removed
+			if (!ibises.containsKey(id)) {
+				logger.debug("requested a dead ibis");
+				throw new Exception("ibis doesn't exist");
 			}
-			
+						
+			//Otherwise just return decent results
+			Object[] result = new Object[desc.length];			
+			for (int i=0; i<desc.length; i++) {			
+				//logger.debug("working on "+desc[i].getAttribute());
+				
+				if (		desc[i].getBeanName().compareTo("java.lang:type=OperatingSystem") == 0 &&
+							desc[i].getAttribute().compareTo("ProcessCpuTime") == 0) {
+					result[i] = (long) (Math.random()*5000);
+				} else if (	desc[i].getBeanName().compareTo("java.lang:type=Runtime") == 0 &&
+							desc[i].getAttribute().compareTo("Uptime") == 0) {
+					result[i] = (long) (Math.random()*5000);
+				} else if (	desc[i].getBeanName().compareTo("java.lang:type=OperatingSystem") == 0 &&
+							desc[i].getAttribute().compareTo("AvailableProcessors") == 0) {
+					result[i] = (int) 4;
+				} else if (	desc[i].getBeanName().compareTo("java.lang:type=Memory") == 0 &&
+							desc[i].getAttribute().compareTo("HeapMemoryUsage") == 0) {
+					
+					String[] itemNames = new String[2];
+					itemNames[0] = "used";
+					itemNames[1] = "max";
+					
+					String[] itemDescriptions = new String[2];
+					itemDescriptions[0] = "used";
+					itemDescriptions[1] = "maximum";
+					
+					@SuppressWarnings("rawtypes")
+					OpenType itemTypes[] = new OpenType[] {
+							SimpleType.LONG, 
+							SimpleType.LONG};
+					
+					CompositeType type = new CompositeType("dummy", "test", itemNames, itemDescriptions, itemTypes);
+					
+					HashMap<String, Long> values = new HashMap<String, Long>();
+					values.put("used", 	(long) (Math.random()*5000));
+					values.put("max", 	(long) (Math.random()*5000));
+					
+					CompositeData data = new CompositeDataSupport(type, values);
+					
+					result[i] = data;				
+				} else if (	desc[i].getBeanName().compareTo("java.lang:type=Memory") == 0 &&
+							desc[i].getAttribute().compareTo("NonHeapMemoryUsage") == 0) {
+					
+					String[] itemNames = new String[2];
+					itemNames[0] = "used";
+					itemNames[1] = "max";
+					
+					String[] itemDescriptions = new String[2];
+					itemDescriptions[0] = "used";
+					itemDescriptions[1] = "maximum";
+					
+					@SuppressWarnings("rawtypes")
+					OpenType itemTypes[] = new OpenType[] {
+							SimpleType.LONG, 
+							SimpleType.LONG};
+					
+					CompositeType type = new CompositeType("dummy", "test", itemNames, itemDescriptions, itemTypes);
+					
+					HashMap<String, Long> values = new HashMap<String, Long>();
+					values.put("used", 	(long)(Math.random()*5000));
+					values.put("max", 	(long)(Math.random()*5000));
+					
+					CompositeData data = new CompositeDataSupport(type, values);
+					
+					result[i] = data;
+				} else if (	desc[i].getBeanName().compareTo("java.lang:type=Threading") == 0 &&
+							desc[i].getAttribute().compareTo("ThreadCount") == 0) {
+					
+					result[i] = (int) (Math.random()*100);
+				} else if (	desc[i].getBeanName().compareTo("ibis") == 0 &&
+							desc[i].getAttribute().compareTo("receivedBytesPerIbis") == 0) {
+					
+					IbisIdentifier iArray[] = ibises.keySet().toArray(new IbisIdentifier[0]);
+					Map<IbisIdentifier, Long> resultMap = new HashMap<IbisIdentifier, Long>();
+					int destinations = (int) (Math.random()*ibises.size());
+					int j = 0;
+					while (j<destinations) {
+						
+						IbisIdentifier randomIbis = iArray[(int)(Math.random()*ibises.size())];
+						while (resultMap.containsKey(randomIbis)) {
+							randomIbis = iArray[(int)(Math.random()*ibises.size())];
+						}
+						resultMap.put(randomIbis, (long) (Math.random()*5000));
+						j++;
+					}
+					result[i] = resultMap;
+				} else if (	desc[i].getBeanName().compareTo("ibis") == 0 &&
+							desc[i].getAttribute().compareTo("sentBytesPerIbis") == 0) {
+					
+					IbisIdentifier iArray[] = ibises.keySet().toArray(new IbisIdentifier[0]);
+					Map<IbisIdentifier, Long> resultMap = new HashMap<IbisIdentifier, Long>();
+					int destinations = (int) (Math.random()*ibises.size());
+					int j = 0;
+					while (j<destinations) {						
+						IbisIdentifier randomIbis = iArray[(int)(Math.random()*ibises.size())];
+						while (resultMap.containsKey(randomIbis)) {
+							randomIbis = iArray[(int)(Math.random()*ibises.size())];
+						}
+						resultMap.put(randomIbis, (long) (Math.random()*5000));
+						j++;
+					}
+					result[i] = resultMap;
+				} else {
+					throw new Exception("unknown attribute requested.");
+				}
+				
+				if (logger.isDebugEnabled()) {
+					//logger.debug(desc[i].getAttribute() +" result: "+ result[i]);
+				}
+				
+			}
+			return result;
 		}
-		return result;
+	}
+
+	public void doUpdate() {
+		synchronized(ibises) {
+			ibises = reg.getIbises();
+		}
 	}
 
 }

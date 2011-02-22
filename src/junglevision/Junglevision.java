@@ -23,7 +23,7 @@ public class Junglevision {
     public static void main(String[] args) {
     	//Ibis/JMX variables
     	FakeRegistryService regInterface = new FakeRegistryService();    	
-    	ManagementServiceInterface manInterface = new FakeManagementService(regInterface.getIbises());
+    	ManagementServiceInterface manInterface = new FakeManagementService(regInterface);
     	RegistryServiceInterface myReg = regInterface;
     	
     	//Data interface

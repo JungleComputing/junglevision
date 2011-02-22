@@ -39,6 +39,11 @@ public class Collector implements junglevision.gathering.Collector, Runnable {
 	
 	//Refreshrate for the status updates
 	int refreshrate;
+	
+	ArrayList<Worker> workers;
+	private int waiting = 0;
+	
+	private static boolean reInitNeeded = false;
 
 	private HashMap<String, junglevision.gathering.Location> locations;
 	private HashMap<String, junglevision.gathering.Pool> pools;
@@ -59,6 +64,7 @@ public class Collector implements junglevision.gathering.Collector, Runnable {
 		descriptions = new HashSet<junglevision.gathering.MetricDescription>();
 		ibises = new HashMap<IbisIdentifier, junglevision.gathering.Ibis>();
 		jobQueue = new LinkedList<junglevision.gathering.Element>();
+		workers = new ArrayList<Worker>();
 		
 		//Create a universe (location root)
 		Float[] color = {0f,0f,0f};
@@ -73,15 +79,22 @@ public class Collector implements junglevision.gathering.Collector, Runnable {
 		descriptions.add(new NonHeapMemory());
 		//descriptions.add(new ThreadsMetric());
 		descriptions.add(new BytesReceivedPerSecond());
-		descriptions.add(new BytesSentPerSecond());
+		descriptions.add(new BytesSentPerSecond());		
 		
+		//Start an update timer for the list mutations
+		UpdateTimer timer = new UpdateTimer(refreshrate*10);
+		new Thread(timer).start();		
 	}		
 		
-	private void initWorkers() {			
+	private void initWorkers() {
+		workers.clear();
+		waiting = 0;
+		
 		//Create and start worker threads for the metric updates
 		for (int i=0; i<workercount; i++) {
-			Thread worker = new Worker();
-			worker.start();			
+			Worker worker = new Worker();
+			workers.add(worker);
+			worker.start();
 		}
 	}
 		
@@ -102,10 +115,12 @@ public class Collector implements junglevision.gathering.Collector, Runnable {
 		}
 	}
 	
+	public static void reInitialize() {
+		reInitNeeded = true;
+	}
+	
 	public void initUniverse() {		
-		//Clear the jobqueue
-		jobQueue.clear();
-		
+		//Rebuild the world
 		initPools();
 		initLocations();
 		initLinks();
@@ -255,9 +270,12 @@ public class Collector implements junglevision.gathering.Collector, Runnable {
 	
 	public junglevision.gathering.Element getWork() {
 		junglevision.gathering.Element result = null;
+		
 		synchronized(jobQueue) {
 			while (jobQueue.isEmpty()) {
 				try {
+					waiting += 1;
+					logger.debug("waiting: "+waiting);
 					jobQueue.wait();
 				} catch (InterruptedException e) {	
 					if (logger.isErrorEnabled()) {
@@ -267,6 +285,7 @@ public class Collector implements junglevision.gathering.Collector, Runnable {
 			}
 			result = jobQueue.removeFirst();
 		}
+		
 		return result;
 	}
 	
@@ -280,31 +299,53 @@ public class Collector implements junglevision.gathering.Collector, Runnable {
 	}
 	
 	public void run() {
+		long timePassed = 0, currentTime = 0, lastTime = 0;
 		while (true) {
-			synchronized(jobQueue) {
-				if (jobQueue.isEmpty()) {
-					jobQueue.addAll(ibises.values());
-					
-					//TODO wait for all the ibises to be complete first
-					jobQueue.add(root);
-					jobQueue.notify();
-				} else {
-					//TODO implement
-					if (logger.isDebugEnabled()) {
-						logger.debug("Queue not empty when refreshed.");
-						logger.debug("Ibises left in queue: "+jobQueue.size());
-						
-					}
-				}
-			}
+			currentTime = System.currentTimeMillis();
+			timePassed = lastTime - currentTime;
+			
+			//sleep for the refreshrate 
 			try {
-				Thread.sleep(refreshrate);
+				long currentTime = System.currentTimeMillis();
+				timePassed = currentTime - startTime;
+				
+				if (timePassed > refreshrate) {
+					logger.debug("Refreshing took too long.");
+				} else {				
+					Thread.sleep(refreshrate - timePassed);
+				}
 			} catch (InterruptedException e) {
 				if (logger.isErrorEnabled()) {
 					logger.error("Interrupted, this should be ignored.");
 				}
 				break;
 			}
+			
+			//then see if our workers have done their jobs
+			
+			
+			
+			synchronized(jobQueue) {
+				if (waiting == workercount) {
+					if (!jobQueue.isEmpty()) {
+						logger.error("workers idling while jobqueue not empty.");
+					}
+					jobQueue.addAll(ibises.values());					
+					jobQueue.add(root);
+					for (int i=0; i<workercount; i++) {
+						jobQueue.add(Worker.END_OF_WORK);
+					}
+					waiting = 0;
+					jobQueue.notify();				
+				} else {
+					//TODO implement
+					if (logger.isDebugEnabled()) {
+						logger.debug("Queue not empty when refreshed.");
+						logger.debug("Ibises left in queue: "+jobQueue.size());						
+					}
+				}
+			}
+			
 		}
 	}
 }

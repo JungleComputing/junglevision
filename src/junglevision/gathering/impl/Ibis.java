@@ -76,8 +76,9 @@ public class Ibis extends Element implements junglevision.gathering.Ibis {
 				metric.getValue().update(partialResults);
 			}
 		} catch (Exception e) {
-			logger.error("Ibis "+ibisid+" got exception while updating metrics.");
-			e.printStackTrace();
+			Collector.reInitialize();
+			logger.error("Ibis "+ibisid+" got exception while updating metrics: "+ e.getMessage());
+			//e.printStackTrace();
 		}		
 	}	
 	

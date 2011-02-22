@@ -7,12 +7,14 @@ public class FakeIbisIdentifier implements ibis.ipl.IbisIdentifier {
 	private static final long serialVersionUID = 1973096908454994055L;
 	
 	private Location location;
+	private String poolName;
 	
-	public FakeIbisIdentifier(String locationString) {
+	public FakeIbisIdentifier(String locationString, String poolName) {
 		location = new ibis.ipl.impl.Location(locationString);
+		this.poolName = poolName;
 	}
 	
-	public Location location() {		
+	public Location location() {	
 		return location;
 	}
 	
@@ -31,9 +33,8 @@ public class FakeIbisIdentifier implements ibis.ipl.IbisIdentifier {
 		return null;
 	}
 
-	public String poolName() {
-		//Not needed by the collector
-		return null;
+	public String poolName() {		
+		return poolName;
 	}
 
 	public byte[] tag() {

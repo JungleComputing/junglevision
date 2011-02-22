@@ -1,15 +1,15 @@
 package junglevision.test;
 
 public class UpdateTimer implements Runnable {
-	private FakeRegistryService reg;
+	private FakeService service;
 	
-	public UpdateTimer(FakeRegistryService reg) {
-		this.reg = reg;
+	public UpdateTimer(FakeService service) {
+		this.service = service;
 	}
 	
 	public void run() {
 		while (true) {
-			reg.doUpdate();
+			service.doUpdate();
 			try {
 				Thread.sleep(100);
 			} catch (InterruptedException e) {				
