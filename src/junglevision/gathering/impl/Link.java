@@ -2,6 +2,7 @@ package junglevision.gathering.impl;
 
 import java.util.ArrayList;
 import java.util.Map.Entry;
+import java.util.concurrent.TimeoutException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -80,7 +81,11 @@ public class Link extends junglevision.gathering.impl.Element implements junglev
 	public void update() { 
 		//First update all of our children
 		for (junglevision.gathering.Link child : children) {
-			child.update();
+			try {
+				child.update();
+			} catch (TimeoutException neverthrown) {
+				logger.error("never happened.");
+			}
 		}
 		
 		for (Entry<junglevision.gathering.MetricDescription, junglevision.gathering.Metric> data : metrics.entrySet()) {

@@ -16,11 +16,11 @@ public class FakeRegistryService implements ibis.ipl.server.RegistryServiceInter
 
 	public enum State { ALIVE, FAILING, DEAD };	
 
-	final int POOLS = 1;
-	final int COUNTRIES = 1;
-	final int UNIVERSITIES = 1;
+	final int POOLS = 2;
+	final int COUNTRIES = 2;
+	final int UNIVERSITIES = 5;
 	final int CLUSTERS = 1;
-	final int IBISES = 2;
+	final int IBISES = 10;
 	
 	private HashMap<String, IbisIdentifier[]> pools;
 	private HashMap<IbisIdentifier, State> ibises;
@@ -94,10 +94,10 @@ public class FakeRegistryService implements ibis.ipl.server.RegistryServiceInter
 	 * */
 	public void doUpdate() {
 		synchronized(ibises) {
-			double CHANCE_OF_IBIS_FAILURE  	= 0.01;
-			double CHANCE_OF_IBIS_JOIN  	= 0.01;
+			double CHANCE_OF_IBIS_FAILURE  	= 0.001;
+			double CHANCE_OF_IBIS_JOIN  	= 0.001;
 			double CHANCE_OF_IBIS_RECOVERY = 0.01;
-			int MAX_FAILRATE = 100;
+			int MAX_FAILRATE = 10;
 					
 			//Add new ibises to the pools
 			if (Math.random() < CHANCE_OF_IBIS_JOIN) {
@@ -119,7 +119,7 @@ public class FakeRegistryService implements ibis.ipl.server.RegistryServiceInter
 				//And update the state.
 				ibises.put(newIbis, State.ALIVE);		
 				
-				logger.debug("REJOICE! A new ibis was born!");
+				logger.debug("A new ibis was added to the universe.");
 			}
 			
 			//Put new ibises in failure mode.

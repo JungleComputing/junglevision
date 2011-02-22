@@ -1,6 +1,7 @@
 package junglevision.gathering;
 
 import java.util.Set;
+import java.util.concurrent.TimeoutException;
 
 import junglevision.gathering.exceptions.SelfLinkeageException;
 
@@ -38,7 +39,7 @@ public interface Element {
 	public void setMetrics(Set<MetricDescription> metrics);
 	public void addMetric(MetricDescription metric);
 	public void removeMetric(MetricDescription metric);
-	public void update();
+	public void update() throws TimeoutException;
 		
 	//internal methods
 	public void addLink(Element element, Link newLink);

@@ -1,17 +1,22 @@
 package junglevision.test;
 
+import java.io.IOException;
+import java.net.SocketException;
 import java.util.HashMap;
 import java.util.Map;
 
 import ibis.ipl.IbisIdentifier;
+import ibis.ipl.NoSuchPropertyException;
 import ibis.ipl.server.ManagementServiceInterface;
 import ibis.ipl.support.management.AttributeDescription;
 import javax.management.openmbean.CompositeType;
 import javax.management.openmbean.CompositeData;
 import javax.management.openmbean.CompositeDataSupport;
+import javax.management.openmbean.OpenDataException;
 import javax.management.openmbean.OpenType;
 import javax.management.openmbean.SimpleType;
 
+import junglevision.gathering.exceptions.UnknownAttributeException;
 import junglevision.test.FakeRegistryService.State;
 
 import org.slf4j.Logger;
@@ -33,17 +38,21 @@ public class FakeManagementService implements ManagementServiceInterface, FakeSe
 		new Thread(timer).start();
 	}
 	
-	public Object[] getAttributes(IbisIdentifier id, AttributeDescription... desc) throws Exception {
+	public Object[] getAttributes(IbisIdentifier id, AttributeDescription... desc) throws IOException, NoSuchPropertyException {
 		synchronized(ibises) {
 			//if failing, go into an infinite loop, to simulate this ibis' failing connective state
 			while(ibises.containsKey(id) && ibises.get(id) == State.FAILING) {
 				//logger.debug("requested a failing ibis");
-				//Thread.sleep(500);
+				try {
+					Thread.sleep(500);
+				} catch (InterruptedException e) {
+					throw new IOException("timeout");
+				}
 			}
 			//This ibis may have been remove while we were waiting, or have not existed at all because it was recently removed
 			if (!ibises.containsKey(id)) {
 				logger.debug("requested a dead ibis");
-				throw new Exception("ibis doesn't exist");
+				throw new SocketException("ibis doesn't exist");
 			}
 						
 			//Otherwise just return decent results
@@ -76,14 +85,25 @@ public class FakeManagementService implements ManagementServiceInterface, FakeSe
 							SimpleType.LONG, 
 							SimpleType.LONG};
 					
-					CompositeType type = new CompositeType("dummy", "test", itemNames, itemDescriptions, itemTypes);
+					CompositeType type = null;
+					try {
+						type = new CompositeType("dummy", "test", itemNames, itemDescriptions, itemTypes);
+					} catch (OpenDataException e) {
+						logger.error("opendata exception");
+						System.exit(0);
+					}
 					
 					HashMap<String, Long> values = new HashMap<String, Long>();
 					values.put("used", 	(long) (Math.random()*5000));
 					values.put("max", 	(long) (Math.random()*5000));
 					
-					CompositeData data = new CompositeDataSupport(type, values);
-					
+					CompositeData data = null;
+					try {
+						data = new CompositeDataSupport(type, values);
+					} catch (OpenDataException e) {
+						logger.error("opendata exception");
+						System.exit(0);
+					}
 					result[i] = data;				
 				} else if (	desc[i].getBeanName().compareTo("java.lang:type=Memory") == 0 &&
 							desc[i].getAttribute().compareTo("NonHeapMemoryUsage") == 0) {
@@ -101,13 +121,25 @@ public class FakeManagementService implements ManagementServiceInterface, FakeSe
 							SimpleType.LONG, 
 							SimpleType.LONG};
 					
-					CompositeType type = new CompositeType("dummy", "test", itemNames, itemDescriptions, itemTypes);
+					CompositeType type = null;
+					try {
+						type = new CompositeType("dummy", "test", itemNames, itemDescriptions, itemTypes);
+					} catch (OpenDataException e) {
+						logger.error("opendata exception");
+						System.exit(0);
+					}
 					
 					HashMap<String, Long> values = new HashMap<String, Long>();
 					values.put("used", 	(long)(Math.random()*5000));
 					values.put("max", 	(long)(Math.random()*5000));
 					
-					CompositeData data = new CompositeDataSupport(type, values);
+					CompositeData data = null;
+					try {
+						data = new CompositeDataSupport(type, values);
+					} catch (OpenDataException e) {
+						logger.error("opendata exception");
+						System.exit(0);
+					}
 					
 					result[i] = data;
 				} else if (	desc[i].getBeanName().compareTo("java.lang:type=Threading") == 0 &&
@@ -148,7 +180,7 @@ public class FakeManagementService implements ManagementServiceInterface, FakeSe
 					}
 					result[i] = resultMap;
 				} else {
-					throw new Exception("unknown attribute requested.");
+					throw new NoSuchPropertyException();
 				}
 				
 				if (logger.isDebugEnabled()) {

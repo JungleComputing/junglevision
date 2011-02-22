@@ -1,5 +1,7 @@
 package junglevision.gathering.impl;
 
+import java.util.concurrent.TimeoutException;
+
 import junglevision.gathering.exceptions.SingletonObjectNotInstantiatedException;
 
 import org.slf4j.Logger;
@@ -7,9 +9,9 @@ import org.slf4j.LoggerFactory;
 
 public class Worker extends Thread {	
 	private static final Logger logger = LoggerFactory.getLogger("ibis.deploy.gui.junglevision.gathering.impl.Worker");
-
-	public static final Ibis END_OF_WORK = new Ibis(null, null, null, null); 
+ 
 	private Collector c;
+	junglevision.gathering.Element element;
 
 	public Worker() {
 		try {
@@ -19,14 +21,14 @@ public class Worker extends Thread {
 		}
 	}
 
-	public void run() {
-		junglevision.gathering.Element element;
+	public void run() {		
 		while (true) {
-			element = c.getWork();
-			if (element == END_OF_WORK) {
-				break;
+			element = c.getWork(this);
+			try {
+				element.update();
+			} catch (TimeoutException e) {
+				logger.debug("timed out.");
 			}
-			element.update();
 		}
 	}
 }

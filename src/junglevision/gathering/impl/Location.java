@@ -3,6 +3,7 @@ package junglevision.gathering.impl;
 import java.util.ArrayList;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.concurrent.TimeoutException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -410,7 +411,11 @@ public class Location extends Element implements junglevision.gathering.Location
 	public void update() {
 		//make sure the children are updated first
 		for (junglevision.gathering.Location child : children) {
-			child.update();
+			try {
+				child.update();
+			} catch (TimeoutException neverthrown) {
+				logger.error("never happened.");
+			}
 		}
 		
 		for (Entry<junglevision.gathering.MetricDescription, junglevision.gathering.Metric> data : metrics.entrySet()) {

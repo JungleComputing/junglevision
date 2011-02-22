@@ -1,12 +1,15 @@
 package junglevision.gathering.impl;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Map.Entry;
+import java.util.concurrent.TimeoutException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import ibis.ipl.IbisIdentifier;
+import ibis.ipl.NoSuchPropertyException;
 import ibis.ipl.server.ManagementServiceInterface;
 import ibis.ipl.support.management.AttributeDescription;
 import junglevision.gathering.Location;
@@ -50,7 +53,7 @@ public class Ibis extends Element implements junglevision.gathering.Ibis {
 		return pool;
 	}
 	
-	public void update() {
+	public void update() throws TimeoutException {
 		//Make an array of all the AttributeDescriptions needed to update this Ibis' metrics.
 		ArrayList<AttributeDescription> requestList = new ArrayList<AttributeDescription>();
 		for (Entry<junglevision.gathering.MetricDescription, junglevision.gathering.Metric> metric : metrics.entrySet()) {
@@ -75,10 +78,12 @@ public class Ibis extends Element implements junglevision.gathering.Ibis {
 				//And pass them to the individual metrics to be updated.
 				metric.getValue().update(partialResults);
 			}
-		} catch (Exception e) {
-			Collector.reInitialize();
+		} catch (IOException e) {
+			throw new TimeoutException();
+		} catch (NoSuchPropertyException e) {
 			logger.error("Ibis "+ibisid+" got exception while updating metrics: "+ e.getMessage());
-			//e.printStackTrace();
+		} catch (Exception e) {
+			logger.error("Ibis "+ibisid+" got exception while updating metrics: "+ e.getMessage());
 		}		
 	}	
 	
