@@ -47,7 +47,7 @@ public class JGMetric extends JGVisualAbstract implements JGVisual {
 		
 		barAndOutlinePointer = jv.getDisplayListPointer(DisplayListBuilder.DisplayList.BAR_AND_OUTLINE);
 		barPointer = jv.getDisplayListPointer(DisplayListBuilder.DisplayList.BAR);
-		currentDL = DisplayListBuilder.DisplayList.BAR;
+		currentDL = DisplayListBuilder.DisplayList.BAR_AND_OUTLINE;
 		
 		dimensions[0] = WIDTH;
 		dimensions[1] = HEIGHT;

@@ -272,15 +272,11 @@ public class JungleGoggles implements GLEventListener {
 		visualRegistry.clear();
 		
 		universe = new JGUniverse(this, glu, collector.getRoot());
-		universe.setCoordinates(m.getCurrentCoordinates().clone());
+		universe.setCoordinates(m.getCurrentCoordinates());
 		universe.init(gl);
 		
 		//TODO reinstate 
-		createLinks();
-		for (JGVisual link : linkRegistry.values()) {
-			link.init(gl);
-			link.setCoordinates(m.getCurrentCoordinates().clone());			
-		}		
+		createLinks();	
 	}
 	
 	/**
@@ -297,7 +293,12 @@ public class JungleGoggles implements GLEventListener {
 			for (Link link : links) {
 				JGVisual v_source = visualRegistry.get(link.getSource());
 				JGVisual v_dest = visualRegistry.get(link.getDestination());
-				linkRegistry.put(link, new JGLink(this, glu, v_source, v_dest, link));
+				
+				JGLink jglink = new JGLink(this, glu, v_source, v_dest, link);				
+				jglink.init(gl);
+				jglink.setCoordinates(m.getCurrentCoordinates());
+				
+				linkRegistry.put(link, jglink);
 			}			
 		}		
 	}	
@@ -365,9 +366,9 @@ public class JungleGoggles implements GLEventListener {
 		
 		//Then, change the rotation according to input given.
 		if (m.locationChanged()) {
-			universe.setCoordinates(m.getCurrentCoordinates().clone());
+			universe.setCoordinates(m.getCurrentCoordinates());
 			for (JGVisual link : linkRegistry.values()) {
-				link.setCoordinates(m.getCurrentCoordinates().clone());
+				link.setCoordinates(m.getCurrentCoordinates());
 			}
 		}
 		

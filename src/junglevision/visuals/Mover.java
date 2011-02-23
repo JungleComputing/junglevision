@@ -29,7 +29,11 @@ public class Mover {
 	}
 	
 	public Float[] getCurrentCoordinates() {
-		return currentLocation;	
+		Float[] tempLocation = new Float[3];
+		tempLocation[0] = currentLocation[0];
+		tempLocation[1] = currentLocation[1];
+		tempLocation[2] = currentLocation[2];
+		return tempLocation;	
 	}
 	
 	public void moveTo(Float[] newCenter) {		

@@ -113,15 +113,17 @@ public class Collector implements junglevision.gathering.Collector, Runnable {
 		}
 	}
 	
-	public void initUniverse() {
+	public void initUniverse() {		
 		//Check if there was a change in the pool sizes
 		boolean change = initPools();
 		
 		if (change) {
-			//Rebuild the world		
-			initLocations();
-			initLinks();
-			initMetrics();
+			synchronized(jobQueue) {
+				//Rebuild the world		
+				initLocations();
+				initLinks();
+				initMetrics();
+			}
 			
 			if (logger.isDebugEnabled()) {
 				logger.debug("world rebuilt");
@@ -199,7 +201,7 @@ public class Collector implements junglevision.gathering.Collector, Runnable {
 					junglevision.gathering.Location current;
 					if (locations.containsKey(ibisName)) {
 						current = locations.get(ibisName);
-					} else {						
+					} else {
 						current = new Location(ibisName, color);
 						locations.put(ibisName, current);
 					}
@@ -207,18 +209,18 @@ public class Collector implements junglevision.gathering.Collector, Runnable {
 					//And add the ibis to that location
 					Ibis ibis = new Ibis(manInterface, ibisid, entry.getValue(), current);
 					current.addIbis(ibis);
-					ibises.put(ibisid, ibis);					
+					ibises.put(ibisid, ibis);
 										
 					//for all location levels, get parent
-					ibis.ipl.Location parentIPLLocation = ibisLocation.getParent();						
+					ibis.ipl.Location parentIPLLocation = ibisLocation.getParent();
 					while (!parentIPLLocation.equals(universe)) {
 						String name = parentIPLLocation.getLevel(0);
 						
-						//Make a new location if we have not encountered the parent 
+						//Make a new location if we have not encountered the parent
 						junglevision.gathering.Location parent;
 						if (locations.containsKey(name)) {
 							parent = locations.get(name);
-						} else {							
+						} else {
 							parent = new Location(name, color);
 							locations.put(name, parent);
 						}
@@ -318,6 +320,7 @@ public class Collector implements junglevision.gathering.Collector, Runnable {
 		while (true) {
 			//Add stuff to the queue and notify
 			synchronized(jobQueue) {
+				jobQueue.clear();
 				initUniverse();
 				jobQueue.addAll(ibises.values());					
 				jobQueue.add(root);			
@@ -342,16 +345,14 @@ public class Collector implements junglevision.gathering.Collector, Runnable {
 					}					
 					logger.debug("Succesfully finished queue.");
 				} else {
+					//If they have not, give warning, interrupt the workers, and try again next turn.					
+					for (Worker w : workers) {
+						w.interrupt();
+					}
+					
 					if (logger.isDebugEnabled()) {
 						logger.debug("Workers still working: "+(workercount-waiting));
 						logger.debug("Ibises left in queue: "+jobQueue.size()+" / "+ ibises.size());						
-					}
-					
-					//If they have not, clear the queue, interrupt the workers, and try again next turn.
-					jobQueue.clear();
-					
-					for (Worker w : workers) {
-						w.interrupt();
 					}
 				}
 			}

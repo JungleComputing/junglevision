@@ -21,7 +21,7 @@ public abstract class JGVisualAbstract implements JGVisual {
 	protected CollectionShape cShape;
 	protected FoldState foldState;
 	protected MetricShape mShape;
-	protected float separation;
+	protected float separation, ibisSeparation, metricSeparation;
 	
 	public JGVisualAbstract() {
 		locations = new ArrayList<JGVisual>();
@@ -30,9 +30,9 @@ public abstract class JGVisualAbstract implements JGVisual {
 		links = new ArrayList<JGVisual>();
 		
 		coordinates   = new Float[3];
-		coordinates[0] = 0.0f;
-		coordinates[1] = 0.0f;
-		coordinates[2] = 0.0f;
+		//coordinates[0] = 0.0f;
+		//coordinates[1] = 0.0f;
+		//coordinates[2] = 0.0f;
 		
 		rotation   = new Float[3];		
 		rotation[0] = 0.0f;
@@ -46,10 +46,12 @@ public abstract class JGVisualAbstract implements JGVisual {
 		
 		maxChildDimensions = new Float[3];
 		maxAllChildDimensions = 0.0f;
-		cShape = CollectionShape.CUBE;
+		cShape = CollectionShape.CITYSCAPE;
 		foldState = FoldState.UNFOLDED;
 		mShape = MetricShape.BAR;
 		separation = 0.0f;
+		ibisSeparation = 0.5f;
+		metricSeparation = 0.05f;
 	}
 	
 	public void init(GL2 gl) {
@@ -67,34 +69,32 @@ public abstract class JGVisualAbstract implements JGVisual {
 		}		
 	}
 	
-	public void setCoordinates(Float[] newCoordinates) {		 
-		this.coordinates[0] = newCoordinates[0];		
-		this.coordinates[1] = newCoordinates[1];
-		this.coordinates[2] = newCoordinates[2];
-		
-		
+	public void setCoordinates(Float[] newCoordinates) {
+		coordinates[0] = newCoordinates[0];
+		coordinates[1] = newCoordinates[1];
+		coordinates[2] = newCoordinates[2];
 		
 		if (locations.size() > 0) {
 			maxAllChildDimensions = Math.max(Math.max(maxChildDimensions[0], maxChildDimensions[1]), maxChildDimensions[2]);
 			
-			if (cShape == CollectionShape.CITYSCAPE) {		
+			if (cShape == CollectionShape.CITYSCAPE) {
 				//get the breakoff point for rows and columns
-				int number_of_children = locations.size();
-				int rows 		= (int)Math.ceil(Math.sqrt(number_of_children));
-				int columns 	= (int)Math.floor(Math.sqrt(number_of_children));
+				int childCount = locations.size();
+				int rows 		= (int)Math.ceil(Math.sqrt(childCount));
+				int columns 	= (int)Math.floor(Math.sqrt(childCount));
 				float xShiftPerChild = maxChildDimensions[0] + separation;
 				float zShiftPerChild = maxChildDimensions[2] + separation;
 				
-				//Center the drawing around the location	
+				//Center the drawing around the location
 				Float[] shiftedLocation = new Float[3];
 				shiftedLocation[0] = coordinates[0] - ((xShiftPerChild*rows   )-separation) * 0.5f;
-				shiftedLocation[1] = coordinates[1];
+				shiftedLocation[1] = coordinates[1] - 5f;
 				shiftedLocation[2] = coordinates[2] - ((zShiftPerChild*columns)-separation) * 0.5f;
 				
-				Float[] metricLocation = new Float[3];
+				Float[] childLocation = new Float[3];
 				
 				int row = 0, column = 0, i = 0;
-				for (JGVisual metric : locations) {
+				for (JGVisual child : locations) {
 					row = i % rows;
 					
 					//Move to next row (if applicable)
@@ -103,11 +103,11 @@ public abstract class JGVisualAbstract implements JGVisual {
 					}
 									
 					//cascade the new location
-					metricLocation[0] = shiftedLocation[0] + xShiftPerChild*row;
-					metricLocation[1] = shiftedLocation[1];
-					metricLocation[2] = shiftedLocation[2] + zShiftPerChild*column;
+					childLocation[0] = shiftedLocation[0] + xShiftPerChild*row;
+					childLocation[1] = shiftedLocation[1];
+					childLocation[2] = shiftedLocation[2] + zShiftPerChild*column;
 					
-					metric.setCoordinates(metricLocation);
+					child.setCoordinates(childLocation);
 					    
 					i++;
 				}
@@ -130,17 +130,17 @@ public abstract class JGVisualAbstract implements JGVisual {
 				}	
 				
 				int k=0;				
-				for (JGVisual node : locations) {						
+				for (JGVisual child : locations) {						
 					//set the location						
-					node.setCoordinates(pt[k]);							
+					child.setCoordinates(pt[k]);							
 					k++;
 				}			
 			} else if (cShape == CollectionShape.CUBE) {		
 				//get the breakoff point for rows and columns
-				int ibisCount = locations.size();
-				int rows 		= (int)Math.ceil(Math.pow(ibisCount,  (1.0/3.0)));
-				int columns 	= (int)Math.ceil(Math.pow(ibisCount, (1.0/3.0)));
-				int layers		= (int)Math.floor(Math.pow(ibisCount, (1.0/3.0)));
+				int childCount = locations.size();
+				int rows 		= (int)Math.ceil(Math.pow(childCount,  (1.0/3.0)));
+				int columns 	= (int)Math.ceil(Math.pow(childCount, (1.0/3.0)));
+				int layers		= (int)Math.floor(Math.pow(childCount, (1.0/3.0)));
 							
 				float xShiftPerChild = maxChildDimensions[0] + separation;
 				float yShiftPerChild = maxChildDimensions[1] + separation;			
@@ -152,10 +152,10 @@ public abstract class JGVisualAbstract implements JGVisual {
 				shiftedLocation[1] = coordinates[1] - ((yShiftPerChild*layers )-separation) * 0.5f;
 				shiftedLocation[2] = coordinates[2] - ((zShiftPerChild*columns)-separation) * 0.5f;
 				
-				Float[] metricLocation = new Float[3];
+				Float[] childLocation = new Float[3];
 				
 				int row = 0, column = 0, layer = 0;
-				for (JGVisual node : locations) {								
+				for (JGVisual child : locations) {								
 					if (row == rows) {
 						row = 0;
 						column++;
@@ -166,25 +166,91 @@ public abstract class JGVisualAbstract implements JGVisual {
 					}			
 									
 					//cascade the new location
-					metricLocation[0] = shiftedLocation[0] + xShiftPerChild*row;
-					metricLocation[1] = shiftedLocation[1] + yShiftPerChild*layer;
-					metricLocation[2] = shiftedLocation[2] + zShiftPerChild*column;
+					childLocation[0] = shiftedLocation[0] + xShiftPerChild*row;
+					childLocation[1] = shiftedLocation[1] + yShiftPerChild*layer;
+					childLocation[2] = shiftedLocation[2] + zShiftPerChild*column;
 					
-					node.setCoordinates(metricLocation);
+					child.setCoordinates(childLocation);
 					    
 					row++;
 				}
+			} else {
+				System.out.println("Collectionshape not defined while setting coordinates.");
+				System.exit(0);
 			}
 		}
 		
-		for (JGVisual metric : metrics) {
-			metric.setCoordinates(newCoordinates);
+		if (ibises.size() > 0) {
+			//get the breakoff point for rows and columns
+			int number_of_children = ibises.size();
+			int rows 		= (int)Math.ceil(Math.sqrt(number_of_children));
+			int columns 	= (int)Math.floor(Math.sqrt(number_of_children));
+			float xShiftPerChild = ibisSeparation;
+			float zShiftPerChild = ibisSeparation;
+			
+			//Center the drawing around the location	
+			Float[] shiftedLocation = new Float[3];
+			shiftedLocation[0] = coordinates[0] - ((xShiftPerChild*rows   )-ibisSeparation) * 0.5f;
+			shiftedLocation[1] = coordinates[1];
+			shiftedLocation[2] = coordinates[2] - ((zShiftPerChild*columns)-ibisSeparation) * 0.5f;
+			
+			Float[] ibisLocation = new Float[3];
+			
+			int row = 0, column = 0, i = 0;
+			for (JGVisual ibis : ibises) {
+				row = i % rows;
+				
+				//Move to next row (if applicable)
+				if (i != 0 && row == 0) {
+					column++;						
+				}
+								
+				//cascade the new location
+				ibisLocation[0] = shiftedLocation[0] + xShiftPerChild*row;
+				ibisLocation[1] = shiftedLocation[1];
+				ibisLocation[2] = shiftedLocation[2] + zShiftPerChild*column;
+				
+				ibis.setCoordinates(ibisLocation);
+				    
+				i++;
+			}
 		}
 		
-		for (JGVisual link : links) {
-			link.setCoordinates(newCoordinates);
+		if (metrics.size() > 0) {
+			//get the breakoff point for rows and columns
+			int number_of_children = metrics.size();
+			int rows 		= (int)Math.ceil(Math.sqrt(number_of_children));
+			int columns 	= (int)Math.floor(Math.sqrt(number_of_children));
+			float xShiftPerChild = metricSeparation;
+			float zShiftPerChild = metricSeparation;
+			
+			//Center the drawing around the location	
+			Float[] shiftedLocation = new Float[3];
+			shiftedLocation[0] = coordinates[0] - ((xShiftPerChild*rows   )-metricSeparation) * 0.5f;
+			shiftedLocation[1] = coordinates[1];
+			shiftedLocation[2] = coordinates[2] - ((zShiftPerChild*columns)-metricSeparation) * 0.5f;
+			
+			Float[] metricLocation = new Float[3];
+			
+			int row = 0, column = 0, i = 0;
+			for (JGVisual metric : metrics) {
+				row = i % rows;
+				
+				//Move to next row (if applicable)
+				if (i != 0 && row == 0) {
+					column++;						
+				}
+								
+				//cascade the new location
+				metricLocation[0] = shiftedLocation[0] + xShiftPerChild*row;
+				metricLocation[1] = shiftedLocation[1];
+				metricLocation[2] = shiftedLocation[2] + zShiftPerChild*column;
+				
+				metric.setCoordinates(metricLocation);
+				    
+				i++;
+			}
 		}
-		
 		
 	}
 	

@@ -30,6 +30,7 @@ public class Location extends Element implements junglevision.gathering.Location
 	private ArrayList<junglevision.gathering.Location> children;
 	
 	public Location(String name, Float[] color) {
+		super();
 		this.name = name;
 		this.color = new Float[3];
 		this.color[0] = color[0];
@@ -383,6 +384,9 @@ public class Location extends Element implements junglevision.gathering.Location
 		}
 		for (junglevision.gathering.Link link : links.values()) {
 			link.setMetrics(newMetrics);
+		}
+		for (junglevision.gathering.MetricDescription md : newMetrics) {
+			metrics.put(md, md.getMetric(this));
 		}
 	}
 	

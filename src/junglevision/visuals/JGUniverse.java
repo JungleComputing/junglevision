@@ -11,7 +11,7 @@ public class JGUniverse extends JGVisualAbstract implements JGVisual {
 	public JGUniverse(JungleGoggles jv, GLUgl2 glu, Location root) {
 		super();
 		separation = 16.0f;
-		cShape = CollectionShape.CUBE;
+		cShape = CollectionShape.CITYSCAPE;
 		
 		jv.registerVisual(root, this);
 		
