@@ -20,14 +20,14 @@ public interface Collector extends Runnable {
 	 * @return
 	 * 		The pools.
 	 */
-	public ArrayList<junglevision.gathering.Pool> getPools();
+	public ArrayList<Pool> getPools();
 		
 	/**
 	 * Returns the Metrics that have been defined and are ready to use.
 	 * @return
 	 * 		The Metrics that could be gathered.
 	 */
-	public HashSet<junglevision.gathering.MetricDescription> getAvailableMetrics();
+	public HashSet<MetricDescription> getAvailableMetrics();
 	
 	/**
 	 * Returns whether there was any change in the universe.

@@ -208,7 +208,7 @@ public class Collector implements junglevision.gathering.Collector, Runnable {
 					
 					//And add the ibis to that location
 					Ibis ibis = new Ibis(manInterface, ibisid, entry.getValue(), current);
-					current.addIbis(ibis);
+					((Location)current).addIbis(ibis);
 					ibises.put(ibisid, ibis);
 										
 					//for all location levels, get parent
@@ -226,7 +226,7 @@ public class Collector implements junglevision.gathering.Collector, Runnable {
 						}
 						
 						//And add the current location as a child of the parent
-						parent.addChild(current);
+						((Location)parent).addChild(current);
 						
 						current = parent;
 						
@@ -235,7 +235,7 @@ public class Collector implements junglevision.gathering.Collector, Runnable {
 					
 					//Finally, add the top-level location to the root location, 
 					//it will only add if it is not already there					
-					root.addChild(current);
+					((Location)root).addChild(current);
 				}
 			} catch (IOException e1) {	
 				if (logger.isErrorEnabled()) {
@@ -261,7 +261,7 @@ public class Collector implements junglevision.gathering.Collector, Runnable {
 			}
 		}
 		
-		root.makeLinkHierarchy();
+		((Location)root).makeLinkHierarchy();
 	}
 		
 	//Getters	

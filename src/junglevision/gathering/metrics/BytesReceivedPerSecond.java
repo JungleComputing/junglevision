@@ -34,6 +34,7 @@ public class BytesReceivedPerSecond extends junglevision.gathering.impl.MetricDe
 	}
 		
 	public void update(Object[] results, Metric metric)  throws IncorrectParametersException {
+		junglevision.gathering.impl.Metric castMetric = ((junglevision.gathering.impl.Metric)metric);
 		HashMap<IbisIdentifier, Number> result = new HashMap<IbisIdentifier, Number>();
 		long total = 0;
 		
@@ -44,8 +45,8 @@ public class BytesReceivedPerSecond extends junglevision.gathering.impl.MetricDe
 					Map.Entry<IbisIdentifier, Long> received = (Entry<IbisIdentifier, Long>) incoming;				
 				
 					long time_now = System.currentTimeMillis();
-					long time_elapsed = time_now - (Long)metric.getHelperVariable("time_prev");
-					metric.setHelperVariable("time_prev", time_now);
+					long time_elapsed = time_now - (Long)castMetric.getHelperVariable("time_prev");
+					castMetric.setHelperVariable("time_prev", time_now);
 					
 					float time_seconds = (float)time_elapsed / 1000.0f;
 		
@@ -63,8 +64,8 @@ public class BytesReceivedPerSecond extends junglevision.gathering.impl.MetricDe
 		}
 		
 		try {
-			metric.setValue(MetricModifier.NORM, MetricOutput.N, total);
-			metric.setValue(MetricModifier.NORM, MetricOutput.RPOS, result);
+			castMetric.setValue(MetricModifier.NORM, MetricOutput.N, total);
+			castMetric.setValue(MetricModifier.NORM, MetricOutput.RPOS, result);
 		} catch (BeyondAllowedRangeException e) {
 			logger.debug(name +" metric failed trying to set value out of bounds.");
 		}

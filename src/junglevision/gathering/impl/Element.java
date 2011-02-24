@@ -17,11 +17,11 @@ public abstract class Element implements junglevision.gathering.Element {
 	private static final Logger logger = LoggerFactory.getLogger("ibis.deploy.gui.junglevision.gathering.impl.Element");
 	
 	HashMap<junglevision.gathering.MetricDescription, junglevision.gathering.Metric> metrics;
-	HashMap<junglevision.gathering.Element, junglevision.gathering.Link> links;
+	HashMap<Element, junglevision.gathering.Link> links;
 	
 	public Element() {
 		metrics = new HashMap<junglevision.gathering.MetricDescription, junglevision.gathering.Metric>();
-		links	= new HashMap<junglevision.gathering.Element, junglevision.gathering.Link>();
+		links	= new HashMap<Element, junglevision.gathering.Link>();
 	}
 		
 	//getters		
@@ -38,14 +38,14 @@ public abstract class Element implements junglevision.gathering.Element {
 		} else {
 			result = new Link(this, destination);
 			result.setMetrics(metrics.keySet());
-			links.put(destination, result);
-			destination.addLink(this, result);			
+			links.put(((Element)destination), result);
+			((Element)destination).addLink(this, result);			
 		}
 		return result;
 	}
 	
 	public void addLink(junglevision.gathering.Element destination, junglevision.gathering.Link link) {
-		links.put(destination, link);
+		links.put(((Element)destination), link);
 	}
 	
 	public void removeLink(junglevision.gathering.Element destination) {

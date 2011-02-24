@@ -30,19 +30,20 @@ public class CPUUsage extends junglevision.gathering.impl.MetricDescription impl
 	}
 	
 	public void update(Object[] results, Metric metric) throws IncorrectParametersException {
+		junglevision.gathering.impl.Metric castMetric = ((junglevision.gathering.impl.Metric)metric);
 		if (results[0] instanceof Long && results[1] instanceof Long &&	results[2] instanceof Integer) {
-			long cpu_elapsed 	= (Long)	results[0] - (Long) metric.getHelperVariable("cpu_prev");
-			long upt_elapsed	= (Long)	results[1] - (Long) metric.getHelperVariable("upt_prev");
+			long cpu_elapsed 	= (Long)	results[0] - (Long) castMetric.getHelperVariable("cpu_prev");
+			long upt_elapsed	= (Long)	results[1] - (Long) castMetric.getHelperVariable("upt_prev");
 			int num_cpus		= (Integer) results[2];
 			
 			// Found at http://forums.sun.com/thread.jspa?threadID=5305095 to be the correct calculation for CPU usage
 			float cpuUsage = Math.min(99F, cpu_elapsed / (upt_elapsed * 10000F * num_cpus));
 			
-			metric.setHelperVariable("cpu_prev", cpu_elapsed);
-			metric.setHelperVariable("upt_prev", upt_elapsed);
+			castMetric.setHelperVariable("cpu_prev", cpu_elapsed);
+			castMetric.setHelperVariable("upt_prev", upt_elapsed);
 			
 			try {			 
-				metric.setValue(MetricModifier.NORM, MetricOutput.PERCENT, (cpuUsage / 100));
+				castMetric.setValue(MetricModifier.NORM, MetricOutput.PERCENT, (cpuUsage / 100));
 			} catch (BeyondAllowedRangeException e) {
 				logger.debug(name +" metric failed trying to set value out of bounds.");
 			}

@@ -49,7 +49,7 @@ public interface MetricDescription {
 	 * @return
 	 * 		an array of AttributeDescriptions needed for this metric
 	 */
-	public ArrayList<AttributeDescription> getNecessaryAttributes();	
+	//public ArrayList<AttributeDescription> getNecessaryAttributes();	
 	
 	/**
 	 * Function that specifies what to do with the resulting values from the attribute update

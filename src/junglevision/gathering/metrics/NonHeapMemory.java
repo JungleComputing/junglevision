@@ -31,6 +31,7 @@ public class NonHeapMemory extends junglevision.gathering.impl.MetricDescription
 	}
 
 	public void update(Object[] results, Metric metric) throws IncorrectParametersException {
+		junglevision.gathering.impl.Metric castMetric = ((junglevision.gathering.impl.Metric)metric);
 		if (results[0] instanceof CompositeData) {
 			CompositeData received	= (CompositeData) results[0];
 			
@@ -38,9 +39,9 @@ public class NonHeapMemory extends junglevision.gathering.impl.MetricDescription
 			long mem_used = (Long) received.get("used");
 					
 			try {			 
-				metric.setValue(MetricModifier.NORM, MetricOutput.PERCENT, (float) mem_used / (float) mem_max);
-				metric.setValue(MetricModifier.NORM, MetricOutput.RPOS, (float) mem_used);
-				metric.setValue(MetricModifier.MAX, MetricOutput.RPOS, (float) mem_max);
+				castMetric.setValue(MetricModifier.NORM, MetricOutput.PERCENT, (float) mem_used / (float) mem_max);
+				castMetric.setValue(MetricModifier.NORM, MetricOutput.RPOS, (float) mem_used);
+				castMetric.setValue(MetricModifier.MAX, MetricOutput.RPOS, (float) mem_max);
 			} catch (BeyondAllowedRangeException e) {
 				logger.debug(name +" metric failed trying to set value out of bounds.");
 			}

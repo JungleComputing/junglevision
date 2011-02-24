@@ -34,6 +34,7 @@ public class BytesSent extends junglevision.gathering.impl.MetricDescription imp
 	}
 		
 	public void update(Object[] results, Metric metric) throws IncorrectParametersException {
+		junglevision.gathering.impl.Metric castMetric = ((junglevision.gathering.impl.Metric)metric);
 		HashMap<IbisIdentifier, Number> result = new HashMap<IbisIdentifier, Number>();
 		long total = 0;
 		
@@ -58,8 +59,8 @@ public class BytesSent extends junglevision.gathering.impl.MetricDescription imp
 		}
 		
 		try {
-			metric.setValue(MetricModifier.NORM, MetricOutput.N, total);
-			metric.setValue(MetricModifier.NORM, MetricOutput.N, result);
+			castMetric.setValue(MetricModifier.NORM, MetricOutput.N, total);
+			castMetric.setValue(MetricModifier.NORM, MetricOutput.N, result);
 		} catch (BeyondAllowedRangeException e) {
 			logger.error(name +" metric failed trying to set value out of bounds.");
 		}

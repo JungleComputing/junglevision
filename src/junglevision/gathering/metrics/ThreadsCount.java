@@ -27,12 +27,13 @@ public class ThreadsCount extends junglevision.gathering.impl.MetricDescription 
 		outputTypes.add(MetricOutput.N);
 	}
 
-	public void update(Object[] results, Metric metric) throws IncorrectParametersException {		
+	public void update(Object[] results, Metric metric) throws IncorrectParametersException {
+		junglevision.gathering.impl.Metric castMetric = ((junglevision.gathering.impl.Metric)metric);
 		if (results[0] instanceof Integer) {
 			int num_threads		= (Integer) results[0];		
 	
 			try {
-				metric.setValue(MetricModifier.NORM, MetricOutput.N, num_threads);
+				castMetric.setValue(MetricModifier.NORM, MetricOutput.N, num_threads);
 			} catch (BeyondAllowedRangeException e) {
 				logger.debug(name +" metric failed trying to set value out of bounds.");
 			}

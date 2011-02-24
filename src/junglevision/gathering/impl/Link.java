@@ -54,7 +54,7 @@ public class Link extends junglevision.gathering.impl.Element implements junglev
 		int result = 1;
 		
 		for (junglevision.gathering.Link child : children) {
-			result += child.getNumberOfDescendants();
+			result += ((Link)child).getNumberOfDescendants();
 		}
 		
 		return result;
@@ -72,7 +72,7 @@ public class Link extends junglevision.gathering.impl.Element implements junglev
 		result += "link: "+((junglevision.gathering.Location)origin).getName()+"->"+((junglevision.gathering.Location)destination).getName()+ "\n";
 		
 		for (junglevision.gathering.Link child : children) {
-			result += "  " + child.debugPrint();
+			result += "  " + ((Link)child).debugPrint();
 		}		
 		
 		return result;
@@ -81,11 +81,7 @@ public class Link extends junglevision.gathering.impl.Element implements junglev
 	public void update() { 
 		//First update all of our children
 		for (junglevision.gathering.Link child : children) {
-			try {
-				child.update();
-			} catch (TimeoutException neverthrown) {
-				logger.error("never happened.");
-			}
+			((Link)destination).update();
 		}
 		
 		for (Entry<junglevision.gathering.MetricDescription, junglevision.gathering.Metric> data : metrics.entrySet()) {
@@ -95,7 +91,7 @@ public class Link extends junglevision.gathering.impl.Element implements junglev
 				break;
 			}
 			
-			junglevision.gathering.Metric metric = data.getValue();			
+			Metric metric = (Metric)data.getValue();			
 			ArrayList<MetricOutput> types = desc.getOutputTypes();
 			
 			for (MetricOutput outputtype : types) {
@@ -105,8 +101,8 @@ public class Link extends junglevision.gathering.impl.Element implements junglev
 						int childLinks = 0;
 						
 						//First, we gather our own metrics
-						junglevision.gathering.Metric srcMetric = origin.getMetric(desc);
-						junglevision.gathering.Metric dstMetric = destination.getMetric(desc);
+						Metric srcMetric = (Metric)origin.getMetric(desc);
+						Metric dstMetric = (Metric)destination.getMetric(desc);
 						
 						float srcValue = (Float)srcMetric.getLinkValue(MetricModifier.NORM, outputtype).get(destination);
 						float dstValue = (Float)dstMetric.getLinkValue(MetricModifier.NORM, outputtype).get(origin);
@@ -123,11 +119,11 @@ public class Link extends junglevision.gathering.impl.Element implements junglev
 						if (outputtype == MetricOutput.PERCENT) {
 							//Gather the metrics of our children, and multiply by their weight
 							for (junglevision.gathering.Link child : children) {							
-								float childValue = (Float)child.getMetric(desc).getValue(MetricModifier.NORM, outputtype);							
+								float childValue = (Float)((Link)child).getMetric(desc).getValue(MetricModifier.NORM, outputtype);							
 								
-								childLinks += child.getNumberOfDescendants();
+								childLinks += ((Link)child).getNumberOfDescendants();
 								
-								total += childValue * child.getNumberOfDescendants();
+								total += childValue * ((Link)child).getNumberOfDescendants();
 								
 								if (childValue > max) max = childValue;								
 								if (childValue < min) min = childValue;
@@ -153,8 +149,8 @@ public class Link extends junglevision.gathering.impl.Element implements junglev
 						long total  = 0, max = 0, min = 1000000;
 						
 						//First, we gather our own metrics
-						junglevision.gathering.Metric srcMetric = origin.getMetric(desc);
-						junglevision.gathering.Metric dstMetric = destination.getMetric(desc);
+						Metric srcMetric = (Metric)origin.getMetric(desc);
+						Metric dstMetric = (Metric)destination.getMetric(desc);
 						
 						long srcValue = (Long)srcMetric.getLinkValue(MetricModifier.NORM, outputtype).get(destination);
 						long dstValue = (Long)dstMetric.getLinkValue(MetricModifier.NORM, outputtype).get(origin);

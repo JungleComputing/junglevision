@@ -39,10 +39,10 @@ public interface Element {
 	public void setMetrics(Set<MetricDescription> metrics);
 	public void addMetric(MetricDescription metric);
 	public void removeMetric(MetricDescription metric);
-	public void update() throws TimeoutException;
+	//public void update() throws TimeoutException;
 		
 	//internal methods
-	public void addLink(Element element, Link newLink);
-	public void removeLink(Element destination);
+	//public void addLink(Element element, Link newLink);
+	//public void removeLink(Element destination);
 	
 }

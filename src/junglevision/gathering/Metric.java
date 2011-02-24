@@ -17,8 +17,8 @@ public interface Metric {
 	public enum MetricModifier { MAX, MIN, NORM };
 	
 	//A variable that is sometimes needed as a helper in the metric descriptions, but still metric-specific 
-	public Number getHelperVariable(String name);	
-	public void setHelperVariable(String name, Number value);
+	//public Number getHelperVariable(String name);	
+	//public void setHelperVariable(String name, Number value);
 		
 	/**
 	 * Returns the value(s) of a metric
@@ -44,7 +44,7 @@ public interface Metric {
 	 * @throws OutputUnavailableException
 	 * 		if the selected outputmethod is considered nonsensical or otherwise unavailable
 	 */
-	public HashMap<Element,Number> getLinkValue(MetricModifier mod, MetricOutput outputmethod) throws OutputUnavailableException;
+	//public HashMap<Element,Number> getLinkValue(MetricModifier mod, MetricOutput outputmethod) throws OutputUnavailableException;
 			
 	/**
 	 * Callback function for the update method in MetricDescriptions
@@ -57,7 +57,7 @@ public interface Metric {
 	 * @throws BeyondAllowedRangeException 
 	 * 		if the value parameter does not conform to the outputmethod parameter's bounds
 	 */
-	public void setValue(MetricModifier mod, MetricOutput outputmethod, Number value) throws BeyondAllowedRangeException;
+	//public void setValue(MetricModifier mod, MetricOutput outputmethod, Number value) throws BeyondAllowedRangeException;
 
 	/**
 	 * Callback function for the update method in MetricDescriptions
@@ -70,7 +70,7 @@ public interface Metric {
 	 * @throws BeyondAllowedRangeException 
 	 * 		if the value parameter does not conform to the outputmethod parameter's bounds
 	 */
-	public void setValue(MetricModifier mod, MetricOutput outputmethod, HashMap<IbisIdentifier, Number> values) throws BeyondAllowedRangeException;
+	//public void setValue(MetricModifier mod, MetricOutput outputmethod, HashMap<IbisIdentifier, Number> values) throws BeyondAllowedRangeException;
 
 	/**
 	 * Returns the MetricDescription of this metric.
@@ -82,5 +82,5 @@ public interface Metric {
 	/**
 	 * Updates the value(s) of this metric by asking it's host over the network
 	 */
-	public void update(Object[] results);
+	//public void update(Object[] results);
 }

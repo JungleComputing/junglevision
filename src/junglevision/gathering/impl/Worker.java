@@ -9,7 +9,7 @@ import org.slf4j.LoggerFactory;
 
 public class Worker extends Thread {	
 	private static final Logger logger = LoggerFactory.getLogger("ibis.deploy.gui.junglevision.gathering.impl.Worker");
- 
+
 	private Collector c;
 	junglevision.gathering.Element element;
 
@@ -24,10 +24,17 @@ public class Worker extends Thread {
 	public void run() {		
 		while (true) {
 			element = c.getWork(this);
-			try {
-				element.update();
-			} catch (TimeoutException e) {
-				logger.debug("timed out.");
+
+			if (element instanceof Location) {
+				((Location)element).update();
+			} else if (element instanceof Ibis) {
+				try {
+					((Ibis)element).update();
+				} catch (TimeoutException e) {
+					logger.debug("timed out.");
+				}
+			} else {
+				logger.error("Wrong type in work queue.");
 			}
 		}
 	}

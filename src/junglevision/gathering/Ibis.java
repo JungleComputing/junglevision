@@ -1,7 +1,5 @@
 package junglevision.gathering;
 
-import java.util.concurrent.TimeoutException;
-
 /**
  * A representation of a seperate Ibis instance within the data gathering universe
  */
@@ -11,7 +9,7 @@ public interface Ibis extends Element {
 	
 	public Pool getPool();
 	
-	public void update() throws TimeoutException;
+	//public void update() throws TimeoutException;
 	
 	//Tryout for steering
 	public void kill();

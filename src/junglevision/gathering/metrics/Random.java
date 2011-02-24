@@ -26,6 +26,7 @@ public class Random extends junglevision.gathering.impl.MetricDescription implem
 	}
 
 	public void update(Object[] results, Metric metric) throws IncorrectParametersException {
+		junglevision.gathering.impl.Metric castMetric = ((junglevision.gathering.impl.Metric)metric);
 		if (results[0] == null) {
 			float currentValue;
 			try {
@@ -40,7 +41,7 @@ public class Random extends junglevision.gathering.impl.MetricDescription implem
 				currentValue = Math.min(1.0f, currentValue);
 	
 				try {
-					metric.setValue(MetricModifier.NORM, MetricOutput.PERCENT, currentValue);
+					castMetric.setValue(MetricModifier.NORM, MetricOutput.PERCENT, currentValue);
 				} catch (BeyondAllowedRangeException e) {
 					logger.debug(name +" metric failed trying to set value out of bounds.");
 				}

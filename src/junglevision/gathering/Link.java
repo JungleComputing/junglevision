@@ -7,9 +7,9 @@ package junglevision.gathering;
 public interface Link extends Element {
 	public Element getSource();
 	public Element getDestination();
-	public int getNumberOfDescendants();
+	//public int getNumberOfDescendants();
 	
-	public String debugPrint();
+	//public String debugPrint();
 	
-	public void addChild(Link childLink);
+	//public void addChild(Link childLink);
 }

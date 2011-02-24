@@ -56,8 +56,9 @@ public class Ibis extends Element implements junglevision.gathering.Ibis {
 	public void update() throws TimeoutException {
 		//Make an array of all the AttributeDescriptions needed to update this Ibis' metrics.
 		ArrayList<AttributeDescription> requestList = new ArrayList<AttributeDescription>();
-		for (Entry<junglevision.gathering.MetricDescription, junglevision.gathering.Metric> metric : metrics.entrySet()) {
-			requestList.addAll(metric.getValue().getDescription().getNecessaryAttributes());
+		for (Entry<junglevision.gathering.MetricDescription, junglevision.gathering.Metric> entry : metrics.entrySet()) {
+			Metric metric = (Metric)entry.getValue();
+			requestList.addAll(((MetricDescription)metric.getDescription()).getNecessaryAttributes());
 		}
 		
 		AttributeDescription[] requestArray = (AttributeDescription[]) requestList.toArray(new AttributeDescription[0]);
@@ -68,15 +69,16 @@ public class Ibis extends Element implements junglevision.gathering.Ibis {
 			
 			//Split the result objects into partial arrays depending on the amount needed per metric
 			int j=0;			
-			for (Entry<junglevision.gathering.MetricDescription, junglevision.gathering.Metric> metric : metrics.entrySet()) {
-				Object[] partialResults = new Object[metric.getValue().getDescription().getNecessaryAttributes().size()];				
+			for (Entry<junglevision.gathering.MetricDescription, junglevision.gathering.Metric> entry : metrics.entrySet()) {
+				Metric metric = ((Metric)entry.getValue());
+				Object[] partialResults = new Object[((MetricDescription)metric.getDescription()).getNecessaryAttributes().size()];				
 				for (int i=0; i < partialResults.length ; i++) {
 					partialResults[i] = results[j];	
 					j++;
 				}
 				
 				//And pass them to the individual metrics to be updated.
-				metric.getValue().update(partialResults);
+				metric.update(partialResults);
 			}
 		} catch (IOException e) {
 			throw new TimeoutException();

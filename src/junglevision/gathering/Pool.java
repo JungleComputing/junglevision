@@ -13,7 +13,7 @@ public interface Pool {
 	
 	public ArrayList<junglevision.gathering.Ibis> getIbises();
 	
-	public void addIbis(junglevision.gathering.Ibis newIbis);
+	//public void addIbis(junglevision.gathering.Ibis newIbis);
 	
-	public void removeIbis(junglevision.gathering.Ibis newIbis);
+	//public void removeIbis(junglevision.gathering.Ibis newIbis);
 }

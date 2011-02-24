@@ -29,7 +29,7 @@ public interface Location extends Element {
 	
 	public ArrayList<junglevision.gathering.Location> getChildren();
 	
-	public String debugPrint();
+	//public String debugPrint();
 	
 	/**
 	 * This function returns a value derived from the values of either all of the Ibises located at its descendants,
@@ -43,7 +43,7 @@ public interface Location extends Element {
 	 * @return
 	 * 		A Number containing the value specific to the metric.
 	 */
-	public Number getReducedValue(Reducefunction function, MetricDescription metric, MetricOutput outputmethod);
+	//public Number getReducedValue(Reducefunction function, MetricDescription metric, MetricOutput outputmethod);
 	
 	/**
 	 * Returns a number of links that correspond to the criteria.
@@ -65,13 +65,13 @@ public interface Location extends Element {
 	 * @return
 	 * 		the total ibis descendants
 	 */
-	public int getNumberOfDescendants();
+	//public int getNumberOfDescendants();
 	
-	public void addIbis(junglevision.gathering.Ibis ibis);	
-	public void removeIbis(junglevision.gathering.Ibis ibis);
+	//public void addIbis(junglevision.gathering.Ibis ibis);	
+	//public void removeIbis(junglevision.gathering.Ibis ibis);
 	
-	public void addChild(junglevision.gathering.Location location);	
-	public void removeChild(junglevision.gathering.Location location);
+	//public void addChild(junglevision.gathering.Location location);	
+	//public void removeChild(junglevision.gathering.Location location);
 	
-	public void makeLinkHierarchy();
+	//public void makeLinkHierarchy();
 }

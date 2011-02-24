@@ -171,7 +171,7 @@ public class Metric implements junglevision.gathering.Metric {
 	
 	public void update(Object[] results) {
 		try {
-			myDescription.update(results, this);
+			((MetricDescription)myDescription).update(results, this);
 		} catch (IncorrectParametersException shouldnteverhappen) {
 			//This is so bad, we're going to throw exceptions until someone fixes it.
 			shouldnteverhappen.printStackTrace();
