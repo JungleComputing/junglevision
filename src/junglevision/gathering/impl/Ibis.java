@@ -93,4 +93,16 @@ public class Ibis extends Element implements junglevision.gathering.Ibis {
 	public void kill() {
 		//TODO implement
 	}
+	
+	public String debugPrint() {
+		String result = ibisid+"metrics: ";
+				
+		for (Entry<junglevision.gathering.MetricDescription, junglevision.gathering.Metric> entry : metrics.entrySet()) {
+			result += "  " + entry.getValue().getDescription().getName();
+		}
+
+		result += "\n";
+		
+		return result;
+	}
 }

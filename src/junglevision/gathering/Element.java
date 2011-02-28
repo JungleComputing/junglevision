@@ -3,6 +3,7 @@ package junglevision.gathering;
 import java.util.Set;
 import java.util.concurrent.TimeoutException;
 
+import junglevision.gathering.exceptions.MetricNotAvailableException;
 import junglevision.gathering.exceptions.SelfLinkeageException;
 
 /**
@@ -15,7 +16,7 @@ public interface Element {
 	 * 		Metrics that can be queried for their values.
 	 */
 	public Metric[] getMetrics();
-	public Metric getMetric(MetricDescription desc);
+	public Metric getMetric(MetricDescription desc) throws MetricNotAvailableException;
 
 	/**
 	 * Returns the link corresponding to the destination, or null if no link exists

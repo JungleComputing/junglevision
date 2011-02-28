@@ -12,6 +12,7 @@ import junglevision.gathering.Metric.MetricModifier;
 import junglevision.gathering.MetricDescription.MetricOutput;
 import junglevision.gathering.MetricDescription.MetricType;
 import junglevision.gathering.exceptions.BeyondAllowedRangeException;
+import junglevision.gathering.exceptions.MetricNotAvailableException;
 import junglevision.gathering.exceptions.OutputUnavailableException;
 import junglevision.gathering.exceptions.SelfLinkeageException;
 
@@ -311,7 +312,9 @@ public class Location extends Element implements junglevision.gathering.Location
 					}
 				} catch (OutputUnavailableException e) {
 					logger.debug("OutputUnavailableException caught. Metric is probably undefined.");
-				}				
+				} catch (MetricNotAvailableException e) {					
+					logger.error("The impossible MetricNotAvailableException just happened anyway.");
+				}			
 			}			
 		} else {
 			for (Entry<Element, junglevision.gathering.Link> entry : links.entrySet()) {
@@ -324,6 +327,8 @@ public class Location extends Element implements junglevision.gathering.Location
 					}
 				} catch (OutputUnavailableException e) {
 					logger.debug("OutputUnavailableException caught. Metric is probably undefined.");
+				} catch (MetricNotAvailableException e) {					
+					logger.error("The impossible MetricNotAvailableException just happened anyway.");
 				}				
 			}	
 		}	
@@ -348,6 +353,12 @@ public class Location extends Element implements junglevision.gathering.Location
 		
 		for (junglevision.gathering.Link link : links.values()) {
 			result += name + " "+((Link)link).debugPrint();
+		}
+		
+		result += "\n";
+		
+		for (junglevision.gathering.Ibis ibis : ibises) {
+			result += name + " "+((Ibis)ibis).debugPrint();
 		}
 		
 		result += "\n";
@@ -415,8 +426,9 @@ public class Location extends Element implements junglevision.gathering.Location
 	}
 	
 	public void update() {
+		logger.debug("updating "+name+" children: "+children.size()+" ibises: "+ ibises.size());
 		//make sure the children are updated first
-		for (junglevision.gathering.Location child : children) {
+		for (junglevision.gathering.Location child : children) {			
 			((Location)child).update();
 		}
 		
@@ -433,7 +445,13 @@ public class Location extends Element implements junglevision.gathering.Location
 						
 						//First, we gather our own metrics
 						for (junglevision.gathering.Ibis ibis : ibises) {
-							float ibisValue = (Float) ibis.getMetric(desc).getValue(MetricModifier.NORM, outputtype);
+							Metric ibisMetric = (Metric)ibis.getMetric(desc);
+							if (ibisMetric == null) {
+								logger.debug("Null at "+name+" metric: "+desc.getName());
+							} else {
+								logger.debug("OK at "+name+" metric: "+desc.getName());
+							}
+							float ibisValue = (Float) ibisMetric.getValue(MetricModifier.NORM, outputtype);
 							
 							total += ibisValue ;
 							
@@ -505,6 +523,8 @@ public class Location extends Element implements junglevision.gathering.Location
 			} catch (BeyondAllowedRangeException e) {
 				//Impossible unless one of the children has a value that is already bad
 				logger.error("The impossible BeyondAllowedRangeException just happened anyway.");
+			} catch (MetricNotAvailableException e) {					
+				logger.error("The impossible MetricNotAvailableException just happened anyway.");
 			}
 		}
 	}

@@ -3,6 +3,7 @@ package junglevision.gathering.impl;
 import java.util.HashMap;
 import java.util.Set;
 
+import junglevision.gathering.exceptions.MetricNotAvailableException;
 import junglevision.gathering.exceptions.SelfLinkeageException;
 import junglevision.gathering.impl.Link;
 
@@ -25,8 +26,12 @@ public abstract class Element implements junglevision.gathering.Element {
 	}
 		
 	//getters		
-	public junglevision.gathering.Metric getMetric(junglevision.gathering.MetricDescription desc) {
-		return metrics.get(desc.getName());
+	public junglevision.gathering.Metric getMetric(junglevision.gathering.MetricDescription desc) throws MetricNotAvailableException {
+		if (metrics.containsKey(desc)) {
+			return metrics.get(desc.getName());
+		} else {
+			throw new MetricNotAvailableException();
+		}
 	}
 	
 	public junglevision.gathering.Link getLink(junglevision.gathering.Element destination) throws SelfLinkeageException {

@@ -73,7 +73,7 @@ public class Collector implements junglevision.gathering.Collector, Runnable {
 		root = new Location("root", color);
 		
 		//Set the default refreshrate
-		refreshrate = 500;
+		refreshrate = 5000;
 		
 		//Set the default metrics
 		descriptions.add(new CPUUsage());
@@ -91,8 +91,11 @@ public class Collector implements junglevision.gathering.Collector, Runnable {
 		//Create and start worker threads for the metric updates
 		for (int i=0; i<workercount; i++) {
 			Worker worker = new Worker();
-			workers.add(worker);
-			worker.start();
+			workers.add(worker);			
+		}
+		
+		for (Worker w : workers) {		
+			w.start();
 		}
 	}
 		
@@ -100,7 +103,7 @@ public class Collector implements junglevision.gathering.Collector, Runnable {
 		if (ref == null) {
 			ref = new Collector(manInterface, regInterface);
 			ref.initWorkers();
-			ref.initUniverse();
+			//ref.initUniverse();
 		}
 		return ref;		
 	}
@@ -118,16 +121,14 @@ public class Collector implements junglevision.gathering.Collector, Runnable {
 		boolean change = initPools();
 		
 		if (change) {
-			synchronized(jobQueue) {
-				//Rebuild the world		
-				initLocations();
-				initLinks();
-				initMetrics();
-			}
+			//Rebuild the world		
+			initLocations();
+			initLinks();
+			initMetrics();
 			
 			if (logger.isDebugEnabled()) {
 				logger.debug("world rebuilt");
-				//logger.debug(root.debugPrint());
+				logger.debug(((Location)root).debugPrint());
 			}
 			
 			//once all updating is finished, signal the visualizations that a change has occurred.
@@ -293,17 +294,14 @@ public class Collector implements junglevision.gathering.Collector, Runnable {
 	}	
 	
 	//Getters for the worker threads
-	public junglevision.gathering.Element getWork(Worker w) {
+	public junglevision.gathering.Element getWork(Worker w) throws InterruptedException {
 		junglevision.gathering.Element result = null;
 		
 		synchronized(jobQueue) {
-			while (jobQueue.isEmpty()) {
-				try {
-					waiting += 1;
-					jobQueue.wait();
-				} catch (InterruptedException e) {
-					logger.debug("Interrupted Queue, ignore this.");
-				}
+			while (jobQueue.isEmpty()) {				
+				waiting += 1;
+				//logger.debug("waiting: "+waiting);
+				jobQueue.wait();				
 			}
 			result = jobQueue.removeFirst();
 		}
@@ -318,9 +316,27 @@ public class Collector implements junglevision.gathering.Collector, Runnable {
 	public void run() {
 		int iterations = 0;
 		while (true) {
-			//Add stuff to the queue and notify
+			//while (waiting != workercount) {
+				//Sync the threads to this point
+				//logger.debug("sync1 waiting: "+waiting);
+			//}
+			
+			//Clear the queue for a new round, and make sure every worker is waiting 
 			synchronized(jobQueue) {
+				waiting = 0;
 				jobQueue.clear();
+				for (Worker w : workers) {
+					w.interrupt();
+				}
+			}
+			
+			//while (waiting != workercount) {
+				//Sync the threads to this point
+				//logger.debug("sync2 waiting: "+waiting);
+			//}
+			
+			//Add stuff to the queue and notify
+			synchronized(jobQueue) {				
 				initUniverse();
 				jobQueue.addAll(ibises.values());					
 				jobQueue.add(root);			
@@ -345,10 +361,7 @@ public class Collector implements junglevision.gathering.Collector, Runnable {
 					}					
 					logger.debug("Succesfully finished queue.");
 				} else {
-					//If they have not, give warning, interrupt the workers, and try again next turn.					
-					for (Worker w : workers) {
-						w.interrupt();
-					}
+					//If they have not, give warning, and try again next turn.				
 					
 					if (logger.isDebugEnabled()) {
 						logger.debug("Workers still working: "+(workercount-waiting));

@@ -2,7 +2,6 @@ package junglevision.gathering.impl;
 
 import java.util.ArrayList;
 import java.util.Map.Entry;
-import java.util.concurrent.TimeoutException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,6 +11,7 @@ import junglevision.gathering.Metric.MetricModifier;
 import junglevision.gathering.MetricDescription.MetricOutput;
 import junglevision.gathering.MetricDescription.MetricType;
 import junglevision.gathering.exceptions.BeyondAllowedRangeException;
+import junglevision.gathering.exceptions.MetricNotAvailableException;
 import junglevision.gathering.exceptions.OutputUnavailableException;
 
 /**
@@ -183,6 +183,8 @@ public class Link extends junglevision.gathering.impl.Element implements junglev
 				} catch (BeyondAllowedRangeException e) {
 					//Impossible unless one of the children has a value that is already bad
 					logger.error("The impossible BeyondAllowedRangeException just happened anyway.");
+				} catch (MetricNotAvailableException e) {					
+					logger.error("The impossible MetricNotAvailableException just happened anyway.");
 				}
 			}
 		}

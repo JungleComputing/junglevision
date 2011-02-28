@@ -23,19 +23,24 @@ public class Worker extends Thread {
 
 	public void run() {		
 		while (true) {
-			element = c.getWork(this);
-
-			if (element instanceof Location) {
-				((Location)element).update();
-			} else if (element instanceof Ibis) {
-				try {
-					((Ibis)element).update();
-				} catch (TimeoutException e) {
-					logger.debug("timed out.");
+			try {
+				element = c.getWork(this);
+				
+				if (element instanceof Location) {
+					((Location)element).update();
+				} else if (element instanceof Ibis) {
+					try {
+						((Ibis)element).update();
+					} catch (TimeoutException e) {
+						logger.debug("timed out.");
+					}
+				} else {
+					logger.error("Wrong type in work queue.");
 				}
-			} else {
-				logger.error("Wrong type in work queue.");
+			} catch (InterruptedException e1) {
+				//try again
 			}
+			element = null;
 		}
 	}
 }
