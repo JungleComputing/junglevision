@@ -58,10 +58,10 @@ public class FakeRegistryService implements ibis.ipl.server.RegistryServiceInter
 			}
 		}
 		
-		if (logger.isDebugEnabled()) {
-			logger.debug("FakeRegistry has created "+ibises.size()+" ibises.");			
-			logger.debug("in "+COUNTRIES+" countries, "+UNIVERSITIES+" universities and "+CLUSTERS+" clusters" );
-			logger.debug("and divided among "+pools.size()+" pools.");
+		if (logger.isInfoEnabled()) {
+			logger.info("FakeRegistry has created "+ibises.size()+" ibises.");			
+			logger.info("in "+COUNTRIES+" countries, "+UNIVERSITIES+" universities and "+CLUSTERS+" clusters" );
+			logger.info("and divided among "+pools.size()+" pools.");
 		}
 		
 		//Start an update timer for the list mutations
