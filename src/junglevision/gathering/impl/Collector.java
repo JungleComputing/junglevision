@@ -73,7 +73,7 @@ public class Collector implements junglevision.gathering.Collector, Runnable {
 		root = new Location("root", color);
 		
 		//Set the default refreshrate
-		refreshrate = 5000;
+		refreshrate = 500;
 		
 		//Set the default metrics
 		descriptions.add(new CPUUsage());
@@ -128,7 +128,7 @@ public class Collector implements junglevision.gathering.Collector, Runnable {
 			
 			if (logger.isDebugEnabled()) {
 				logger.debug("world rebuilt");
-				logger.debug(((Location)root).debugPrint());
+				//logger.debug(((Location)root).debugPrint());
 			}
 			
 			//once all updating is finished, signal the visualizations that a change has occurred.
@@ -247,7 +247,7 @@ public class Collector implements junglevision.gathering.Collector, Runnable {
 	}
 	
 	private void initMetrics() {
-		root.setMetrics(descriptions);		
+		((Location)root).setMetrics(descriptions);		
 	}
 	
 	private void initLinks() {
@@ -316,11 +316,6 @@ public class Collector implements junglevision.gathering.Collector, Runnable {
 	public void run() {
 		int iterations = 0;
 		while (true) {
-			//while (waiting != workercount) {
-				//Sync the threads to this point
-				//logger.debug("sync1 waiting: "+waiting);
-			//}
-			
 			//Clear the queue for a new round, and make sure every worker is waiting 
 			synchronized(jobQueue) {
 				waiting = 0;
@@ -329,11 +324,6 @@ public class Collector implements junglevision.gathering.Collector, Runnable {
 					w.interrupt();
 				}
 			}
-			
-			//while (waiting != workercount) {
-				//Sync the threads to this point
-				//logger.debug("sync2 waiting: "+waiting);
-			//}
 			
 			//Add stuff to the queue and notify
 			synchronized(jobQueue) {				

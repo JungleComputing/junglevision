@@ -26,6 +26,7 @@ public class Link extends junglevision.gathering.impl.Element implements junglev
 	private Element destination;
 		
 	public Link(Element origin, Element destination) {
+		super();
 		this.origin = origin;
 		this.destination = destination;
 		
@@ -66,22 +67,10 @@ public class Link extends junglevision.gathering.impl.Element implements junglev
 		}
 	}
 	
-	public String debugPrint() {
-		String result = "";
-		
-		result += "link: "+((junglevision.gathering.Location)origin).getName()+"->"+((junglevision.gathering.Location)destination).getName()+ "\n";
-		
-		for (junglevision.gathering.Link child : children) {
-			result += "  " + ((Link)child).debugPrint();
-		}		
-		
-		return result;
-	}
-	
 	public void update() { 
 		//First update all of our children
 		for (junglevision.gathering.Link child : children) {
-			((Link)destination).update();
+			((Link)child).update();
 		}
 		
 		for (Entry<junglevision.gathering.MetricDescription, junglevision.gathering.Metric> data : metrics.entrySet()) {
@@ -207,5 +196,26 @@ public class Link extends junglevision.gathering.impl.Element implements junglev
 	@Override public int hashCode() {
 		int hashCode = origin.hashCode()+destination.hashCode();
 		return hashCode;
-    }	
+    }
+	
+	public String debugPrint() {
+		String result = "";
+		
+		result += "link: "+((junglevision.gathering.Location)origin).getName()+"->"+((junglevision.gathering.Location)destination).getName()+ "\n";
+		
+		result += "has "+metrics.size()+" metrics: ";
+		
+		for (Entry<junglevision.gathering.MetricDescription, junglevision.gathering.Metric> entry : metrics.entrySet()) {
+			result += "  " + entry.getValue().getDescription().getName();
+		}
+		
+		result += "\n";
+		
+		for (junglevision.gathering.Link child : children) {
+			result += "  " + ((Link)child).debugPrint();
+		}		
+		
+		return result;
+	}
 }
+

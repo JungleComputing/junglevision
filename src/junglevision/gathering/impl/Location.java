@@ -1,9 +1,9 @@
 package junglevision.gathering.impl;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.concurrent.TimeoutException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -344,31 +344,7 @@ public class Location extends Element implements junglevision.gathering.Location
 		
 		return result;
 	} 
-	
-	public String debugPrint() {
-		String result = "";
-		result += name + " has "+children.size()+" children. \n" ;
-		result += name + " has "+links.size()+" links. \n" ;
-		result += name + " has "+ibises.size()+" ibises. \n" ;
 		
-		for (junglevision.gathering.Link link : links.values()) {
-			result += name + " "+((Link)link).debugPrint();
-		}
-		
-		result += "\n";
-		
-		for (junglevision.gathering.Ibis ibis : ibises) {
-			result += name + " "+((Ibis)ibis).debugPrint();
-		}
-		
-		result += "\n";
-		
-		for (junglevision.gathering.Location child : children) {
-			result += ((Location)child).debugPrint();
-		}
-		return result;
-	}
-	
 	//Setters
 	public void addIbis(junglevision.gathering.Ibis ibis) {
 		ibises.add(ibis);
@@ -388,18 +364,34 @@ public class Location extends Element implements junglevision.gathering.Location
 		children.remove(location);
 	}
 		
-	public void setMetrics(Set<junglevision.gathering.MetricDescription> newMetrics) {
+	public void setMetrics(Set<junglevision.gathering.MetricDescription> descriptions) {
 		for (junglevision.gathering.Ibis ibis : ibises) {
-			ibis.setMetrics(newMetrics);
+			((Ibis)ibis).setMetrics(descriptions);
 		}
 		for (junglevision.gathering.Location child : children) {
-			child.setMetrics(newMetrics);
+			((Location)child).setMetrics(descriptions);
 		}
 		for (junglevision.gathering.Link link : links.values()) {
-			link.setMetrics(newMetrics);
+			((Link)link).setMetrics(descriptions);
 		}
-		for (junglevision.gathering.MetricDescription md : newMetrics) {
-			metrics.put(md, md.getMetric(this));
+		
+		//add new metrics
+		for (junglevision.gathering.MetricDescription md : descriptions) {
+			if(!metrics.containsKey(md)) {
+				Metric newMetric = (Metric) ((MetricDescription)md).getMetric(this); 
+				metrics.put(md, newMetric);
+			}
+		}
+		
+		//make a snapshot of our current metrics.
+		Set<junglevision.gathering.MetricDescription> temp = new HashSet<junglevision.gathering.MetricDescription>();		
+		temp.addAll(metrics.keySet());
+		
+		//and loop through the snapshot to remove unwanted metrics that don't appear in the new set
+		for (junglevision.gathering.MetricDescription entry : temp) {
+			if(!descriptions.contains(entry)) {
+				metrics.remove(entry);
+			}
 		}
 	}
 	
@@ -426,7 +418,6 @@ public class Location extends Element implements junglevision.gathering.Location
 	}
 	
 	public void update() {
-		logger.debug("updating "+name+" children: "+children.size()+" ibises: "+ ibises.size());
 		//make sure the children are updated first
 		for (junglevision.gathering.Location child : children) {			
 			((Location)child).update();
@@ -444,13 +435,9 @@ public class Location extends Element implements junglevision.gathering.Location
 						float total = 0f, max = -10000000f, min = 10000000f;
 						
 						//First, we gather our own metrics
-						for (junglevision.gathering.Ibis ibis : ibises) {
-							Metric ibisMetric = (Metric)ibis.getMetric(desc);
-							if (ibisMetric == null) {
-								logger.debug("Null at "+name+" metric: "+desc.getName());
-							} else {
-								logger.debug("OK at "+name+" metric: "+desc.getName());
-							}
+						for (junglevision.gathering.Ibis entry : ibises) {
+							Ibis ibis = (Ibis)entry;
+							Metric ibisMetric = (Metric)ibis.getMetric(desc);							
 							float ibisValue = (Float) ibisMetric.getValue(MetricModifier.NORM, outputtype);
 							
 							total += ibisValue ;
@@ -527,6 +514,38 @@ public class Location extends Element implements junglevision.gathering.Location
 				logger.error("The impossible MetricNotAvailableException just happened anyway.");
 			}
 		}
+	}
+	
+	public String debugPrint() {
+		String result = "";
+		result += name + " has "+children.size()+" children. \n" ;
+		result += name + " has "+links.size()+" links. \n" ;
+		result += name + " has "+ibises.size()+" ibises. \n" ;
+		
+		result += name + " has "+metrics.size()+" metrics: ";
+		
+		for (Entry<junglevision.gathering.MetricDescription, junglevision.gathering.Metric> entry : metrics.entrySet()) {
+			result += "  " + entry.getValue().getDescription().getName();
+		}
+		
+		result += "\n";
+		
+		for (junglevision.gathering.Link link : links.values()) {
+			result += name + " "+((Link)link).debugPrint();
+		}
+		
+		result += "\n";
+		
+		for (junglevision.gathering.Ibis ibis : ibises) {
+			result += name + " "+((Ibis)ibis).debugPrint();
+		}
+		
+		result += "\n";
+		
+		for (junglevision.gathering.Location child : children) {
+			result += ((Location)child).debugPrint();
+		}
+		return result;
 	}
 		
 }

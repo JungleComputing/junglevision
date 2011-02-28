@@ -1,6 +1,7 @@
 package junglevision.gathering.impl;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Set;
 
 import junglevision.gathering.exceptions.MetricNotAvailableException;
@@ -28,7 +29,7 @@ public abstract class Element implements junglevision.gathering.Element {
 	//getters		
 	public junglevision.gathering.Metric getMetric(junglevision.gathering.MetricDescription desc) throws MetricNotAvailableException {
 		if (metrics.containsKey(desc)) {
-			return metrics.get(desc.getName());
+			return metrics.get(desc);
 		} else {
 			throw new MetricNotAvailableException();
 		}
@@ -62,19 +63,35 @@ public abstract class Element implements junglevision.gathering.Element {
 	}
 	
 	//Setters
-	public void setMetrics(Set<junglevision.gathering.MetricDescription> descriptions) {
+	public void setMetrics(Set<junglevision.gathering.MetricDescription> descriptions) {		
+		//add new metrics
 		for (junglevision.gathering.MetricDescription md : descriptions) {
-			metrics.put(md, md.getMetric(this));
+			if(!metrics.containsKey(md)) {
+				Metric newMetric = (Metric) ((MetricDescription)md).getMetric(this); 
+				metrics.put(md, newMetric);
+			}
+		}
+		
+		//make a snapshot of our current metrics.
+		Set<junglevision.gathering.MetricDescription> temp = new HashSet<junglevision.gathering.MetricDescription>();		
+		temp.addAll(metrics.keySet());
+		
+		//and loop through the snapshot to remove unwanted metrics
+		for (junglevision.gathering.MetricDescription entry : temp) {
+			if(!descriptions.contains(entry)) {
+				metrics.remove(entry);
+			}
 		}
 	}
 	
 	public void addMetric(junglevision.gathering.MetricDescription description) {
-		metrics.put(description, description.getMetric(this));
+		if(!metrics.containsKey(description)) {
+			Metric newMetric = (Metric) ((MetricDescription)description).getMetric(this); 
+			metrics.put(description, newMetric);
+		}
 	}
 	
 	public void removeMetric(junglevision.gathering.MetricDescription description) {
 		metrics.remove(description);
-	}
-		
-	
+	}	
 }

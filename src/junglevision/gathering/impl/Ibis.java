@@ -29,6 +29,7 @@ public class Ibis extends Element implements junglevision.gathering.Ibis {
 	private Location location;
 	
 	public Ibis(ManagementServiceInterface manInterface, IbisIdentifier ibisid, Pool pool, Location location) {
+		super();
 		this.manInterface = manInterface;
 		this.ibisid = ibisid;
 		this.pool = pool;

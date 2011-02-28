@@ -2,7 +2,6 @@ package junglevision.gathering.impl;
 
 import java.util.ArrayList;
 
-import junglevision.gathering.exceptions.NotALinkMetricException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
